@@ -58,13 +58,18 @@ public class PLCDigitalBlockHandler extends PLCBlockHandler {
      * {@inheritDoc}
      */
     @Override
-    public void initialize() {
-        config = getConfigAs(PLCLogoDigitalConfiguration.class);
-
+    public synchronized void initialize() {
         final Thing thing = getThing();
         Objects.requireNonNull(thing, "PLCDigitalBlockHandler: Thing may not be null.");
 
         final Bridge bridge = getBridge();
+        Objects.requireNonNull(bridge, "PLCDigitalBlockHandler: Bridge may not be null.");
+
+        synchronized (config) {
+            config = getConfigAs(PLCLogoDigitalConfiguration.class);
+        }
+        logger.debug("Initialize LOGO! {} digital handler.", config.getBlockName());
+
         final String name = config.getBlockName();
         if (config.isBlockValid() && (bridge != null)) {
             ThingBuilder tBuilder = editThing();
@@ -78,9 +83,10 @@ public class PLCDigitalBlockHandler extends PLCBlockHandler {
                 tBuilder.withoutChannel(channel.getUID());
             }
 
+            final String type = config.getItemType();
             final ChannelUID uid = new ChannelUID(thing.getUID(), DIGITAL_CHANNEL_ID);
-            ChannelBuilder cBuilder = ChannelBuilder.create(uid, config.isInputBlock() ? "Contact" : "Switch");
-            cBuilder = cBuilder.withType(new ChannelTypeUID(BINDING_ID, DIGITAL_CHANNEL_ID));
+            ChannelBuilder cBuilder = ChannelBuilder.create(uid, type);
+            cBuilder = cBuilder.withType(new ChannelTypeUID(BINDING_ID, type.toLowerCase()));
             cBuilder = cBuilder.withLabel(name);
             cBuilder = cBuilder.withDescription("Digital " + text);
             tBuilder = tBuilder.withChannel(cBuilder.build());
@@ -99,8 +105,8 @@ public class PLCDigitalBlockHandler extends PLCBlockHandler {
      * {@inheritDoc}
      */
     @Override
-    public void dispose() {
-        logger.debug("Dispose LOGO! digital handler.");
+    public synchronized void dispose() {
+        logger.debug("Dispose LOGO! {} digital handler.", config.getBlockName());
         super.dispose();
 
         oldValue = Integer.MAX_VALUE;
@@ -160,7 +166,9 @@ public class PLCDigitalBlockHandler extends PLCBlockHandler {
     @Override
     protected void updateConfiguration(Configuration configuration) {
         super.updateConfiguration(configuration);
-        config = getConfigAs(PLCLogoDigitalConfiguration.class);
+        synchronized (config) {
+            config = getConfigAs(PLCLogoDigitalConfiguration.class);
+        }
     }
 
     /**

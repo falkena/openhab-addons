@@ -8,6 +8,8 @@
  */
 package org.openhab.binding.plclogo.config;
 
+import static org.openhab.binding.plclogo.PLCLogoBindingConstants.ANALOG_NUMBER_CHANNEL;
+
 import java.util.Objects;
 
 /**
@@ -93,6 +95,14 @@ public class PLCLogoAnalogConfiguration extends PLCLogoBlockConfiguration {
     public boolean isInputBlock() {
         final String kind = getBlockKind();
         return kind.equalsIgnoreCase("AI") || kind.equalsIgnoreCase("NAI");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getItemType() {
+        return ANALOG_NUMBER_CHANNEL.equalsIgnoreCase(getType()) ? "Number" : "DateTime";
     }
 
 }

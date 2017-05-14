@@ -65,7 +65,7 @@ public abstract class PLCLogoBlockConfiguration {
     }
 
     /**
-     * Checks, if current block configuration is valid.
+     * Checks if current block configuration is valid.
      *
      * @return True, if the name is valid and false otherwise
      */
@@ -97,4 +97,10 @@ public abstract class PLCLogoBlockConfiguration {
      */
     public abstract boolean isInputBlock();
 
+    /**
+     * Return supported item type for this block.
+     *
+     * @return Supported item type
+     */
+    public abstract String getItemType();
 }

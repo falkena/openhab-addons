@@ -55,4 +55,12 @@ public class PLCLogoDigitalConfiguration extends PLCLogoBlockConfiguration {
         return kind.equalsIgnoreCase("I") || kind.equalsIgnoreCase("NI");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getItemType() {
+        return isInputBlock() ? "Contact" : "Switch";
+    }
+
 }

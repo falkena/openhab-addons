@@ -12,5 +12,14 @@
 		<description>LOGO! digital input/output block</description>
 		<config-description-ref uri="thing-type:plclogo:digital" />
 	</thing-type>
+
+	<channel-type id="switch">
+		<item-type>Switch</item-type>
+		<label>Digital output</label>
+	</channel-type>
+	<channel-type id="contact">
+		<item-type>Contact</item-type>
+		<label>Digital input</label>
+	</channel-type>
 </thing:thing-descriptions>
 

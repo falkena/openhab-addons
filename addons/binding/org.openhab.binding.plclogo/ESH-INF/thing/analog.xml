@@ -12,5 +12,14 @@
 		<description>LOGO! analog input/output block</description>
 		<config-description-ref uri="thing-type:plclogo:analog" />
 	</thing-type>
+
+	<channel-type id="number">
+		<item-type>Number</item-type>
+		<label>Analog number</label>
+	</channel-type>
+	<channel-type id="datetime">
+		<item-type>DateTime</item-type>
+		<label>Analog date/time</label>
+	</channel-type>
 </thing:thing-descriptions>
 

@@ -64,13 +64,18 @@ public class PLCAnalogBlockHandler extends PLCBlockHandler {
      * {@inheritDoc}
      */
     @Override
-    public void initialize() {
-        config = getConfigAs(PLCLogoAnalogConfiguration.class);
-
+    public synchronized void initialize() {
         final Thing thing = getThing();
         Objects.requireNonNull(thing, "PLCAnalogBlockHandler: Thing may not be null.");
 
         final Bridge bridge = getBridge();
+        Objects.requireNonNull(bridge, "PLCAnalogBlockHandler: Bridge may not be null.");
+
+        synchronized (config) {
+            config = getConfigAs(PLCLogoAnalogConfiguration.class);
+        }
+        logger.debug("Initialize LOGO! {} analog handler.", config.getBlockName());
+
         final String name = config.getBlockName();
         if (config.isBlockValid() && (bridge != null)) {
             ThingBuilder tBuilder = editThing();
@@ -84,10 +89,10 @@ public class PLCAnalogBlockHandler extends PLCBlockHandler {
                 tBuilder.withoutChannel(channel.getUID());
             }
 
-            final boolean isNumber = ANALOG_NUMBER_CHANNEL.equalsIgnoreCase(config.getType());
+            final String type = config.getItemType();
             final ChannelUID uid = new ChannelUID(thing.getUID(), ANALOG_CHANNEL_ID);
-            ChannelBuilder cBuilder = ChannelBuilder.create(uid, isNumber ? "Number" : "DateTime");
-            cBuilder = cBuilder.withType(new ChannelTypeUID(BINDING_ID, ANALOG_CHANNEL_ID));
+            ChannelBuilder cBuilder = ChannelBuilder.create(uid, type);
+            cBuilder = cBuilder.withType(new ChannelTypeUID(BINDING_ID, type.toLowerCase()));
             cBuilder = cBuilder.withLabel(name);
             cBuilder = cBuilder.withDescription("Analog " + text);
             tBuilder = tBuilder.withChannel(cBuilder.build());
@@ -106,8 +111,8 @@ public class PLCAnalogBlockHandler extends PLCBlockHandler {
      * {@inheritDoc}
      */
     @Override
-    public void dispose() {
-        logger.debug("Dispose LOGO! analog handler.");
+    public synchronized void dispose() {
+        logger.debug("Dispose LOGO! {} analog handler.", config.getBlockName());
         super.dispose();
 
         oldValue = Long.MAX_VALUE;
@@ -199,7 +204,9 @@ public class PLCAnalogBlockHandler extends PLCBlockHandler {
     @Override
     protected void updateConfiguration(Configuration configuration) {
         super.updateConfiguration(configuration);
-        config = getConfigAs(PLCLogoAnalogConfiguration.class);
+        synchronized (config) {
+            config = getConfigAs(PLCLogoAnalogConfiguration.class);
+        }
     }
 
     /**
