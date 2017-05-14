@@ -17,5 +17,6 @@
 		<item-type>DateTime</item-type>
 		<label>Siemens LOGO! RTC</label>
 		<description>The value of Siemens LOGO! RTC</description>
+		<state readOnly="true"></state>
 	</channel-type>
 </thing:thing-descriptions>
