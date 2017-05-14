@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -63,40 +64,41 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
     private PLCLogoBridgeConfiguration config = getConfigAs(PLCLogoBridgeConfiguration.class);
 
     private Calendar rtc = Calendar.getInstance();
-    private final Thread rtcReader = new Thread() {
+    private ScheduledFuture<?> rtcJob = null;
+    private final Runnable rtcReader = new Runnable() {
         // Buffer for diagnostic data
         private final byte[] data = { 0, 0, 0, 0, 0, 0, 0 };
 
         @Override
         public void run() {
-            while (!isInterrupted() && (client != null)) {
-                int result = client.ReadDBArea(1, LOGO_STATE.intValue(), data.length, S7Client.S7WLByte, data);
-                if (result == 0) {
-                    final Calendar calendar = PLCLogoDataType.getRtcAt(data, 1);
-                    synchronized (rtc) {
-                        rtc.setTimeZone(calendar.getTimeZone());
-                        rtc.setTimeInMillis(calendar.getTimeInMillis());
-                    }
-                    final Channel channel = thing.getChannel(RTC_CHANNEL_ID);
-                    updateState(channel.getUID(), new DateTimeType(rtc));
+            try {
+                if (client != null) {
+                    int result = client.ReadDBArea(1, LOGO_STATE.intValue(), data.length, S7Client.S7WLByte, data);
+                    if (result == 0) {
+                        final Calendar calendar = PLCLogoDataType.getRtcAt(data, 1);
+                        synchronized (rtc) {
+                            rtc.setTimeZone(calendar.getTimeZone());
+                            rtc.setTimeInMillis(calendar.getTimeInMillis());
+                        }
+                        final Channel channel = thing.getChannel(RTC_CHANNEL_ID);
+                        updateState(channel.getUID(), new DateTimeType(rtc));
 
-                    if (logger.isTraceEnabled()) {
-                        final String raw = Arrays.toString(data);
-                        final String type = channel.getAcceptedItemType();
-                        logger.trace("Channel {} accepting {} received {}.", channel.getUID(), type, raw);
+                        if (logger.isTraceEnabled()) {
+                            final String raw = Arrays.toString(data);
+                            final String type = channel.getAcceptedItemType();
+                            logger.trace("Channel {} accepting {} received {}.", channel.getUID(), type, raw);
+                        }
+                    } else {
+                        logger.error("Can not read diagnostics from LOGO!: {}.", S7Client.ErrorText(result));
                     }
                 } else {
-                    logger.error("Can not read diagnostics from LOGO!: {}.", S7Client.ErrorText(result));
+                    logger.error("LOGO! client {} is invalid.", client);
                 }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException exception) {
-                    logger.error("RTC thread got exception: {}.", exception.getMessage());
-                    interrupt();
-                }
-            }
-            if (client == null) {
-                logger.error("LOGO! client {} is invalid.", client);
+            } catch (Exception exception) {
+                logger.error("RTC thread got exception: {}.", exception.getMessage());
+            } catch (Error error) {
+                logger.error("RTC thread got error: {}.", error.getMessage());
+                throw error;
             }
         }
     };
@@ -276,6 +278,13 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
     public synchronized void initialize() {
         logger.debug("Initialize LOGO! bridge handler.");
 
+        final Thing thing = getThing();
+        Objects.requireNonNull(thing, "PLCBridgeHandler: Thing may not be null.");
+
+        synchronized (config) {
+            config = getConfigAs(PLCLogoBridgeConfiguration.class);
+        }
+
         boolean configured = (config.getAddress() != null);
         configured = configured && (config.getLocalTSAP() != null);
         configured = configured && (config.getRemoteTSAP() != null);
@@ -294,11 +303,12 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
                 logger.info("Creating new reader job for {} with interval {} ms.", host, interval.toString());
                 readerJob = scheduler.scheduleWithFixedDelay(dataReader, 100, interval, TimeUnit.MILLISECONDS);
             }
-            if (!rtcReader.isAlive()) {
+            if (rtcJob == null) {
                 logger.info("Creating new RTC job for {} with interval 1 s.", host);
-                rtcReader.start();
+                rtcJob = scheduler.scheduleWithFixedDelay(rtcReader, 100, 1, TimeUnit.SECONDS);
             }
-            super.initialize();
+
+            PLCBridgeHandler.super.initialize();
         } else {
             final String message = "Can not initialize LOGO!. Please, check parameter.";
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, message);
@@ -314,16 +324,19 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
         logger.debug("Dispose LOGO! bridge handler.");
         super.dispose();
 
-        rtcReader.interrupt();
-        while (rtcReader.isAlive()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException exception) {
-                logger.error("Dispose LOGO! bridge handler throw an error: {}.", exception.getMessage());
-                break;
+        if (rtcJob != null) {
+            rtcJob.cancel(false);
+            while (!rtcJob.isDone()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException exception) {
+                    logger.error("Dispose LOGO! bridge handler throw an error: {}.", exception.getMessage());
+                    break;
+                }
             }
+            rtcJob = null;
+            logger.info("Destroy RTC job for {}.", config.getAddress());
         }
-        logger.info("Destroy RTC job for {}.", config.getAddress());
 
         if (readerJob != null) {
             readerJob.cancel(false);
@@ -408,7 +421,9 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
     @Override
     protected void updateConfiguration(Configuration configuration) {
         super.updateConfiguration(configuration);
-        config = getConfigAs(PLCLogoBridgeConfiguration.class);
+        synchronized (config) {
+            config = getConfigAs(PLCLogoBridgeConfiguration.class);
+        }
     }
 
     /**
@@ -416,17 +431,18 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
      *
      * @return True, if connected and false otherwise
      */
-    private synchronized boolean connect() {
-        if (!client.Connected) {
-            final String host = config.getAddress();
-            final Integer local = config.getLocalTSAP();
-            final Integer remote = config.getRemoteTSAP();
+    private boolean connect() {
+        synchronized (client) {
+            if (!client.Connected) {
+                final String host = config.getAddress();
+                final Integer local = config.getLocalTSAP();
+                final Integer remote = config.getRemoteTSAP();
 
-            if ((host != null) && (local != null) && (remote != null)) {
-                client.Connect(host, local.intValue(), remote.intValue());
+                if ((host != null) && (local != null) && (remote != null)) {
+                    client.Connect(host, local.intValue(), remote.intValue());
+                }
             }
         }
-
         return client.Connected;
     }
 
@@ -435,11 +451,13 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
      *
      * @return True, if disconnected and false otherwise
      */
-    private synchronized boolean disconnect() {
+    private boolean disconnect() {
         boolean result = false;
-        if (client != null) {
-            client.Disconnect();
-            result = !client.Connected;
+        synchronized (client) {
+            if (client != null) {
+                client.Disconnect();
+                result = !client.Connected;
+            }
         }
         return result;
     }

@@ -8,8 +8,6 @@
  */
 package org.openhab.binding.plclogo.internal;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,13 +25,19 @@ public class PLCLogoClient extends S7Client {
 
     private static final int MAX_RETRY_NUMBER = 10;
 
-    private final ReentrantLock lock = new ReentrantLock();
-
     /**
      * Constructor.
      */
     public PLCLogoClient() {
         super();
+    }
+
+    /**
+     * Connects a client to a PLC
+     */
+    @Override
+    public synchronized int Connect() {
+        return super.Connect();
     }
 
     /**
@@ -44,9 +48,17 @@ public class PLCLogoClient extends S7Client {
      * @param RemoteTSAP Remote TSAP for the connection
      * @return Zero on success, error code otherwise
      */
-    public int Connect(String Address, int LocalTSAP, int RemoteTSAP) {
+    public synchronized int Connect(String Address, int LocalTSAP, int RemoteTSAP) {
         SetConnectionParams(Address, LocalTSAP, RemoteTSAP);
-        return Connect();
+        return super.Connect();
+    }
+
+    /**
+     * Disconnects a client from a PLC
+     */
+    @Override
+    public synchronized void Disconnect() {
+        super.Disconnect();
     }
 
     /**
@@ -61,7 +73,7 @@ public class PLCLogoClient extends S7Client {
      * @return Zero on success, error code otherwise
      */
     @Override
-    public int ReadArea(int Area, int DBNumber, int Start, int Amount, int WordLength, byte[] Data) {
+    public synchronized int ReadArea(int Area, int DBNumber, int Start, int Amount, int WordLength, byte[] Data) {
         if (LastError != 0) {
             logger.debug("Reconnect during read: {}.", ErrorText(LastError));
             Disconnect();
@@ -73,7 +85,6 @@ public class PLCLogoClient extends S7Client {
         final int packet = Math.min(Amount, 1024);
         int offset = packet;
 
-        lock.lock();
         int retry = 0;
         int result = -1;
         do {
@@ -98,7 +109,6 @@ public class PLCLogoClient extends S7Client {
                 Connect();
             }
         } while (result != 0);
-        lock.unlock();
 
         return result;
     }
@@ -129,7 +139,7 @@ public class PLCLogoClient extends S7Client {
      * @return Zero on success, error code otherwise
      */
     @Override
-    public int WriteArea(int Area, int DBNumber, int Start, int Amount, int WordLength, byte[] Data) {
+    public synchronized int WriteArea(int Area, int DBNumber, int Start, int Amount, int WordLength, byte[] Data) {
         if (LastError != 0) {
             logger.debug("Reconnect during write: {}.", ErrorText(LastError));
             Disconnect();
@@ -138,7 +148,6 @@ public class PLCLogoClient extends S7Client {
             Connect();
         }
 
-        lock.lock();
         int retry = 0;
         int result = -1;
         do {
@@ -156,7 +165,7 @@ public class PLCLogoClient extends S7Client {
                 Connect();
             }
         } while (result != 0);
-        lock.unlock();
+
         return result;
     }
 
