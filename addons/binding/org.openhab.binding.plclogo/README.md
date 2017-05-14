@@ -5,6 +5,11 @@ Currently only two devices are supported: 0BA7 (LOGO! 7) and 0BA8 (LOGO! 8). Add
 Different families of LOGO! devices should work also, but was not tested now due to lack of hardware.
 Binding works nicely at least 100ms polling rate, if network connection is stable.
 
+#### Attention:
+Changing of block parameter may kill your LOGO!, so that program flashing via LOGO! SoftComort will be required.
+Furthermore programs within LOGO! SoftComfort and LOGO! itself will differ, so that online simulation will not
+work anymore without program synchronisation.
+
 ## Discovery
 
 Siemens LOGO! devices can be manually discovered by sending a request to every IP on the network.
@@ -128,14 +133,14 @@ logo.things:
 ```
 Bridge plclogo:device:Logo [ address="192.168.0.1", family="0BA8", localTSAP="0x3000", remoteTSAP="0x2000", refresh=100 ]
 {
-  Thing plclogo:digital:VB0_0 [ block="VB0.0" ]
-  Thing plclogo:digital:VB0_1 [ block="VB0.1" ]
-  Thing plclogo:digital:NI1   [ block="NI1" ]
-  Thing plclogo:digital:NI2   [ block="NI2" ]
-  Thing plclogo:digital:Q1    [ block="Q1" ]
-  Thing plclogo:digital:Q2    [ block="Q2" ]
-  Thing plclogo:analog:VW100  [ block="VW100", threshold=1, force=true ]
-  Thing plclogo:analog:VW102  [ block="VW102", type="time" ]
+  Thing digital VB0_0 [ block="VB0.0" ]
+  Thing digital VB0_1 [ block="VB0.1" ]
+  Thing digital NI1   [ block="NI1" ]
+  Thing digital NI2   [ block="NI2" ]
+  Thing digital Q1    [ block="Q1" ]
+  Thing digital Q2    [ block="Q2" ]
+  Thing analog VW100  [ block="VW100", threshold=1, force=true ]
+  Thing analog VW102  [ block="VW102", type="time" ]
 }
 ```
 
@@ -161,23 +166,23 @@ logo.things:
 ```
 Bridge plclogo:device:Logo1 [ address="192.168.0.1", family="0BA8", localTSAP="0x3000", remoteTSAP="0x2000", refresh=100 ]
 {
-  Thing plclogo:digital:Logo1_VB0_0 [ block="VB0.0" ]
-  Thing plclogo:digital:Logo1_VB0_1 [ block="VB0.1" ]
-  Thing plclogo:digital:Logo1_NI1   [ block="NI1" ]
-  Thing plclogo:digital:Logo1_NI2   [ block="NI2" ]
-  Thing plclogo:digital:Logo1_Q1    [ block="Q1" ]
-  Thing plclogo:digital:Logo1_Q2    [ block="Q2" ]
-  Thing plclogo:analog:Logo1_VW100  [ block="VW100", threshold=1 ]
+  Thing digital Logo1_VB0_0 [ block="VB0.0" ]
+  Thing digital Logo1_VB0_1 [ block="VB0.1" ]
+  Thing digital Logo1_NI1   [ block="NI1" ]
+  Thing digital Logo1_NI2   [ block="NI2" ]
+  Thing digital Logo1_Q1    [ block="Q1" ]
+  Thing digital Logo1_Q2    [ block="Q2" ]
+  Thing analog Logo1_VW100  [ block="VW100", threshold=1 ]
 }
 Bridge plclogo:device:Logo2 [ address="192.168.0.2", family="0BA8", localTSAP="0x3100", remoteTSAP="0x2000", refresh=100 ]
 {
-  Thing plclogo:digital:Logo2_VB0_0 [ block="VB0.0" ]
-  Thing plclogo:digital:Logo2_VB0_1 [ block="VB0.1" ]
-  Thing plclogo:digital:Logo2_NI1   [ block="NI1" ]
-  Thing plclogo:digital:Logo2_NI2   [ block="NI2" ]
-  Thing plclogo:digital:Logo2_Q1    [ block="Q1" ]
-  Thing plclogo:digital:Logo2_Q2    [ block="Q2" ]
-  Thing plclogo:analog:Logo2_VW100  [ block="VW100", threshold=1 ]
+  Thing digital Logo2_VB0_0 [ block="VB0.0" ]
+  Thing digital Logo2_VB0_1 [ block="VB0.1" ]
+  Thing digital Logo2_NI1   [ block="NI1" ]
+  Thing digital Logo2_NI2   [ block="NI2" ]
+  Thing digital Logo2_Q1    [ block="Q1" ]
+  Thing digital Logo2_Q2    [ block="Q2" ]
+  Thing analog Logo2_VW100  [ block="VW100", threshold=1 ]
 }
 ```
 
