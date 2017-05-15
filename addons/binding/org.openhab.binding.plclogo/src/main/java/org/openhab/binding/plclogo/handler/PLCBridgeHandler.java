@@ -75,7 +75,10 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
                 if (client != null) {
                     int result = client.ReadDBArea(1, LOGO_STATE.intValue(), data.length, S7Client.S7WLByte, data);
                     if (result == 0) {
-                        final Calendar calendar = PLCLogoDataType.getRtcAt(data, 1);
+                        Calendar calendar = PLCLogoDataType.getRtcAt(data, 1);
+                        if (LOGO_0BA7.equalsIgnoreCase(getLogoFamily())) {
+                            calendar = Calendar.getInstance();
+                        }
                         synchronized (rtc) {
                             rtc.setTimeZone(calendar.getTimeZone());
                             rtc.setTimeInMillis(calendar.getTimeInMillis());
@@ -304,8 +307,8 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
                 readerJob = scheduler.scheduleWithFixedDelay(dataReader, 100, interval, TimeUnit.MILLISECONDS);
             }
             if (rtcJob == null) {
-                logger.info("Creating new RTC job for {} with interval 1 s.", host);
-                rtcJob = scheduler.scheduleWithFixedDelay(rtcReader, 100, 1, TimeUnit.SECONDS);
+                logger.info("Creating new RTC job for {} with interval 500 ms.", host);
+                rtcJob = scheduler.scheduleWithFixedDelay(rtcReader, 100, 500, TimeUnit.MILLISECONDS);
             }
 
             PLCBridgeHandler.super.initialize();
