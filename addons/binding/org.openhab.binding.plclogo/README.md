@@ -141,6 +141,7 @@ Bridge plclogo:device:Logo [ address="192.168.0.1", family="0BA8", localTSAP="0x
   Thing digital Q2    [ block="Q2" ]
   Thing analog VW100  [ block="VW100", threshold=1, force=true ]
   Thing analog VW102  [ block="VW102", type="time" ]
+  Thing analog VW104  [ block="VW104", type="time" ]
 }
 ```
 
@@ -150,13 +151,16 @@ logo.items:
 // NI1 is mapped to VB0.0 address in LOGO!Soft Comfort 
 // NI2 is mapped to VB0.1 address in LOGO!Soft Comfort 
 
-Switch  LogoUp     {channel="plclogo:digital:VB0_0:state"}
-Switch  LogoDown   {channel="plclogo:digital:VB0_1:state"}
-Contact LogoIsUp   {channel="plclogo:digital:NI1:state"}
-Contact LogoIsDown {channel="plclogo:digital:NI2:state"}
-Switch  Output1    {channel="plclogo:digital:Q1:state"}
-Switch  Output2    {channel="plclogo:digital:Q2:state"}
-Number  Position   {channel="plclogo:analog:VW100:value"}
+Switch   LogoUp                              {channel="plclogo:digital:VB0_0:state"}
+Switch   LogoDown                            {channel="plclogo:digital:VB0_1:state"}
+Contact  LogoIsUp                            {channel="plclogo:digital:NI1:state"}
+Contact  LogoIsDown                          {channel="plclogo:digital:NI2:state"}
+Switch   Output1                             {channel="plclogo:digital:Q1:state"}
+Switch   Output2                             {channel="plclogo:digital:Q2:state"}
+Number   Position                            {channel="plclogo:analog:VW100:value"}
+DateTime Sunrise    "Sunrise [%1$tH:%1$tM]"  {channel="plclogo:analog:VW102:value"}
+DateTime Sunset     "Sunset [%1$tH:%1$tM]"   {channel="plclogo:analog:VW104:value"}
+DateTime RTC                                 {channel="plclogo:device:Logo:rtc}
 ```
 
 Configuration of two Siemens LOGO!
@@ -189,19 +193,21 @@ Bridge plclogo:device:Logo2 [ address="192.168.0.2", family="0BA8", localTSAP="0
 logo.items:
 
 ```
-Switch  Logo1_Up       {channel="plclogo:digital:Logo1_VB0_0:state"}
-Switch  Logo1_Down     {channel="plclogo:digital:Logo1_VB0_1:state"}
-Contact Logo1_IsUp     {channel="plclogo:digital:Logo1_NI1:state"}
-Contact Logo1_IsDown   {channel="plclogo:digital:Logo1_NI2:state"}
-Switch  Logo1_Output1  {channel="plclogo:digital:Logo1_Q1:state"}
-Switch  Logo1_Output2  {channel="plclogo:digital:Logo1_Q2:state"}
-Number  Logo1_Position {channel="plclogo:analog:Logo1_VW100:value"}
+Switch   Logo1_Up       {channel="plclogo:digital:Logo1_VB0_0:state"}
+Switch   Logo1_Down     {channel="plclogo:digital:Logo1_VB0_1:state"}
+Contact  Logo1_IsUp     {channel="plclogo:digital:Logo1_NI1:state"}
+Contact  Logo1_IsDown   {channel="plclogo:digital:Logo1_NI2:state"}
+Switch   Logo1_Output1  {channel="plclogo:digital:Logo1_Q1:state"}
+Switch   Logo1_Output2  {channel="plclogo:digital:Logo1_Q2:state"}
+Number   Logo1_Position {channel="plclogo:analog:Logo1_VW100:value"}
+DateTime Logo1_RTC      {channel="plclogo:device:Logo1:rtc}
 
-Switch  Logo2_Up       {channel="plclogo:digital:Logo2_VB0_0:state"}
-Switch  Logo2_Down     {channel="plclogo:digital:Logo2_VB0_1:state"}
-Contact Logo2_IsUp     {channel="plclogo:digital:Logo2_NI1:state"}
-Contact Logo2_IsDown   {channel="plclogo:digital:Logo2_NI2:state"}
-Switch  Logo2_Output1  {channel="plclogo:digital:Logo2_Q1:state"}
-Switch  Logo2_Output2  {channel="plclogo:digital:Logo2_Q2:state"}
-Number  Logo2_Position {channel="plclogo:analog:Logo2_VW100:value"}
+Switch   Logo2_Up       {channel="plclogo:digital:Logo2_VB0_0:state"}
+Switch   Logo2_Down     {channel="plclogo:digital:Logo2_VB0_1:state"}
+Contact  Logo2_IsUp     {channel="plclogo:digital:Logo2_NI1:state"}
+Contact  Logo2_IsDown   {channel="plclogo:digital:Logo2_NI2:state"}
+Switch   Logo2_Output1  {channel="plclogo:digital:Logo2_Q1:state"}
+Switch   Logo2_Output2  {channel="plclogo:digital:Logo2_Q2:state"}
+Number   Logo2_Position {channel="plclogo:analog:Logo2_VW100:value"}
+DateTime Logo2_RTC      {channel="plclogo:device:Logo2:rtc}
 ```
