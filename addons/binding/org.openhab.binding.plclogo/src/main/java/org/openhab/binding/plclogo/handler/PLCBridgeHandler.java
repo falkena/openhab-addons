@@ -177,7 +177,10 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
                 byte[] buffer = { 0, 0, 0, 0, 0, 0, 0 };
                 int result = client.ReadDBArea(1, LOGO_STATE.intValue(), buffer.length, S7Client.S7WLByte, buffer);
                 if (result == 0) {
-                    final Calendar calendar = PLCLogoDataType.getRtcAt(buffer, 1);
+                    Calendar calendar = PLCLogoDataType.getRtcAt(buffer, 1);
+                    if (LOGO_0BA7.equalsIgnoreCase(getLogoFamily())) {
+                        calendar = Calendar.getInstance();
+                    }
                     synchronized (rtc) {
                         rtc.setTimeZone(calendar.getTimeZone());
                         rtc.setTimeInMillis(calendar.getTimeInMillis());
