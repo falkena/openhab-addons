@@ -139,9 +139,9 @@ Bridge plclogo:device:Logo [ address="192.168.0.1", family="0BA8", localTSAP="0x
   Thing digital NI2   [ block="NI2" ]
   Thing digital Q1    [ block="Q1" ]
   Thing digital Q2    [ block="Q2" ]
-  Thing analog VW100  [ block="VW100", threshold=1, force=true ]
-  Thing analog VW102  [ block="VW102", type="time" ]
-  Thing analog VW104  [ block="VW104", type="time" ]
+  Thing analog  VW100  [ block="VW100", threshold=1, force=true ]
+  Thing analog  VW102  [ block="VW102", type="time" ]
+  Thing analog  VW104  [ block="VW104", type="time" ]
 }
 ```
 
