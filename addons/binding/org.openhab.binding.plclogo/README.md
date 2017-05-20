@@ -1,7 +1,7 @@
 # PLCLogo Binding
 
 This binding provides native support of Siemens LOGO! PLC devices. Communication with Logo is done via Moka7 library.
-Currently only two devices are supported: 0BA7 (LOGO! 7) and 0BA8 (LOGO! 8). Additionally multiple devices are supported.
+Currently only two devices are supported: `0BA7` (LOGO! 7) and `0BA8` (LOGO! 8). Additionally multiple devices are supported.
 Different families of LOGO! devices should work also, but was not tested now due to lack of hardware.
 Binding works nicely at least 100ms polling rate, if network connection is stable.
 
@@ -102,7 +102,10 @@ Each device have currently one channel `rtc`:
 channel="plclogo:device:<DeviceId>:rtc"
 ```
 
-This channel supports `DateTime` items only.
+This channel supports `DateTime` items only. Since Siemens `0BA7` (LOGO! 7) devices will not transfer
+any useful data for this channel, local time of openHAB host will be used. Rather for Siemens `0BA8`
+(LOGO! 8) devices, the data will be read from PLC. Since the smallest resolution provided by LOGO! is
+one second, `rtc` channel will be tried to update with the same rate.
 
 ### Digital
 Each digital thing have currently one channel `state`:
