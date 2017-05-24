@@ -219,7 +219,7 @@ DateTime Logo2_RTC      {channel="plclogo:device:Logo2:rtc}
 
 ## Troubleshooting
 
-**Bridge (Reader) was created but no communication with LOGO! possible**
+**Log shows Reader was created but no communication with LOGO! possible**
 
 Check TSAP values: localTSAP and remoteTSAP should not be the same, you have to choose different addresses.
 
