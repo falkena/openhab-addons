@@ -119,7 +119,7 @@ public class Util {
      * @return the requested argument object
      * @throws ChannelConfigException if not found
      */
-    private static SCPDArgumentType getArgument(SCPDActionType scpdAction, String argumentName, SCPDDirection direction)
+    public static SCPDArgumentType getArgument(SCPDActionType scpdAction, String argumentName, SCPDDirection direction)
             throws ChannelConfigException {
         return scpdAction.getArgumentList().stream()
                 .filter(argument -> argument.getName().equals(argumentName) && argument.getDirection() == direction)
@@ -137,7 +137,7 @@ public class Util {
      * @return the related state variable object for this argument
      * @throws ChannelConfigException if not found
      */
-    private static SCPDStateVariableType getStateVariable(SCPDScpdType serviceRoot, SCPDArgumentType scpdArgument)
+    public static SCPDStateVariableType getStateVariable(SCPDScpdType serviceRoot, SCPDArgumentType scpdArgument)
             throws ChannelConfigException {
         return serviceRoot.getServiceStateTable().stream()
                 .filter(stateVariable -> stateVariable.getName().equals(scpdArgument.getRelatedStateVariable()))
@@ -154,7 +154,7 @@ public class Util {
      * @return the requested action object
      * @throws ChannelConfigException if not found
      */
-    private static SCPDActionType getAction(SCPDScpdType serviceRoot, String actionName, String actionType)
+    public static SCPDActionType getAction(SCPDScpdType serviceRoot, String actionName, String actionType)
             throws ChannelConfigException {
         return serviceRoot.getActionList().stream().filter(action -> actionName.equals(action.getName())).findFirst()
                 .orElseThrow(() -> new ChannelConfigException(actionType + " '" + actionName + "' not found"));
