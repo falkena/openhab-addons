@@ -128,7 +128,8 @@ public class SystemInfoHandler extends BaseBridgeHandler {
                         }
                         case CHANNEL_BATTERY_REMAINING_CAPACITY: {
                             BigDecimal state = systeminfo.getBatteryRemainingCapacity(deviceIndex);
-                            updateState(channelUID, new QuantityType<>(state, Units.PERCENT));
+                            updateState(channelUID,
+                                    state != null ? new QuantityType<>(state, Units.PERCENT) : UnDefType.UNDEF);
                             break;
                         }
                         case CHANNEL_BATTERY_REMAINING_TIME: {
@@ -448,10 +449,7 @@ public class SystemInfoHandler extends BaseBridgeHandler {
             if (highPriorityTasks == null) {
                 logger.debug("Schedule high priority tasks at fixed rate {} s.", refreshIntervalHighPriority);
                 highPriorityTasks = scheduler.scheduleWithFixedDelay(() -> {
-                    Set<ChannelUID> group = null;
-                    synchronized (channelGroups) {
-                        group = channelGroups.get(HIGH_PRIOIRITY);
-                    }
+                    Set<ChannelUID> group = getHighPriorityChannels();
                     for (ChannelUID channel : group != null ? group : Collections.<ChannelUID> emptySet()) {
                         handleCommand(channel, RefreshType.REFRESH);
                     }
@@ -461,10 +459,7 @@ public class SystemInfoHandler extends BaseBridgeHandler {
             if (mediumPriorityTasks == null) {
                 logger.debug("Schedule medium priority tasks at fixed rate {} s.", refreshIntervalMediumPriority);
                 mediumPriorityTasks = scheduler.scheduleWithFixedDelay(() -> {
-                    Set<ChannelUID> group = null;
-                    synchronized (channelGroups) {
-                        group = channelGroups.get(MEDIUM_PRIOIRITY);
-                    }
+                    Set<ChannelUID> group = getMediumPriorityChannels();
                     for (ChannelUID channel : group != null ? group : Collections.<ChannelUID> emptySet()) {
                         handleCommand(channel, RefreshType.REFRESH);
                     }
@@ -528,15 +523,21 @@ public class SystemInfoHandler extends BaseBridgeHandler {
     }
 
     public @Nullable Set<ChannelUID> getHighPriorityChannels() {
-        return channelGroups.get(HIGH_PRIOIRITY);
+        synchronized (channelGroups) {
+            return channelGroups.get(HIGH_PRIOIRITY);
+        }
     }
 
     public @Nullable Set<ChannelUID> getMediumPriorityChannels() {
-        return channelGroups.get(MEDIUM_PRIOIRITY);
+        synchronized (channelGroups) {
+            return channelGroups.get(MEDIUM_PRIOIRITY);
+        }
     }
 
     public @Nullable Set<ChannelUID> getLowPriorityChannels() {
-        return channelGroups.get(LOW_PRIOIRITY);
+        synchronized (channelGroups) {
+            return channelGroups.get(LOW_PRIOIRITY);
+        }
     }
 
     @Override
