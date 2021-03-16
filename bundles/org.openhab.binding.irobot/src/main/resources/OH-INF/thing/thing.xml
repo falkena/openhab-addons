@@ -16,7 +16,7 @@
 			<channel-group id="mission" typeId="mission"/>
 			<channel-group id="network" typeId="network"/>
 			<channel-group id="position" typeId="position"/>
-			<channel-group id="statistics" typeId="statistics"/>
+			<channel-group id="common" typeId="common"/>
 		</channel-groups>
 
 		<representation-property>mac</representation-property>

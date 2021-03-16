@@ -77,8 +77,7 @@ public abstract class RoombaConnectionHandler implements MqttConnectionObserver,
         connection.setCredentials(blid, password);
         connection.setTrustManagers(TRUST_MANAGERS);
 
-        // 1 here actually corresponds to MQTT qos 0 (AT_MOST_ONCE). Only this value is accepted
-        // by Roomba, others just cause it to reject the command and drop the connection.
+        // Roomba accepts MQTT qos 0 (AT_MOST_ONCE) only. Shall be 0 for openhab 3.1 M3
         connection.setQos(1);
         // MQTT connection reconnects itself, so we don't have to reconnect, when it breaks
         connection.setReconnectStrategy(new PeriodicReconnectStrategy(RECONNECT_DELAY, RECONNECT_DELAY));
@@ -168,8 +167,7 @@ public abstract class RoombaConnectionHandler implements MqttConnectionObserver,
             if (logger.isTraceEnabled()) {
                 logger.trace("Sending {}: {}", request.getTopic(), request.getPayload());
             }
-            // 1 here actually corresponds to MQTT qos 0 (AT_MOST_ONCE). Only this value is accepted
-            // by Roomba, others just cause it to reject the command and drop the connection.
+            // Roomba accepts MQTT qos 0 (AT_MOST_ONCE) only. Shall be 0 for openhab 3.1 M3
             connection.publish(request.getTopic(), request.getPayload(), 1, false);
         }
     }

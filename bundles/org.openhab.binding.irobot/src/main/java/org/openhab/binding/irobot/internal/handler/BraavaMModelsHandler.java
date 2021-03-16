@@ -23,7 +23,6 @@ import com.google.gson.*;
 @NonNullByDefault
 public class BraavaMModelsHandler extends RoombaCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(BraavaMModelsHandler.class);
-    private final JsonParser jsonParser = new JsonParser();
 
     public BraavaMModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider,
             LocaleProvider localeProvider) {

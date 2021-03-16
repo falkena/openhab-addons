@@ -145,7 +145,6 @@ public class IRobotMap extends BufferedImage {
             point.setFrame(p.getX() - 1, p.getY() - 1, 3, 3);
             graphics.fill(offset.createTransformedShape(point));
         }
-        graphics.dispose();
 
         for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight() / 2; y++) {
@@ -154,5 +153,7 @@ public class IRobotMap extends BufferedImage {
                 setRGB(x, getHeight() - y - 1, temporary);
             }
         }
+
+        graphics.dispose();
     }
 }

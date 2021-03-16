@@ -9,7 +9,6 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
@@ -49,7 +48,6 @@ import com.google.gson.*;
 @NonNullByDefault
 public class Roomba9ModelsHandler extends RoombaCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(Roomba9ModelsHandler.class);
-    private final JsonParser jsonParser = new JsonParser();
 
     public Roomba9ModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider,
             LocaleProvider localeProvider) {
@@ -159,7 +157,7 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
                 final ChannelGroupUID groupUID = new ChannelGroupUID(channelUID.getThingUID(), INTERNAL_GROUP_ID);
                 final State lastCommand = getCacheEntry(new ChannelUID(groupUID, CHANNEL_INTERNAL_LAST_COMMAND));
                 if (lastCommand != null) {
-                    final JsonElement tree = jsonParser.parse(lastCommand.toString());
+                    final JsonElement tree = JsonParser.parseString(lastCommand.toString());
                     isPaused = JSONUtils.getAsBoolean("command", tree);
                 }
 
@@ -177,14 +175,15 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
     }
 
     @Override
-    public void receive(final String topic, final String json) {
+    public void receive(final String topic, final JsonElement tree) {
         final ThingUID thingUID = thing.getUID();
-        final JsonElement tree = jsonParser.parse(new StringReader(json));
 
-        // Skip desired messages, since AWS-related stuff
-        if (JSONUtils.getAsJSONString("desired", tree) != null) {
-            return;
-        }
+        // @formatter:off
+        // "audio":{
+        //   "active":true
+        // }
+        // @formatter:on
+        // can be ignored: Robot feedback, if playing a sound
 
         State cache = getCacheEntry(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_PHASE));
         StringType phase = (cache != null) ? cache.as(StringType.class) : null;
@@ -290,7 +289,9 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
             if (COMMAND_RESUME.equals(command) || COMMAND_START.equals(command)) {
                 command = COMMAND_CLEAN;
             }
-            updateState(new ChannelUID(thingUID, CONTROL_GROUP_ID, CHANNEL_CONTROL_COMMAND), command);
+            if (!COMMAND_FIND.equals(command)) {
+                updateState(new ChannelUID(thingUID, CONTROL_GROUP_ID, CHANNEL_CONTROL_COMMAND), command);
+            }
         }
 
         updateProperty(Thing.PROPERTY_FIRMWARE_VERSION, JSONUtils.getAsString("softwareVer", tree));
@@ -300,7 +301,7 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
         updateProperty("bootloaderVer", JSONUtils.getAsString("bootloaderVer", tree));
         updateProperty("umiVer", JSONUtils.getAsString("umiVer", tree));
 
-        super.receive(topic, json);
+        super.receive(topic, tree);
     }
 
     private void reportPowerBoost(final JsonElement tree) {

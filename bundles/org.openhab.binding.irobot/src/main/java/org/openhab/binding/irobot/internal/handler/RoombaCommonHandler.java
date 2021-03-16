@@ -14,6 +14,7 @@ package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
+import static org.openhab.core.library.unit.ImperialUnits.FOOT;
 import static org.openhab.core.thing.ThingStatus.*;
 
 import java.io.IOException;
@@ -23,11 +24,10 @@ import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
+
+import javax.measure.quantity.Area;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -41,6 +41,7 @@ import org.openhab.core.config.core.Configuration;
 import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.*;
+import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.types.Command;
@@ -67,7 +68,6 @@ public class RoombaCommonHandler extends BaseThingHandler {
     private IRobotChannelContentProvider channelContentProvider;
     private LocaleProvider localeProvider;
 
-    private AtomicReference<IRobotConfiguration> config = new AtomicReference<>();
     private ConcurrentHashMap<ChannelUID, State> lastState = new ConcurrentHashMap<>();
 
     private @Nullable Future<?> credentialRequester;
@@ -76,7 +76,13 @@ public class RoombaCommonHandler extends BaseThingHandler {
     protected RoombaConnectionHandler connection = new RoombaConnectionHandler() {
         @Override
         public void receive(final String topic, final String json) {
-            RoombaCommonHandler.this.receive(topic, json);
+            final JsonElement tree = JsonParser.parseString(json);
+
+            // Skip desired messages, since AWS-related stuff
+            if (JSONUtils.getAsJSONString("desired", tree) == null) {
+                updateState(new ChannelUID(thing.getUID(), STATE_GROUP_ID, CHANNEL_JSON), json);
+                RoombaCommonHandler.this.receive(topic, tree);
+            }
         }
 
         @Override
@@ -99,20 +105,20 @@ public class RoombaCommonHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        config.set(getConfigAs(IRobotConfiguration.class));
+        IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
         for (Channel channel : thing.getChannels()) {
             lastState.put(channel.getUID(), UnDefType.UNDEF);
         }
 
         try {
-            InetAddress.getByName(config.get().getAddress());
+            InetAddress.getByName(config.getAddress());
         } catch (UnknownHostException exception) {
             final String message = "Error connecting to host " + exception.toString();
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, message);
             return;
         }
 
-        if (UNKNOWN.equals(config.get().getPassword()) || UNKNOWN.equals(config.get().getBlid())) {
+        if (UNKNOWN.equals(config.getPassword()) || UNKNOWN.equals(config.getBlid())) {
             final String message = "Robot authentication is required";
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, message);
             scheduler.execute(this::getCredentials);
@@ -123,8 +129,9 @@ public class RoombaCommonHandler extends BaseThingHandler {
 
     @Override
     public void dispose() {
-        if (credentialRequester != null) {
-            credentialRequester.cancel(false);
+        Future<?> requester = credentialRequester;
+        if (requester != null) {
+            requester.cancel(false);
             credentialRequester = null;
         }
 
@@ -142,13 +149,13 @@ public class RoombaCommonHandler extends BaseThingHandler {
         } else if (command instanceof OnOffType) {
             final JsonObject request = new JsonObject();
             final String channelId = channelUID.getIdWithoutGroup();
-            if (CHANNEL_CONTROL_AUDIO.equals(channelId)) {
-                request.addProperty("audio", command.equals(OnOffType.ON));
-                connection.send(new Requests.DeltaRequest(request));
-            } else if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
+            if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
                 // Binding operate with inverse of "binPause"
                 request.addProperty("binPause", command.equals(OnOffType.OFF));
                 connection.send(new Requests.DeltaRequest(request));
+            } else if (CHANNEL_CONTROL_FIND.equals(channelId)) {
+                connection.send(new Requests.CommandRequest(new JsonPrimitive(COMMAND_FIND)));
+                scheduler.schedule(() -> updateState(channelUID, OnOffType.OFF), 10, TimeUnit.SECONDS);
             } else if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
                 request.addProperty("mapUploadAllowed", command.equals(OnOffType.ON));
                 connection.send(new Requests.DeltaRequest(request));
@@ -161,8 +168,14 @@ public class RoombaCommonHandler extends BaseThingHandler {
                 request.addProperty("twoPasses", command.equals(PASSES_2));
                 connection.send(new Requests.DeltaRequest(request));
             } else if (CHANNEL_CONTROL_LANGUAGE.equals(channelId)) {
-                request.addProperty("language", command.toString());
-                connection.send(new Requests.DeltaRequest(request));
+                try {
+                    request.addProperty("language", Integer.parseInt(command.toString()));
+                    connection.send(new Requests.DeltaRequest(request));
+                } catch (NumberFormatException exception) {
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Got invalid command {}", command.toString());
+                    }
+                }
             }
         }
     }
@@ -195,12 +208,6 @@ public class RoombaCommonHandler extends BaseThingHandler {
     protected void updateState(ChannelUID channelUID, State state) {
         lastState.put(channelUID, state);
         super.updateState(channelUID, state);
-    }
-
-    @Override
-    protected void updateConfiguration(Configuration configuration) {
-        super.updateConfiguration(configuration);
-        config.set(getConfigAs(IRobotConfiguration.class));
     }
 
     @Override
@@ -269,11 +276,12 @@ public class RoombaCommonHandler extends BaseThingHandler {
     // In order not to mess up our connection state we need to make sure that connect()
     // and disconnect() are never running concurrently, so they are synchronized
     private synchronized void connect() {
-        final String address = config.get().getAddress();
+        IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
+        final String address = config.getAddress();
         logger.debug("Connecting to {}", address);
 
-        String blid = config.get().getBlid();
-        String password = config.get().getPassword();
+        final String blid = config.getBlid();
+        final String password = config.getPassword();
         if (UNKNOWN.equals(blid) || UNKNOWN.equals(password)) {
             final String message = "Robot authentication is required";
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, message);
@@ -285,15 +293,8 @@ public class RoombaCommonHandler extends BaseThingHandler {
         }
     }
 
-    public void receive(final String topic, final String json) {
+    public void receive(final String topic, final JsonElement tree) {
         final ThingUID thingUID = thing.getUID();
-        updateState(new ChannelUID(thingUID, STATE_GROUP_ID, CHANNEL_JSON), json);
-
-        final JsonParser jsonParser = new JsonParser();
-        final JsonElement tree = jsonParser.parse(json);
-
-        final Boolean audio = JSONUtils.getAsBoolean("audio", tree);
-        updateState(new ChannelUID(thingUID, CONTROL_GROUP_ID, CHANNEL_CONTROL_AUDIO), audio);
 
         final Boolean binPause = JSONUtils.getAsBoolean("binPause", tree);
         final Boolean continueVacuum = (binPause != null) ? !binPause : null;
@@ -305,16 +306,19 @@ public class RoombaCommonHandler extends BaseThingHandler {
         final BigDecimal charge = JSONUtils.getAsDecimal("batPct", tree);
         updateState(new ChannelUID(thingUID, STATE_GROUP_ID, CHANNEL_STATE_CHARGE), charge);
 
-        final String type = JSONUtils.getAsString("batteryType", tree);
-        updateState(new ChannelUID(thingUID, STATE_GROUP_ID, CHANNEL_STATE_TYPE), type);
+        final JsonElement dock = JSONUtils.find("dock", tree);
+        if (dock != null) {
+            final Boolean known = JSONUtils.getAsBoolean("known", dock);
+            updateState(new ChannelUID(thingUID, STATE_GROUP_ID, CHANNEL_STATE_DOCK), known);
+        }
 
         reportBinState(tree);
         reportCleanPasses(tree);
         reportLanguage(tree);
+        reportCommonState(tree);
         reportMissionState(tree);
         reportNetworkState(tree);
         reportPositionState(tree);
-        reportStatisticsState(tree);
     }
 
     private void reportBinState(final JsonElement tree) {
@@ -381,6 +385,45 @@ public class RoombaCommonHandler extends BaseThingHandler {
         }
     }
 
+    private void reportCommonState(final JsonElement tree) {
+        final ThingUID thingUID = thing.getUID();
+        final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+
+        final String name = JSONUtils.getAsString("name", tree);
+        updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_NAME), name);
+
+        final String batteryType = JSONUtils.getAsString("batteryType", tree);
+        updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_BATTERY_TYPE), batteryType);
+
+        final JsonElement run = JSONUtils.find("bbrun", tree);
+        if (run != null) {
+            final BigDecimal hrs = JSONUtils.getAsDecimal("hr", run);
+            final BigDecimal min = JSONUtils.getAsDecimal("min", run);
+            if ((hrs != null) && (min != null)) {
+                State state = new QuantityType<>(60 * hrs.longValue() + min.longValue(), Units.MINUTE);
+                updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_DURATION), state);
+            }
+
+            final BigDecimal area = JSONUtils.getAsDecimal("sqft", run);
+            if (area != null) {
+                State state = new QuantityType<>(area, FOOT.multiply(FOOT).asType(Area.class));
+                updateState(new ChannelUID(commonGroupUID, CHANNEL_AREA), state);
+            }
+
+            final BigDecimal scrubs = JSONUtils.getAsDecimal("nScrubs", run);
+            updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_SCRUBS), scrubs);
+        }
+
+        // @formatter:off
+        // "bbmssn": { "aCycleM": 0, "nMssnF": 0, "nMssnC": 0, "nMssnOk": 0, "aMssnM": 0, "nMssn": 0 }
+        // @formatter:on
+        final JsonElement mission = JSONUtils.find("bbmssn", tree);
+        if (mission != null) {
+            final BigDecimal mCount = JSONUtils.getAsDecimal("nMssn", mission);
+            updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_MISSION_COUNT), mCount);
+        }
+    }
+
     private void reportMissionState(final JsonElement tree) {
         // @formatter:off
         // "cleanMissionStatus": {
@@ -404,6 +447,18 @@ public class RoombaCommonHandler extends BaseThingHandler {
 
             final BigDecimal missions = JSONUtils.getAsDecimal("nMssn", status);
             updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_NUMBER), missions);
+
+            final BigDecimal area = JSONUtils.getAsDecimal("sqft", status);
+            if (area != null) {
+                State state = new QuantityType<>(area, FOOT.multiply(FOOT).asType(Area.class));
+                updateState(new ChannelUID(missionGroupUID, CHANNEL_AREA), state);
+            }
+
+            final BigDecimal duration = JSONUtils.getAsDecimal("mssnM", status);
+            if (duration != null) {
+                State state = new QuantityType<>(duration, Units.MINUTE);
+                updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_DURATION), state);
+            }
         }
     }
 
@@ -459,36 +514,6 @@ public class RoombaCommonHandler extends BaseThingHandler {
 
             final BigDecimal theta = JSONUtils.getAsDecimal("theta", position);
             updateState(new ChannelUID(positionGroupUID, CHANNEL_POSITION_THETA), theta);
-        }
-    }
-
-    private void reportStatisticsState(final JsonElement tree) {
-        final JsonElement run = JSONUtils.find("bbrun", tree);
-        if (run != null) {
-            final ThingUID thingUID = thing.getUID();
-            final ChannelGroupUID statisticsGroupUID = new ChannelGroupUID(thingUID, STATISTICS_GROUP_ID);
-
-            final BigDecimal hrs = JSONUtils.getAsDecimal("hr", run);
-            final BigDecimal min = JSONUtils.getAsDecimal("min", run);
-            if ((hrs != null) && (min != null)) {
-                Locale locale = localeProvider.getLocale();
-                final String hString = ChronoField.HOUR_OF_DAY.getDisplayName(locale);
-                final String mString = ChronoField.MINUTE_OF_HOUR.getDisplayName(locale);
-                String duration = String.format("%d %s %d %s", hrs.intValue(), hString, min.intValue(), mString);
-                updateState(new ChannelUID(statisticsGroupUID, CHANNEL_STATISTICS_DURATION), duration);
-            }
-        }
-
-        // @formatter:off
-        // "bbmssn": { "aCycleM": 0, "nMssnF": 0, "nMssnC": 0, "nMssnOk": 0, "aMssnM": 0, "nMssn": 0 }
-        // @formatter:on
-        final JsonElement mission = JSONUtils.find("bbmssn", tree);
-        if (mission != null) {
-            final ThingUID thingUID = thing.getUID();
-            final ChannelGroupUID statisticsGroupUID = new ChannelGroupUID(thingUID, STATISTICS_GROUP_ID);
-
-            final BigDecimal mCount = JSONUtils.getAsDecimal("nMssn", mission);
-            updateState(new ChannelUID(statisticsGroupUID, CHANNEL_STATISTICS_MISSION_COUNT), mCount);
         }
     }
 }

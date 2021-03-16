@@ -60,8 +60,7 @@ public class LoginRequester {
             socket.close();
         }
 
-        final JsonParser jsonParser = new JsonParser();
-        final JsonElement tree = jsonParser.parse(new String(reply, 0, reply.length, StandardCharsets.UTF_8));
+        final JsonElement tree = JsonParser.parseString(new String(reply, 0, reply.length, StandardCharsets.UTF_8));
 
         String blid = JSONUtils.getAsString("robotid", tree);
         final String hostname = JSONUtils.getAsString("hostname", tree);

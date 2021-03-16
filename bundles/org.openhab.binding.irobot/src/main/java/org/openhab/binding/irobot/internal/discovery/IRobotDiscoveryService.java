@@ -110,9 +110,8 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
                 }
             }
 
-            final JsonParser jsonParser = new JsonParser();
             for (final String json : robots) {
-                final JsonElement tree = jsonParser.parse(json);
+                final JsonElement tree = JsonParser.parseString(json);
 
                 // Only firmware version 2 and above are supported via MQTT, therefore check it
                 final BigDecimal version = JSONUtils.getAsDecimal("ver", tree);

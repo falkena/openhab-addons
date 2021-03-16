@@ -68,7 +68,18 @@ public class IRobotBindingConstants {
     }
 
     // Common channel IDs
+    public static final String CHANNEL_AREA = "area";
     public static final String CHANNEL_JSON = "json";
+
+    /**
+     * Common robot information group ID and channels within
+     */
+    public static final String COMMON_GROUP_ID = "common";
+    public static final String CHANNEL_COMMON_BATTERY_TYPE = "battery_type";
+    public static final String CHANNEL_COMMON_DURATION = "duration";
+    public static final String CHANNEL_COMMON_MISSION_COUNT = "mission_count";
+    public static final String CHANNEL_COMMON_NAME = "name";
+    public static final String CHANNEL_COMMON_SCRUBS = "scrubs";
 
     /**
      * Network group ID and channels within
@@ -101,8 +112,8 @@ public class IRobotBindingConstants {
      */
     public static final String STATE_GROUP_ID = "state";
     public static final String CHANNEL_STATE_BIN = "bin";
+    public static final String CHANNEL_STATE_DOCK = "dock";
     public static final String CHANNEL_STATE_CHARGE = "charge";
-    public static final String CHANNEL_STATE_TYPE = "type";
     public static final String STATE_BIN_OK = "ok";
     public static final String STATE_BIN_FULL = "full";
     public static final String STATE_BIN_REMOVED = "removed";
@@ -137,7 +148,7 @@ public class IRobotBindingConstants {
     public static final String PASSES_1 = "1";
     public static final String PASSES_2 = "2";
 
-    public static final String CHANNEL_CONTROL_AUDIO = "audio";
+    public static final String CHANNEL_CONTROL_FIND = "find";
     public static final String CHANNEL_CONTROL_LANGUAGE = "language";
     public static final String CHANNEL_CONTROL_MAP_LEARN = "learn_map";
     public static final String CHANNEL_CONTROL_MAP_UPLOAD = "upload_map";
@@ -146,6 +157,7 @@ public class IRobotBindingConstants {
     public static final String COMMAND_CLEAN = "clean";
     public static final String COMMAND_CLEAN_REGIONS = "cleanRegions";
     public static final String COMMAND_DOCK = "dock";
+    public static final String COMMAND_FIND = CHANNEL_CONTROL_FIND;
     public static final String COMMAND_SPOT = "spot";
     public static final String COMMAND_PAUSE = "pause";
     public static final String COMMAND_RESUME = "resume";
@@ -158,17 +170,11 @@ public class IRobotBindingConstants {
      */
     public static final String MISSION_GROUP_ID = "mission";
     public static final String CHANNEL_MISSION_CYCLE = "cycle";
+    public static final String CHANNEL_MISSION_DURATION = "duration";
     public static final String CHANNEL_MISSION_ERROR = "error";
     public static final String CHANNEL_MISSION_MAP = "map";
     public static final String CHANNEL_MISSION_NUMBER = "number";
     public static final String CHANNEL_MISSION_PHASE = "phase";
-
-    /**
-     * Lifetime statistics group ID and channels within
-     */
-    public static final String STATISTICS_GROUP_ID = "statistics";
-    public static final String CHANNEL_STATISTICS_DURATION = "duration";
-    public static final String CHANNEL_STATISTICS_MISSION_COUNT = "mission_count";
 
     /**
      * Internal group IDs, there are no channels on GUI

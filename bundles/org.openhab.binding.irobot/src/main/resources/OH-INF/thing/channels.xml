@@ -4,10 +4,17 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<channel-type id="text" advanced="true">
-		<item-type>String</item-type>
+	<channel-type id="area">
+		<item-type>Number:Area</item-type>
+		<label>Area</label>
+		<description>Cleaned area</description>
+		<state readOnly="true" pattern="%.1f %unit%"></state>
+	</channel-type>
+
+	<channel-type id="duration">
+		<item-type>Number:Time</item-type>
 		<label>General text</label>
-		<state readOnly="true"></state>
+		<state readOnly="true" pattern="%d %unit%"></state>
 	</channel-type>
 
 	<channel-type id="number" advanced="true">
@@ -15,6 +22,40 @@
 		<label>General text</label>
 		<state readOnly="true"></state>
 	</channel-type>
+
+	<channel-type id="text" advanced="true">
+		<item-type>String</item-type>
+		<label>General text</label>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-group-type id="common">
+		<label>Common information</label>
+		<description>Robot common information</description>
+		<channels>
+			<channel id="name" typeId="text">
+				<label>Name</label>
+				<description>Robot name</description>
+			</channel>
+			<channel id="area" typeId="area"/>
+			<channel id="duration" typeId="duration">
+				<label>Cleaning duration</label>
+				<description>Robot lifetime cleaning duration</description>
+			</channel>
+			<channel id="mission_count" typeId="number">
+				<label>Mission count</label>
+				<description>Robot lifetime mission count</description>
+			</channel>
+			<channel id="scrubs" typeId="number">
+				<label>Scrub count</label>
+				<description>Robot lifetime scrub count</description>
+			</channel>
+			<channel id="battery_type" typeId="text">
+				<label>Battery type</label>
+				<description>Battery type reported by Roomba</description>
+			</channel>
+		</channels>
+	</channel-group-type>
 
 	<channel-group-type id="network">
 		<label>Network</label>
@@ -190,11 +231,8 @@
 		<description>Robot state</description>
 		<channels>
 			<channel id="bin" typeId="bin"/>
+			<channel id="dock" typeId="dock"/>
 			<channel id="charge" typeId="system.battery-level"/>
-			<channel id="type" typeId="text">
-				<label>Battery type</label>
-				<description>Battery type reported by Roomba</description>
-			</channel>
 			<channel id="json" typeId="text">
 				<label>JSON message</label>
 				<description>JSON message replied by Roomba</description>
@@ -213,13 +251,19 @@
 			</options>
 		</state>
 	</channel-type>
+	<channel-type id="dock">
+		<item-type>Switch</item-type>
+		<label>Docking station</label>
+		<description>Docking station is visible</description>
+		<state readOnly="true"></state>
+	</channel-type>
 
 	<channel-group-type id="control">
 		<label>Control</label>
 		<description>Robot cleaning control</description>
 		<channels>
 			<channel id="command" typeId="command"/>
-			<channel id="audio" typeId="audio"/>
+			<channel id="find" typeId="find"/>
 			<channel id="always_finish" typeId="always_finish"/>
 			<channel id="language" typeId="language"/>
 			<channel id="clean_passes" typeId="clean_passes"/>
@@ -246,11 +290,6 @@
 			</options>
 		</state>
 	</channel-type>
-	<channel-type id="audio">
-		<item-type>Switch</item-type>
-		<label>Acoustic feedback</label>
-		<description>Give acoustic feedback on command/state change</description>
-	</channel-type>
 	<channel-type id="always_finish">
 		<item-type>Switch</item-type>
 		<label>Always finish</label>
@@ -260,6 +299,11 @@
 		<item-type>Switch</item-type>
 		<label>Edge clean</label>
 		<description>Seek out and clean along walls and furniture legs</description>
+	</channel-type>
+	<channel-type id="find">
+		<item-type>Switch</item-type>
+		<label>Find robot</label>
+		<description>Play acoustic signal</description>
 	</channel-type>
 	<channel-type id="learn_map">
 		<item-type>Switch</item-type>
@@ -310,9 +354,14 @@
 		<label>Mission</label>
 		<description>Robot cleaning control</description>
 		<channels>
+			<channel id="area" typeId="area"/>
+			<channel id="duration" typeId="duration">
+				<label>Duration</label>
+				<description>Mission duration</description>
+			</channel>
 			<channel id="number" typeId="number">
-				<label>Current</label>
-				<description>Current mission number</description>
+				<label>Number</label>
+				<description>Mission number</description>
 			</channel>
 			<channel id="map" typeId="map"/>
 			<channel id="error" typeId="error"/>
@@ -429,20 +478,5 @@
 			</options>
 		</state>
 	</channel-type>
-
-	<channel-group-type id="statistics">
-		<label>Lifetime statistics</label>
-		<description>Robot cleaning lifetime statistics</description>
-		<channels>
-			<channel id="duration" typeId="text">
-				<label>Cleaning duration</label>
-				<description>Robot lifetime cleaning duration</description>
-			</channel>
-			<channel id="mission_count" typeId="number">
-				<label>Mission count</label>
-				<description>Robot lifetime mission count</description>
-			</channel>
-		</channels>
-	</channel-group-type>
 
 </thing:thing-descriptions>
