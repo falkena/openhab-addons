@@ -38,7 +38,6 @@ import org.openhab.binding.irobot.internal.utils.JSONUtils;
 import org.openhab.binding.irobot.internal.utils.LoginRequester;
 import org.openhab.binding.irobot.internal.utils.Requests;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.*;
 import org.openhab.core.library.unit.Units;
@@ -66,7 +65,6 @@ public class RoombaCommonHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(RoombaCommonHandler.class);
 
     private IRobotChannelContentProvider channelContentProvider;
-    private LocaleProvider localeProvider;
 
     private ConcurrentHashMap<ChannelUID, State> lastState = new ConcurrentHashMap<>();
 
@@ -96,11 +94,9 @@ public class RoombaCommonHandler extends BaseThingHandler {
         }
     };
 
-    public RoombaCommonHandler(Thing thing, IRobotChannelContentProvider channelContentProvider,
-            LocaleProvider localeProvider) {
+    public RoombaCommonHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
         super(thing);
         this.channelContentProvider = channelContentProvider;
-        this.localeProvider = localeProvider;
     }
 
     @Override

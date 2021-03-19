@@ -12,12 +12,12 @@
  */
 package org.openhab.binding.irobot.internal.handler;
 
+import static java.nio.charset.StandardCharsets.*;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -71,14 +71,14 @@ public abstract class RoombaConnectionHandler implements MqttConnectionObserver,
         // BLID is used as both client ID and username. The name of BLID also came from Roomba980-python
         MqttBrokerConnection connection = new MqttBrokerConnection(ip, MQTT_PORT, true, blid);
 
-        // Disable sending UNSUBSCRIBE request before disconnecting becuase Roomba doesn't like it.
+        // Disable sending UNSUBSCRIBE request before disconnecting because Roomba doesn't like it.
         // It just swallows the request and never sends any response, so stop() method never completes.
         connection.setUnsubscribeOnStop(false);
         connection.setCredentials(blid, password);
         connection.setTrustManagers(TRUST_MANAGERS);
 
-        // Roomba accepts MQTT qos 0 (AT_MOST_ONCE) only. Shall be 0 for openhab 3.1 M3
-        connection.setQos(1);
+        // Roomba accepts MQTT qos 0 (AT_MOST_ONCE) only.
+        connection.setQos(0);
         // MQTT connection reconnects itself, so we don't have to reconnect, when it breaks
         connection.setReconnectStrategy(new PeriodicReconnectStrategy(RECONNECT_DELAY, RECONNECT_DELAY));
 
@@ -151,7 +151,7 @@ public abstract class RoombaConnectionHandler implements MqttConnectionObserver,
     @Override
     public void processMessage(String topic, byte[] payload) {
         // Report raw JSON reply
-        final String json = new String(payload, StandardCharsets.UTF_8);
+        final String json = new String(payload, UTF_8);
         if (logger.isTraceEnabled()) {
             logger.trace("Got topic {} data {}", topic, json);
         }
@@ -164,11 +164,11 @@ public abstract class RoombaConnectionHandler implements MqttConnectionObserver,
     public void send(Requests.Request request) {
         MqttBrokerConnection connection = this.connection;
         if (connection != null) {
+            final String payload = request.getPayload();
             if (logger.isTraceEnabled()) {
-                logger.trace("Sending {}: {}", request.getTopic(), request.getPayload());
+                logger.trace("Sending {}: {}", request.getTopic(), payload);
             }
-            // Roomba accepts MQTT qos 0 (AT_MOST_ONCE) only. Shall be 0 for openhab 3.1 M3
-            connection.publish(request.getTopic(), request.getPayload(), 1, false);
+            connection.publish(request.getTopic(), payload.getBytes(UTF_8), connection.getQos(), false);
         }
     }
 }

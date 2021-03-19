@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.irobot.internal.utils;
 
-import java.nio.charset.StandardCharsets;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -27,7 +25,7 @@ public class Requests {
     public interface Request {
         public String getTopic();
 
-        public byte[] getPayload();
+        public String getPayload();
     }
 
     /*
@@ -68,11 +66,11 @@ public class Requests {
         }
 
         @Override
-        public byte[] getPayload() {
+        public String getPayload() {
             payload.add("command", command);
             payload.addProperty("time", System.currentTimeMillis() / 1000);
             payload.addProperty("initiator", "openhab");
-            return payload.toString().getBytes(StandardCharsets.UTF_8);
+            return payload.toString();
         }
     }
 
@@ -90,9 +88,9 @@ public class Requests {
         }
 
         @Override
-        public byte[] getPayload() {
+        public String getPayload() {
             payload.add("state", element);
-            return payload.toString().getBytes(StandardCharsets.UTF_8);
+            return payload.toString();
         }
     }
 }

@@ -7,7 +7,6 @@ package org.openhab.binding.irobot.internal.handler;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
-import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.thing.Thing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +23,7 @@ import com.google.gson.*;
 public class BraavaMModelsHandler extends RoombaCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(BraavaMModelsHandler.class);
 
-    public BraavaMModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider,
-            LocaleProvider localeProvider) {
-        super(thing, channelContentProvider, localeProvider);
+    public BraavaMModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+        super(thing, channelContentProvider);
     }
 }

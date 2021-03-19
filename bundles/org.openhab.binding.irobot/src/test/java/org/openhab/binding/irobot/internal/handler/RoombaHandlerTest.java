@@ -25,7 +25,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -71,8 +70,7 @@ class RoombaHandlerTest {
         callback = Mockito.mock(ThingHandlerCallback.class);
 
         IRobotChannelContentProvider channelContentProviderMock = Mockito.mock(IRobotChannelContentProvider.class);
-        LocaleProvider localeProviderMock = Mockito.mock(LocaleProvider.class);
-        handler = new RoombaCommonHandler(myThing, channelContentProviderMock, localeProviderMock);
+        handler = new RoombaCommonHandler(myThing, channelContentProviderMock);
         handler.setCallback(callback);
     }
 

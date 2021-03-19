@@ -26,7 +26,6 @@ import org.openhab.binding.irobot.internal.handler.RoombaEModelsHandler;
 import org.openhab.binding.irobot.internal.handler.RoombaIModelsHandler;
 import org.openhab.binding.irobot.internal.handler.RoombaSModelsHandler;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
@@ -52,17 +51,14 @@ public class IRobotHandlerFactory extends BaseThingHandlerFactory {
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_ROOMBA);
 
     private IRobotChannelContentProvider channelContentProvider;
-    private LocaleProvider localeProvider;
 
     static {
         OpenCV.loadShared();
     }
 
     @Activate
-    public IRobotHandlerFactory(@Reference IRobotChannelContentProvider channelContentProvider,
-            @Reference LocaleProvider localeProvider) {
+    public IRobotHandlerFactory(@Reference IRobotChannelContentProvider channelContentProvider) {
         this.channelContentProvider = channelContentProvider;
-        this.localeProvider = localeProvider;
     }
 
     @Override
@@ -78,15 +74,15 @@ public class IRobotHandlerFactory extends BaseThingHandlerFactory {
             final Configuration config = thing.getConfiguration();
             final Models family = config.as(IRobotConfiguration.class).getFamily();
             if (family == Models.BRAAVA_M_SERIES) {
-                return new BraavaMModelsHandler(thing, channelContentProvider, localeProvider);
+                return new BraavaMModelsHandler(thing, channelContentProvider);
             } else if (family == Models.ROOMBA_9_SERIES) {
-                return new Roomba9ModelsHandler(thing, channelContentProvider, localeProvider);
+                return new Roomba9ModelsHandler(thing, channelContentProvider);
             } else if (family == Models.ROOMBA_E_SERIES) {
-                return new RoombaEModelsHandler(thing, channelContentProvider, localeProvider);
+                return new RoombaEModelsHandler(thing, channelContentProvider);
             } else if (family == Models.ROOMBA_I_SERIES) {
-                return new RoombaIModelsHandler(thing, channelContentProvider, localeProvider);
+                return new RoombaIModelsHandler(thing, channelContentProvider);
             } else if (family == Models.ROOMBA_S_SERIES) {
-                return new RoombaSModelsHandler(thing, channelContentProvider, localeProvider);
+                return new RoombaSModelsHandler(thing, channelContentProvider);
             }
         }
 

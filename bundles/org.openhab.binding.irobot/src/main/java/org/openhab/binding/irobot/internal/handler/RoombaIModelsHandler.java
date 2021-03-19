@@ -20,7 +20,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.utils.JSONUtils;
 import org.openhab.binding.irobot.internal.utils.Requests;
-import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.RawType;
@@ -50,9 +49,8 @@ import com.google.gson.*;
 public class RoombaIModelsHandler extends RoombaCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(RoombaIModelsHandler.class);
 
-    public RoombaIModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider,
-            LocaleProvider localeProvider) {
-        super(thing, channelContentProvider, localeProvider);
+    public RoombaIModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+        super(thing, channelContentProvider);
     }
 
     @Override
