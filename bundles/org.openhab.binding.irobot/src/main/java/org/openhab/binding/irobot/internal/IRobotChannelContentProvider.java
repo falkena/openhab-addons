@@ -7,10 +7,8 @@ package org.openhab.binding.irobot.internal;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.time.ZoneId;
+import java.util.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ChannelUID;
@@ -32,7 +30,7 @@ public class IRobotChannelContentProvider extends BaseDynamicStateDescriptionPro
     public IRobotChannelContentProvider() {
     }
 
-    public void setLanguages(ChannelUID channelUID, JsonElement options) {
+    public void setLanguages(final ChannelUID channelUID, JsonElement options) {
         final ThingUID thingUID = channelUID.getThingUID();
         if (BINDING_ID.equals(thingUID.getBindingId()) && options.isJsonArray()) {
             if (CHANNEL_CONTROL_LANGUAGE.equals(channelUID.getIdWithoutGroup())) {
@@ -50,6 +48,21 @@ public class IRobotChannelContentProvider extends BaseDynamicStateDescriptionPro
                         }
                     }
                 }
+                buffer.add(new StateOption(UNKNOWN, "Unknown"));
+                setStateOptions(channelUID, buffer);
+            }
+        }
+    }
+
+    public void setTimeZones(final ChannelUID channelUID) {
+        final ThingUID thingUID = channelUID.getThingUID();
+        if (BINDING_ID.equals(thingUID.getBindingId())) {
+            if (CHANNEL_COMMON_TIMEZONE.equals(channelUID.getIdWithoutGroup())) {
+                List<StateOption> buffer = new ArrayList<>();
+                for (final String zoneId : ZoneId.getAvailableZoneIds()) {
+                    buffer.add(new StateOption(zoneId.trim(), zoneId.trim()));
+                }
+                Collections.sort(buffer, Comparator.comparing(StateOption::getValue));
                 buffer.add(new StateOption(UNKNOWN, "Unknown"));
                 setStateOptions(channelUID, buffer);
             }

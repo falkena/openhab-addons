@@ -52,10 +52,16 @@
 			</channel>
 			<channel id="battery_type" typeId="text">
 				<label>Battery type</label>
-				<description>Battery type reported by Roomba</description>
+				<description>Robot battery type</description>
 			</channel>
+			<channel id="timezone" typeId="timezone"/>
 		</channels>
 	</channel-group-type>
+	<channel-type id="timezone" advanced="true">
+		<item-type>String</item-type>
+		<label>Time zone</label>
+		<description>Robot time zone</description>
+	</channel-type>
 
 	<channel-group-type id="network">
 		<label>Network</label>

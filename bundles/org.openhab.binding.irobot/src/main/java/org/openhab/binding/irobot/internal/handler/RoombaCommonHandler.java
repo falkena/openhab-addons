@@ -172,6 +172,9 @@ public class RoombaCommonHandler extends BaseThingHandler {
                         logger.trace("Got invalid command {}", command.toString());
                     }
                 }
+            } else if (CHANNEL_COMMON_TIMEZONE.equals(channelId)) {
+                request.addProperty("timezone", command.toString().trim());
+                connection.send(new Requests.DeltaRequest(request));
             }
         }
     }
@@ -190,7 +193,7 @@ public class RoombaCommonHandler extends BaseThingHandler {
 
     protected void updateState(ChannelUID channelUID, @Nullable String value) {
         if (value != null) {
-            updateState(channelUID, new StringType(value));
+            updateState(channelUID, new StringType(value.trim()));
         }
     }
 
@@ -418,6 +421,12 @@ public class RoombaCommonHandler extends BaseThingHandler {
             final BigDecimal mCount = JSONUtils.getAsDecimal("nMssn", mission);
             updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_MISSION_COUNT), mCount);
         }
+
+        final ChannelUID timeZoneChannelUID = new ChannelUID(commonGroupUID, CHANNEL_COMMON_TIMEZONE);
+        if (!channelContentProvider.isChannelPopulated(timeZoneChannelUID)) {
+            channelContentProvider.setTimeZones(timeZoneChannelUID);
+        }
+        updateState(timeZoneChannelUID, JSONUtils.getAsString("timezone", tree));
     }
 
     private void reportMissionState(final JsonElement tree) {
