@@ -163,19 +163,22 @@ public class RoombaIModelsHandler extends RoombaCommonHandler {
         final JsonElement status = JSONUtils.find("cleanMissionStatus", tree);
         if (status != null) {
             // I7: cycle = "clean", 980: cycle = "quick"
+            final String currentCycle = JSONUtils.getAsString("cycle", status);
             final String currentPhase = JSONUtils.getAsString("phase", status);
-            if ("run".equals(currentPhase) && ((phase == null) || !phase.equals(currentPhase))) {
-                lastCleanMap.clear();
-                updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), UnDefType.UNDEF);
-            } else if ("hmPostMsn".equals(currentPhase) || "hmUsrDock".equals(currentPhase)) {
-                lastCleanMap.generate();
-                try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-                    ImageIO.write(lastCleanMap, "png", stream);
-                    final RawType data = new RawType(stream.toByteArray(), "image/png");
-                    updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), data);
-                } catch (IOException exception) {
+            if (((phase == null) || !phase.equals(currentPhase)) && !"none".equals(currentCycle)) {
+                if ("run".equals(currentPhase)) {
+                    lastCleanMap.clear();
                     updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), UnDefType.UNDEF);
-                    logger.debug("Can not convert image: {}", exception.getMessage());
+                } else if ("hmPostMsn".equals(currentPhase) || "hmUsrDock".equals(currentPhase)) {
+                    lastCleanMap.generate();
+                    try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+                        ImageIO.write(lastCleanMap, "png", stream);
+                        final RawType data = new RawType(stream.toByteArray(), "image/png");
+                        updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), data);
+                    } catch (IOException exception) {
+                        updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), UnDefType.UNDEF);
+                        logger.debug("Can not convert image: {}", exception.getMessage());
+                    }
                 }
             }
             phase = new StringType(currentPhase);

@@ -146,14 +146,20 @@ public class IRobotMap extends BufferedImage {
             graphics.fill(offset.createTransformedShape(point));
         }
 
-        for (int x = 0; x < getWidth(); x++) {
+        graphics.dispose();
+        flush();
+
+        DataBuffer buffer = getRaster().getDataBuffer();
+        for (int bank = 0; bank < buffer.getNumBanks(); bank++) {
             for (int y = 0; y < getHeight() / 2; y++) {
-                int temporary = getRGB(x, y);
-                setRGB(x, y, getRGB(x, getHeight() - y - 1));
-                setRGB(x, getHeight() - y - 1, temporary);
+                int offset0 = y * getWidth();
+                int offset1 = (getHeight() - 1) * getWidth() - offset0;
+                for (int x = 0; x < getWidth(); x++) {
+                    int temp = buffer.getElem(bank, offset0 + x);
+                    buffer.setElem(bank, offset0 + x, buffer.getElem(bank, offset1 + x));
+                    buffer.setElem(bank, offset1 + x, temp);
+                }
             }
         }
-
-        graphics.dispose();
     }
 }
