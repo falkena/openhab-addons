@@ -7,14 +7,10 @@ package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Iterator;
-
-import javax.imageio.ImageIO;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
@@ -22,7 +18,6 @@ import org.openhab.binding.irobot.internal.utils.JSONUtils;
 import org.openhab.binding.irobot.internal.utils.Requests;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.library.types.RawType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelGroupUID;
 import org.openhab.core.thing.ChannelUID;
@@ -33,7 +28,6 @@ import org.openhab.core.thing.binding.builder.ThingBuilder;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
-import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,41 +152,6 @@ public class RoombaIModelsHandler extends RoombaCommonHandler {
     @Override
     public void receive(final String topic, final JsonElement tree) {
         final ThingUID thingUID = thing.getUID();
-
-        State phase = getCacheEntry(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_PHASE));
-        final JsonElement status = JSONUtils.find("cleanMissionStatus", tree);
-        if (status != null) {
-            // I7: cycle = "clean", 980: cycle = "quick"
-            final String currentCycle = JSONUtils.getAsString("cycle", status);
-            final String currentPhase = JSONUtils.getAsString("phase", status);
-            if (((phase == null) || !phase.equals(currentPhase)) && !"none".equals(currentCycle)) {
-                if ("run".equals(currentPhase)) {
-                    lastCleanMap.clear();
-                    updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), UnDefType.UNDEF);
-                } else if ("hmPostMsn".equals(currentPhase) || "hmUsrDock".equals(currentPhase)) {
-                    lastCleanMap.generate();
-                    try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-                        ImageIO.write(lastCleanMap, "png", stream);
-                        final RawType data = new RawType(stream.toByteArray(), "image/png");
-                        updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), data);
-                    } catch (IOException exception) {
-                        updateState(new ChannelUID(thingUID, MISSION_GROUP_ID, CHANNEL_MISSION_MAP), UnDefType.UNDEF);
-                        logger.debug("Can not convert image: {}", exception.getMessage());
-                    }
-                }
-            }
-            phase = new StringType(currentPhase);
-        }
-
-        final JsonElement position = JSONUtils.find("pose", tree);
-        if ((position != null) && (phase != null) && phase.equals("run")) {
-            final BigDecimal xPos = JSONUtils.getAsDecimal("x", position);
-            final BigDecimal yPos = JSONUtils.getAsDecimal("y", position);
-            if ((xPos != null) && (yPos != null)) {
-                // I7: cycle = "clean", 980: cycle = "quick"
-                lastCleanMap.add(xPos.doubleValue(), yPos.doubleValue());
-            }
-        }
 
         // @formatter:off
         // "cleanSchedule2": [{

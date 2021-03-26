@@ -46,10 +46,6 @@
 				<label>Mission count</label>
 				<description>Robot lifetime mission count</description>
 			</channel>
-			<channel id="scrubs" typeId="number">
-				<label>Scrub count</label>
-				<description>Robot lifetime scrub count</description>
-			</channel>
 			<channel id="battery_type" typeId="text">
 				<label>Battery type</label>
 				<description>Robot battery type</description>
@@ -236,7 +232,6 @@
 		<label>State</label>
 		<description>Robot state</description>
 		<channels>
-			<channel id="bin" typeId="bin"/>
 			<channel id="dock" typeId="dock"/>
 			<channel id="charge" typeId="system.battery-level"/>
 			<channel id="json" typeId="text">

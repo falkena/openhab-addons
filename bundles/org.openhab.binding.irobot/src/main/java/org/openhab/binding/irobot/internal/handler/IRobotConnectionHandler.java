@@ -32,21 +32,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link RoombaConnectionHandler} is responsible for handling iRobot MQTT connection.
+ * The {@link IRobotConnectionHandler} is responsible for handling iRobot MQTT connection.
  *
  * @author hkuhn42 - Initial contribution
  * @author Pavel Fedin - Rewrite for 900 series
  * @author Alexander Falkenstern - Add support for I7 series
  */
 @NonNullByDefault
-public abstract class RoombaConnectionHandler implements MqttConnectionObserver, MqttMessageSubscriber {
+public abstract class IRobotConnectionHandler implements MqttConnectionObserver, MqttMessageSubscriber {
     private final Logger logger = LoggerFactory.getLogger(RoombaCommonHandler.class);
 
     private static final int RECONNECT_DELAY = 10000; // In milliseconds
     private @Nullable Future<?> reconnect;
     private @Nullable MqttBrokerConnection connection;
 
-    public RoombaConnectionHandler() {
+    public IRobotConnectionHandler() {
     }
 
     public synchronized void connect(final String ip, final String blid, final String password) {

@@ -14,16 +14,16 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.*;
 
 /**
- * The {@link BraavaMModelsHandler} is responsible for handling commands, which are
+ * The {@link RoombaSModelsHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public class BraavaMModelsHandler extends BraavaCommonHandler {
-    private final Logger logger = LoggerFactory.getLogger(BraavaMModelsHandler.class);
+public class RoombaSModelsHandler extends RoombaCommonHandler {
+    private final Logger logger = LoggerFactory.getLogger(RoombaSModelsHandler.class);
 
-    public BraavaMModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+    public RoombaSModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
         super(thing, channelContentProvider);
     }
 }
