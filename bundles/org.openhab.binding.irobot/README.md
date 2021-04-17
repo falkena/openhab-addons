@@ -28,11 +28,21 @@ You can also try using [these python scripts](https://github.com/NickWaterton/Ro
 
 | Parameter | Type    | Required  | Default  | Description       |
 | --------- | :-----: | :-------: | :------: | ----------------- |
-| ipaddress | String  | Yes       |          | Robot IP address  |
+| address   | String  | Yes       |          | Robot IP address  |
+| family    | String  | Yes       |          | Robot family      |
 | blid      | String  | No        |          | Robot ID          |
 | password  | String  | No        |          | Robot Password    |
 
-All parameters will be autodiscovered. If using textual configuration, then `ipaddress` shall be specified.
+All parameters will be autodiscovered. If using textual configuration, then `address` and `family` shall be specified.
+The table below provides valid values for `family`:
+
+| Robot                  | Parameter  | 
+| ---------------------- | ---------- | 
+| iRobot Braava M-Series | "Braava-M" |
+| iRobot Roomba 9-Series | "Roomba-9" |
+| iRobot Roomba I-Series | "Roomba-E" |
+| iRobot Roomba E-Series | "Roomba-I" |
+| iRobot Roomba S-Series | "Roomba-S" |
 
 ## Channels
 

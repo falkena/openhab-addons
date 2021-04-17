@@ -17,7 +17,7 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UDP_POR
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
 
 import java.io.IOException;
-import java.io.StringReader;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.irobot.internal.dto.MQTTProtocol.DiscoveryResponse;
-import org.openhab.binding.irobot.internal.utils.LoginRequester;
+import org.openhab.binding.irobot.internal.IRobotBindingConstants.Models;
+import org.openhab.binding.irobot.internal.dto.Identification;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.config.discovery.DiscoveryService;
@@ -46,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
 
 /**
  * Discovery service for iRobots. The {@link LoginRequester#getBlid} and
@@ -62,14 +61,11 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(IRobotDiscoveryService.class);
 
-    private final Gson gson = new Gson();
-
     private final Runnable scanner;
     private @Nullable ScheduledFuture<?> backgroundFuture;
 
     public IRobotDiscoveryService() {
         super(Collections.singleton(THING_TYPE_ROOMBA), 30, true);
-
         scanner = createScanner();
     }
 
@@ -123,23 +119,38 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
                 }
             }
 
+            final Gson gson = new Gson();
             for (final String json : robots) {
-
-                JsonReader jsonReader = new JsonReader(new StringReader(json));
-                DiscoveryResponse msg = gson.fromJson(jsonReader, DiscoveryResponse.class);
+                Identification identification = gson.fromJson(json, Identification.class);
 
                 // Only firmware version 2 and above are supported via MQTT, therefore check it
-                if ((msg.ver != null) && (Integer.parseInt(msg.ver) > 1) && "mqtt".equalsIgnoreCase(msg.proto)) {
-                    final String address = msg.ip;
-                    final String mac = msg.mac;
-                    final String sku = msg.sku;
+                final String protocol = identification.getProto();
+                final BigInteger version = identification.getVer();
+                if ((BigInteger.ONE.compareTo(version) < 0) && "mqtt".equalsIgnoreCase(protocol)) {
+                    final String address = identification.getIp();
+                    final String mac = identification.getMac();
+                    final String sku = identification.getSku();
                     if (!address.isEmpty() && !sku.isEmpty() && !mac.isEmpty()) {
                         ThingUID thingUID = new ThingUID(THING_TYPE_ROOMBA, mac.replace(":", ""));
                         DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(thingUID);
                         builder = builder.withProperty("mac", mac).withRepresentationProperty("mac");
-                        builder = builder.withProperty("ipaddress", address);
 
-                        String name = msg.robotname;
+                        Models model = null;
+                        if (sku.regionMatches(true, 0, "M", 0, 1)) {
+                            model = Models.BRAAVA_M_SERIES;
+                        } else if (sku.regionMatches(true, 0, "E", 0, 1)) {
+                            model = Models.ROOMBA_E_SERIES;
+                        } else if (sku.regionMatches(true, 0, "I", 0, 1)) {
+                            model = Models.ROOMBA_I_SERIES;
+                        } else if (sku.regionMatches(true, 0, "R", 0, 1)) {
+                            model = Models.ROOMBA_9_SERIES;
+                        } else if (sku.regionMatches(true, 0, "S", 0, 1)) {
+                            model = Models.ROOMBA_S_SERIES;
+                        }
+                        builder = builder.withProperty("family", model != null ? model.toString() : UNKNOWN);
+                        builder = builder.withProperty("address", address);
+
+                        String name = identification.getRobotname();
                         builder = builder.withLabel("iRobot " + (!name.isEmpty() ? name : UNKNOWN));
                         thingDiscovered(builder.build());
                     }

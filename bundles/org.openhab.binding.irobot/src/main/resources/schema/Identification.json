@@ -1,0 +1,149 @@
+{
+  "$id": "#Identification",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot identification protocol",
+  "type": "object",
+  "properties": {
+    "hostname": {
+      "description": "Robot hostname. Normally Roomba-<BLID>.",
+      "type": "string"
+    },
+    "ip": {
+      "description": "Robot <IP>: Internet Protocol Address.",
+      "type": "string"
+    },
+    "mac": {
+      "description": "Robot <MAC>: Media Access Control.",
+      "type": "string"
+    },
+    "nc": {
+      "type": "integer"
+    },
+    "proto": {
+      "description": "Robot communication protocol.",
+      "type": "string"
+    },
+    "robotid": {
+      "description": "Robot <BLID>: Basic Calling Line ID. Not available on 9XX models.",
+      "type": "string"
+    },
+    "robotname": {
+      "description": "Robot name.",
+      "type": "string"
+    },
+    "sku": {
+      "description": "Robot <SKU>: Stock Keeping Unit.",
+      "type": "string"
+    },
+    "sw": {
+      "description": "Robot software version. Reported string is model dependend.",
+      "type": "string"
+    },
+    "ver": {
+      "description": "API(?) version.",
+      "type": "integer"
+    },
+    "cap": {
+      "type": "object",
+      "properties": {
+        "5ghz": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "area": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "binFullDetect": {
+          "type": "integer"
+        },
+        "bleDevLoc": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "carpetBoost": {
+          "description": "Unknown. Available on 9XX models only?",
+          "type": "integer"
+        },
+        "dockComm": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "eco": {
+          "type": "integer"
+        },
+        "edge": {
+          "type": "integer"
+        },
+        "lang": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "langOta": {
+          "type": "integer"
+        },
+        "log": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "maps": {
+          "type": "integer"
+        },
+        "multiPass": {
+          "type": "integer"
+        },
+        "ota": {
+          "type": "integer"
+        },
+        "pmaps": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "pose": {
+          "type": "integer"
+        },
+        "pp": {
+          "type": "integer"
+        },
+        "prov": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "sched": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "svcConf": {
+          "type": "integer"
+        },
+        "team": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "tileScan": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "tLine": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        },
+        "wDevLoc": {
+          "description": "Unknown. Not available on 9XX models.",
+          "type": "integer"
+        }
+      },
+      "required": [ "pose", "ota", "multiPass", "pp", "binFullDetect", "langOta", "maps", "edge", "eco", "svcConf" ],
+      "extends" : {
+        "type" : "object",
+        "javaType" : "IRobotDTO"
+      }
+    }
+  },
+  "required": [ "ver", "hostname", "robotname", "ip", "mac", "sw", "sku", "nc", "proto", "cap" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}
+

@@ -12,39 +12,7 @@
  */
 package org.openhab.binding.irobot.internal.handler;
 
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BIN_FULL;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BIN_OK;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BIN_REMOVED;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_AUTO;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_ECO;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_PERFORMANCE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_ALWAYS_FINISH;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_BATTERY;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_BIN;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CLEAN_PASSES;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_COMMAND;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CYCLE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_EDGE_CLEAN;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_ERROR;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_LAST_COMMAND;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_MAP_UPLOAD;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_PHASE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_POWER_BOOST;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_RSSI;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHEDULE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHED_SWITCH;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHED_SWITCH_PREFIX;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SNR;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_CLEAN;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_CLEAN_REGIONS;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_DOCK;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_PAUSE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_STOP;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.PASSES_1;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.PASSES_2;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.PASSES_AUTO;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.ROBOT_BLID;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.ROBOT_PASSWORD;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
 import static org.openhab.core.thing.ThingStatus.INITIALIZING;
 import static org.openhab.core.thing.ThingStatus.OFFLINE;
@@ -52,9 +20,12 @@ import static org.openhab.core.thing.ThingStatus.UNINITIALIZED;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -84,6 +55,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonReader;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.ParseContext;
+import com.jayway.jsonpath.TypeRef;
+import com.jayway.jsonpath.spi.json.GsonJsonProvider;
+import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 
 /**
  * The {@link RoombaHandler} is responsible for handling commands, which are
@@ -99,6 +78,7 @@ public class RoombaHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(RoombaHandler.class);
 
     private final Gson gson = new Gson();
+    private ParseContext jsonParser;
 
     private Hashtable<String, State> lastState = new Hashtable<>();
     private MQTTProtocol.@Nullable Schedule lastSchedule = null;
@@ -112,7 +92,12 @@ public class RoombaHandler extends BaseThingHandler {
     protected IRobotConnectionHandler connection = new IRobotConnectionHandler() {
         @Override
         public void receive(final String topic, final String json) {
-            RoombaHandler.this.receive(topic, json);
+            // Skip desired messages, since AWS-related stuff
+            final DocumentContext document = jsonParser.parse(json);
+            if (document.read("$..desired", new TypeRef<List<String>>() {
+            }).isEmpty()) {
+                RoombaHandler.this.receive(topic, json);
+            }
         }
 
         @Override
@@ -129,11 +114,24 @@ public class RoombaHandler extends BaseThingHandler {
 
     public RoombaHandler(Thing thing) {
         super(thing);
+        Configuration.ConfigurationBuilder builder = Configuration.builder();
+        builder = builder.jsonProvider(new GsonJsonProvider());
+        builder = builder.mappingProvider(new GsonMappingProvider());
+        builder = builder.options(Option.ALWAYS_RETURN_LIST, Option.SUPPRESS_EXCEPTIONS);
+        jsonParser = JsonPath.using(builder.build());
     }
 
     @Override
     public void initialize() {
         IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
+
+        try {
+            InetAddress.getByName(config.getAddress());
+        } catch (UnknownHostException exception) {
+            final String message = "Error connecting to host " + exception.toString();
+            updateStatus(OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, message);
+            return;
+        }
 
         if (UNKNOWN.equals(config.getPassword()) || UNKNOWN.equals(config.getBlid())) {
             final String message = "Robot authentication is required";
@@ -299,7 +297,7 @@ public class RoombaHandler extends BaseThingHandler {
                 @Nullable
                 String blid = null;
                 try {
-                    blid = LoginRequester.getBlid(config.getIpAddress());
+                    blid = LoginRequester.getBlid(config.getAddress());
                 } catch (IOException exception) {
                     updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, exception.toString());
                 }
@@ -315,7 +313,7 @@ public class RoombaHandler extends BaseThingHandler {
                 @Nullable
                 String password = null;
                 try {
-                    password = LoginRequester.getPassword(config.getIpAddress());
+                    password = LoginRequester.getPassword(config.getAddress());
                 } catch (KeyManagementException | NoSuchAlgorithmException exception) {
                     updateStatus(OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, exception.toString());
                     return; // This is internal system error, no retry
@@ -343,7 +341,7 @@ public class RoombaHandler extends BaseThingHandler {
     // and disconnect() are never running concurrently, so they are synchronized
     private synchronized void connect() {
         IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
-        final String address = config.getIpAddress();
+        final String address = config.getAddress();
         logger.debug("Connecting to {}", address);
 
         final String blid = config.getBlid();
@@ -373,7 +371,8 @@ public class RoombaHandler extends BaseThingHandler {
             JsonReader jsonReader = new JsonReader(new StringReader(json));
             msg = gson.fromJson(jsonReader, MQTTProtocol.StateMessage.class);
         } catch (JsonParseException exception) {
-            logger.warn("Failed to parse JSON message for {}: {}", thing.getLabel(), exception.toString());
+            IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
+            logger.warn("Failed to parse JSON message from {}: {}", config.getAddress(), exception.toString());
             logger.warn("Raw contents: {}", json);
             return;
         }
@@ -391,7 +390,7 @@ public class RoombaHandler extends BaseThingHandler {
             String phase = reported.cleanMissionStatus.phase;
             String command;
 
-            if ("none".equals(cycle)) {
+            if (cycle.equals("none")) {
                 command = CMD_STOP;
             } else {
                 switch (phase) {
