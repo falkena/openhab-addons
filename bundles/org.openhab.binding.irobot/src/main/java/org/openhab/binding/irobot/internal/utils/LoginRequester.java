@@ -31,13 +31,9 @@ import javax.net.ssl.SSLContext;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.irobot.internal.dto.Identification;
 
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.spi.json.GsonJsonProvider;
-import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
+import com.google.gson.Gson;
 
 /**
  * Helper functions to get blid and password. Seems pretty much reinventing a bicycle,
@@ -70,19 +66,15 @@ public class LoginRequester {
             socket.close();
         }
 
-        Configuration.ConfigurationBuilder builder = Configuration.builder();
-        builder = builder.jsonProvider(new GsonJsonProvider());
-        builder = builder.mappingProvider(new GsonMappingProvider());
-        builder = builder.options(Option.DEFAULT_PATH_LEAF_TO_NULL, Option.SUPPRESS_EXCEPTIONS);
-
+        final Gson gson = new Gson();
         final String json = new String(reply, 0, reply.length, StandardCharsets.UTF_8);
-        DocumentContext document = JsonPath.using(builder.build()).parse(json);
+        Identification identification = gson.fromJson(json, Identification.class);
 
         @Nullable
-        String blid = document.read("$.robotid", String.class);
-        final @Nullable String hostname = document.read("$.hostname", String.class);
+        String blid = identification.getRobotid();
+        final @Nullable String hostname = identification.getHostname();
         if (((blid == null) || blid.isEmpty()) && ((hostname != null) && !hostname.isEmpty())) {
-            String[] parts = hostname.split("-");
+            final String[] parts = hostname.split("-");
             if (parts.length == 2) {
                 blid = parts[1];
             }
@@ -93,8 +85,6 @@ public class LoginRequester {
 
     public static @Nullable String getPassword(final String ip)
             throws KeyManagementException, NoSuchAlgorithmException, IOException {
-        String password = null;
-
         SSLContext context = SSLContext.getInstance("SSL");
         context.init(null, TRUST_MANAGERS, new java.security.SecureRandom());
 
@@ -117,6 +107,8 @@ public class LoginRequester {
             buffer.flush();
         }
 
+        @Nullable
+        String password = null;
         final byte[] reply = buffer.toByteArray();
         if ((reply.length > request.length) && (reply.length == reply[1] + 2)) { // Add 2 bytes, see request doc above
             reply[1] = request[1]; // Hack, that we can find request packet in reply

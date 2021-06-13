@@ -15,6 +15,7 @@ package org.openhab.binding.irobot.internal.discovery;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.irobot.internal.dto.Identification;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.config.discovery.DiscoveryService;
@@ -40,13 +42,7 @@ import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.ParseContext;
-import com.jayway.jsonpath.spi.json.GsonJsonProvider;
-import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
+import com.google.gson.Gson;
 
 /**
  * Discovery service for iRobots. The {@link LoginRequester#getBlid} and
@@ -62,20 +58,11 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(IRobotDiscoveryService.class);
 
-    private ParseContext jsonParser;
-
     private final Runnable scanner;
     private @Nullable ScheduledFuture<?> backgroundFuture;
 
     public IRobotDiscoveryService() {
         super(Collections.singleton(THING_TYPE_ROOMBA), 30, true);
-
-        Configuration.ConfigurationBuilder builder = Configuration.builder();
-        builder = builder.jsonProvider(new GsonJsonProvider());
-        builder = builder.mappingProvider(new GsonMappingProvider());
-        builder = builder.options(Option.DEFAULT_PATH_LEAF_TO_NULL, Option.SUPPRESS_EXCEPTIONS);
-        jsonParser = JsonPath.using(builder.build());
-
         scanner = createScanner();
     }
 
@@ -129,46 +116,17 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
                 }
             }
 
-            /*
-             * JSON of the following contents (addresses are undisclosed):
-             * @formatter:off
-             * {
-             *   "ver":"3",
-             *   "hostname":"Roomba-<blid>",
-             *   "robotname":"Roomba",
-             *   "robotid":"<blid>", --> available on some models only
-             *   "ip":"XXX.XXX.XXX.XXX",
-             *   "mac":"XX:XX:XX:XX:XX:XX",
-             *   "sw":"v2.4.6-3",
-             *   "sku":"R981040",
-             *   "nc":0,
-             *   "proto":"mqtt",
-             *   "cap":{
-             *     "pose":1,
-             *     "ota":2,
-             *     "multiPass":2,
-             *     "carpetBoost":1,
-             *     "pp":1,
-             *     "binFullDetect":1,
-             *     "langOta":1,
-             *     "maps":1,
-             *     "edge":1,
-             *     "eco":1,
-             *     "svcConf":1
-             *   }
-             * }
-             * @formatter:on
-             */
+            final Gson gson = new Gson();
             for (final String json : robots) {
-                DocumentContext document = jsonParser.parse(json);
+                Identification identification = gson.fromJson(json, Identification.class);
 
                 // Only firmware version 2 and above are supported via MQTT, therefore check it
-                final @Nullable Integer version = document.read("$.ver", Integer.class);
-                final @Nullable String protocol = document.read("$.proto", String.class);
-                if ((version != null) && (version > 1) && "mqtt".equalsIgnoreCase(protocol)) {
-                    final String address = document.read("$.ip", String.class);
-                    final String mac = document.read("$.mac", String.class);
-                    final String sku = document.read("$.sku", String.class);
+                final String protocol = identification.getProto();
+                final BigInteger version = identification.getVer();
+                if ((BigInteger.ONE.compareTo(version) < 0) && "mqtt".equalsIgnoreCase(protocol)) {
+                    final String address = identification.getIp();
+                    final String mac = identification.getMac();
+                    final String sku = identification.getSku();
                     if (!address.isEmpty() && !sku.isEmpty() && !mac.isEmpty()) {
                         ThingUID thingUID = new ThingUID(THING_TYPE_ROOMBA, mac.replace(":", ""));
                         DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(thingUID);
@@ -189,7 +147,7 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
                         builder = builder.withProperty("family", model != null ? model.toString() : UNKNOWN);
                         builder = builder.withProperty("address", address);
 
-                        String name = document.read("$.robotname", String.class);
+                        String name = identification.getRobotname();
                         builder = builder.withLabel("iRobot " + (!name.isEmpty() ? name : UNKNOWN));
                         thingDiscovered(builder.build());
                     }

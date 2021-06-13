@@ -18,6 +18,33 @@
     <bnd.importpackage>!org.apache.tapestry5.json.*,!org.codehaus.jettison.json.*,!org.json.*,!com.fasterxml.jackson.*</bnd.importpackage>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jsonschema2pojo</groupId>
+        <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+        <version>1.1.1</version>
+        <configuration>
+          <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+          <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
+          <targetPackage>org.openhab.binding.irobot.internal.dto</targetPackage>
+          <annotationStyle>gson</annotationStyle>
+          <includeGeneratedAnnotation>false</includeGeneratedAnnotation>
+          <includeTypeInfo>true</includeTypeInfo>
+          <useBigDecimals>true</useBigDecimals>
+          <useBigIntegers>true</useBigIntegers>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>
