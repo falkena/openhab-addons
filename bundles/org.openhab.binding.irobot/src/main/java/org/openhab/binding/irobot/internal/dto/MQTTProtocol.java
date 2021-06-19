@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.irobot.internal.dto;
 
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.DAY_OF_WEEK;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,11 +116,9 @@ public class MQTTProtocol {
         public int[] h;
         public int[] m;
 
-        public static final int NUM_WEEK_DAYS = 7;
-
         public Schedule(int cycles_bitmask) {
-            cycle = new String[NUM_WEEK_DAYS];
-            for (int i = 0; i < NUM_WEEK_DAYS; i++) {
+            cycle = new String[DAY_OF_WEEK.length];
+            for (int i = 0; i < DAY_OF_WEEK.length; i++) {
                 enableCycle(i, (cycles_bitmask & (1 << i)) != 0);
             }
         }

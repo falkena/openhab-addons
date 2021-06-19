@@ -29,52 +29,71 @@ You can also try using [these python scripts](https://github.com/NickWaterton/Ro
 | Parameter | Type    | Required  | Default  | Description       |
 | --------- | :-----: | :-------: | :------: | ----------------- |
 | address   | String  | Yes       |          | Robot IP address  |
-| family    | String  | Yes       |          | Robot family      |
 | blid      | String  | No        |          | Robot ID          |
 | password  | String  | No        |          | Robot Password    |
 
-All parameters will be autodiscovered. If using textual configuration, then `address` and `family` shall be specified.
-The table below provides valid values for `family`:
-
-| Robot                  | Parameter  | 
-| ---------------------- | ---------- | 
-| iRobot Braava M-Series | "Braava-M" |
-| iRobot Roomba 9-Series | "Roomba-9" |
-| iRobot Roomba I-Series | "Roomba-E" |
-| iRobot Roomba E-Series | "Roomba-I" |
-| iRobot Roomba S-Series | "Roomba-S" |
+All parameters will be autodiscovered. If using textual configuration, then `address` shall be specified.
 
 ## Channels
 
-| channel       | type   | description                                                               | Read-only |
-|---------------|--------|---------------------------------------------------------------------------|-----------|
-| command       | String | Command to execute: clean, spot, dock, pause, stop                        | N |
-| cycle         | String | Current mission: none, clean, spot                                        | Y |
-| phase         | String | Current phase of the mission; see below.                                  | Y |
-| battery       | Number | Battery charge in percents                                                | Y |
-| bin           | String | Bin status: ok, removed, full                                             | Y |
-| error         | String | Error code; see below                                                     | Y |
-| rssi          | Number | Wi-Fi Received Signal Strength indicator in db                            | Y |
-| snr           | Number | Wi-Fi Signal to noise ratio                                               | Y |
-| sched_mon     | Switch | Scheduled clean enabled for Monday                                        | N |
-| sched_tue     | Switch | Scheduled clean enabled for Tuesday                                       | N |
-| sched_wed     | Switch | Scheduled clean enabled for Wednesday                                     | N |
-| sched_thu     | Switch | Scheduled clean enabled for Thursday                                      | N |
-| sched_fri     | Switch | Scheduled clean enabled for Friday                                        | N |
-| sched_sat     | Switch | Scheduled clean enabled for Saturday                                      | N |
-| sched_sun     | Switch | Scheduled clean enabled for Sunday                                        | N |
-| schedule      | Number | Schedule bitmask for use in scripts. 7 bits, bit #0 corresponds to Sunday | N |
-| edge_clean    | Switch | Seek out and clean along walls and furniture legs                         | N |
-| always_finish | Switch | Whether to keep cleaning if the bin becomes full                          | N |
-| power_boost   | String | Power boost mode: "auto", "performance", "eco"                            | N |
-| clean_passes  | String | Number of cleaning passes: "auto", "1", "2"                               | N |
-| map_upload    | Switch | Enable or disable uploading Clean Map(tm) to cloud for notifications      | N |
-| last_command  | String | Json string containing the parameters of the last executed command        | N |
+| Group    | Channel           | Type     | Read-only | Description                                                   |
+| -------- | :---------------: | :------: | :-------: | ------------------------------------------------------------- |
+| common   | name              | String   | Yes       |                                                               |
+|          | area              |          | Yes       |                                                               |
+|          | mission_count     |          | Yes       |                                                               |
+|          | battery_type      |          | Yes       |                                                               |
+|          | timezone          |          |           |                                                               |
+| network  | address           |          | Yes       |                                                               |
+|          | dhcp              | Number   | Yes       |                                                               |
+|          | mac               | Number   | Yes       |                                                               |
+|          | mask              | Number   | Yes       |                                                               |
+|          | gateway           | Number   | Yes       |                                                               |
+|          | primary_dns       | Number   | Yes       |                                                               |
+|          | secondary_dns     | Number   | Yes       |                                                               |
+|          | ssid              | Number   | Yes       |                                                               |
+|          | bssid             | Number   | Yes       |                                                               |
+|          | security          | String   | Yes       |                                                               |
+|          | noise             | Number   | Yes       |                                                               |
+|          | rssi              | Number   | Yes       | Wi-Fi Received Signal Strength indicator in db                |
+|          | snr               | Number   | Yes       | Wi-Fi Signal to noise ratio                                   |
+| position | x                 | Number   | Yes       |                                                               |
+|          | y                 | Number   | Yes       |                                                               |
+|          | theta             | Number   | Yes       |                                                               |
+| schedule | monday_enabled    | Switch   | No        | Scheduled clean enabled for Monday                            |
+|          | monday_time       | DateTime | No        |                                                               |
+|          | tuesday_enabled   | Switch   | No        | Scheduled clean enabled for Tuesday                           |
+|          | tuesday_time      | DateTime | No        |                                                               |
+|          | wednesday_enabled | Switch   | No        | Scheduled clean enabled for Wednesday                         |
+|          | wednesday_time    | DateTime | No        |                                                               |
+|          | thirsday_enabled  | Switch   | No        | Scheduled clean enabled for Thursday                          |
+|          | thirsday_time     | DateTime | No        |                                                               |
+|          | friday_enabled    | Switch   | No        | Scheduled clean enabled for Friday                            |
+|          | friday_time       | DateTime | No        |                                                               |
+|          | saturday_enabled  | Switch   | No        | Scheduled clean enabled for Saturday                          |
+|          | saturday_time     | DateTime | No        |                                                               |
+|          | sunday_enabled    | Switch   | No        | Scheduled clean enabled for Sunday                            |
+|          | sunday_time       | DateTime | No        |                                                               |
+| state    | bin               | String   | Yes       | Bin status: ok, removed, full                                 |
+|          | dock              | Switch   | Yes       |                                                               |
+|          | charge            | Number   | Yes       | Battery charge in percents                                    |
+|          | json              | String   | Yes       | Json string containing the last executed command              |
+| control  | command           | String   | No        | Command to execute: clean, spot, dock, pause, stop            |
+|          | find              | Switch   | No        |                                                               |
+|          | always_finish     | Switch   | No        | Whether to keep cleaning if the bin becomes full              |
+|          | language          | Switch   | No        |                                                               |
+|          | clean_passes      | String   | No        | Number of cleaning passes: "auto", "1", "2"                   |
+|          | upload_map        | Switch   | No        | Enable or disable uploading Clean Map(tm) to cloud            |
+|          | edge_clean        | Switch   | No        | Seek out and clean along walls and furniture legs             |
+|          | power_boost       | String   | No        | Power boost mode: "auto", "performance", "eco"                |
+| mission  | cycle             | String   | Yes       | Current mission: none, clean, spot                            |
+|          | phase             | String   | Yes       | Current phase of the mission; see below.                      |
+|          | error             | String   | Yes       | Error code; see below                                         |
+|          | map
 
 Known phase strings and their meanings:
 
 | phase     | Meaning                           |
-|-----------|-----------------------------------|
+| --------- | --------------------------------- |
 | charge    | Charging                          |
 | new       | New Mission (*)                   |
 | run       | Running                           |
@@ -96,64 +115,64 @@ are taken from Roomba980-Python.
 
 Error codes. Data type is string in order to be able to utilize mapping to human-readable strings.
 
-| Code | Meaning                    |
-|------|----------------------------|
-| 0    | None                       |
-| 1    | Left wheel off floor       |
-| 2    | Main Brushes stuck         |
-| 3    | Right wheel off floor      |
-| 4    | Left wheel stuck           |
-| 5    | Right wheel stuck          |
-| 6    | Stuck near a cliff         |
-| 7    | Left wheel error           |
-| 8    | Bin error                  |
-| 9    | Bumper stuck               |
-| 10    | Right wheel error         |
-| 11    | Bin error                 |
-| 12    | Cliff sensor issue        |
-| 13    | Both wheels off floor     |
-| 14    | Bin missing               |
-| 15    | Reboot required           |
-| 16    | Bumped unexpectedly       |
-| 17    | Path blocked              |
-| 18    | Docking issue             |
-| 19    | Undocking issue           |
-| 20    | Docking issue             |
-| 21    | Navigation problem        |
-| 22    | Navigation problem        |
-| 23    | Battery issue             |
-| 24    | Navigation problem        |
-| 25    | Reboot required           |
-| 26    | Vacuum problem            |
-| 27    | Vacuum problem            |
-| 29    | Software update needed    |
-| 30    | Vacuum problem            |
-| 31    | Reboot required           |
-| 32    | Smart map problem         |
-| 33    | Path blocked              |
-| 34    | Reboot required           |
-| 35    | Unrecognized cleaning pad |
-| 36    | Bin full                  |
-| 37    | Tank needed refilling     |
-| 38    | Vacuum problem            |
-| 39    | Reboot required           |
-| 40    | Navigation problem        |
-| 41    | Timed out                 |
-| 42    | Localization problem      |
-| 43    | Navigation problem        |
-| 44    | Pump issue                |
-| 45    | Lid open                  |
-| 46    | Low battery               |
-| 47    | Reboot required           |
-| 48    | Path blocked              |
-| 52    | Pad required attention    |
-| 65    | Hardware problem detected |
-| 66    | Low memory                |
-| 68    | Hardware problem detected |
-| 73    | Pad type changed          |
-| 74    | Max area reached          |
-| 75    | Navigation problem        |
-| 76    | Hardware problem detected |
+| Code | Meaning                   |
+| ---- | ------------------------- |
+| 0    | None                      |
+| 1    | Left wheel off floor      |
+| 2    | Main Brushes stuck        |
+| 3    | Right wheel off floor     |
+| 4    | Left wheel stuck          |
+| 5    | Right wheel stuck         |
+| 6    | Stuck near a cliff        |
+| 7    | Left wheel error          |
+| 8    | Bin error                 |
+| 9    | Bumper stuck              |
+| 10   | Right wheel error         |
+| 11   | Bin error                 |
+| 12   | Cliff sensor issue        |
+| 13   | Both wheels off floor     |
+| 14   | Bin missing               |
+| 15   | Reboot required           |
+| 16   | Bumped unexpectedly       |
+| 17   | Path blocked              |
+| 18   | Docking issue             |
+| 19   | Undocking issue           |
+| 20   | Docking issue             |
+| 21   | Navigation problem        |
+| 22   | Navigation problem        |
+| 23   | Battery issue             |
+| 24   | Navigation problem        |
+| 25   | Reboot required           |
+| 26   | Vacuum problem            |
+| 27   | Vacuum problem            |
+| 29   | Software update needed    |
+| 30   | Vacuum problem            |
+| 31   | Reboot required           |
+| 32   | Smart map problem         |
+| 33   | Path blocked              |
+| 34   | Reboot required           |
+| 35   | Unrecognized cleaning pad |
+| 36   | Bin full                  |
+| 37   | Tank needed refilling     |
+| 38   | Vacuum problem            |
+| 39   | Reboot required           |
+| 40   | Navigation problem        |
+| 41   | Timed out                 |
+| 42   | Localization problem      |
+| 43   | Navigation problem        |
+| 44   | Pump issue                |
+| 45   | Lid open                  |
+| 46   | Low battery               |
+| 47   | Reboot required           |
+| 48   | Path blocked              |
+| 52   | Pad required attention    |
+| 65   | Hardware problem detected |
+| 66   | Low memory                |
+| 68   | Hardware problem detected |
+| 73   | Pad type changed          |
+| 74   | Max area reached          |
+| 75   | Navigation problem        |
+| 76   | Hardware problem detected |
 
 ## Cleaning specific regions
 
