@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="irobot"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<channel-type id="area">
+		<item-type>Number:Area</item-type>
+		<label>Area</label>
+		<description>Cleaned area</description>
+		<state readOnly="true" pattern="%.1f %unit%"></state>
+	</channel-type>
+
+	<channel-type id="duration">
+		<item-type>Number:Time</item-type>
+		<label>General text</label>
+		<state readOnly="true" pattern="%d %unit%"></state>
+	</channel-type>
+
+	<channel-type id="number" advanced="true">
+		<item-type>Number</item-type>
+		<label>General text</label>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="text" advanced="true">
+		<item-type>String</item-type>
+		<label>General text</label>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-group-type id="common">
+		<label>Common information</label>
+		<description>Robot common information</description>
+		<channels>
+			<channel id="name" typeId="text">
+				<label>Name</label>
+				<description>Robot name</description>
+			</channel>
+			<channel id="area" typeId="area"/>
+			<channel id="duration" typeId="duration">
+				<label>Cleaning duration</label>
+				<description>Robot lifetime cleaning duration</description>
+			</channel>
+			<channel id="mission_count" typeId="number">
+				<label>Mission count</label>
+				<description>Robot lifetime mission count</description>
+			</channel>
+			<channel id="battery_type" typeId="text">
+				<label>Battery type</label>
+				<description>Robot battery type</description>
+			</channel>
+			<channel id="timezone" typeId="timezone"/>
+		</channels>
+	</channel-group-type>
+	<channel-type id="timezone" advanced="true">
+		<item-type>String</item-type>
+		<label>Time zone</label>
+		<description>Robot time zone</description>
+	</channel-type>
+
+	<channel-group-type id="network">
+		<label>Network</label>
+		<description>Robot network settings</description>
+		<channels>
+			<channel id="address" typeId="text">
+				<label>IP address</label>
+				<description>IP address</description>
+			</channel>
+			<channel id="dhcp" typeId="dhcp"/>
+			<channel id="mac" typeId="text">
+				<label>MAC address</label>
+				<description>MAC address</description>
+			</channel>
+			<channel id="mask" typeId="text">
+				<label>IP mask</label>
+				<description>IP mask</description>
+			</channel>
+			<channel id="gateway" typeId="text">
+				<label>Gateway</label>
+				<description>Gateway</description>
+			</channel>
+			<channel id="primary_dns" typeId="text">
+				<label>Primary DNS server</label>
+				<description>Primary DNS server IP address</description>
+			</channel>
+			<channel id="secondary_dns" typeId="text">
+				<label>Secondary DNS server</label>
+				<description>Secondary DNS server IP address</description>
+			</channel>
+			<channel id="ssid" typeId="text">
+				<label>Service set identifier</label>
+				<description>WLAN network name</description>
+			</channel>
+			<channel id="bssid" typeId="text">
+				<label>Basic service set identifier</label>
+				<description>Basic service set identifier</description>
+			</channel>
+			<channel id="security" typeId="security"/>
+			<channel id="rssi" typeId="number">
+				<label>RSSI</label>
+				<description>Wi-Fi signal strength</description>
+			</channel>
+			<channel id="snr" typeId="number">
+				<label>SNR</label>
+				<description>Wi-Fi signal to noise ratio</description>
+			</channel>
+		</channels>
+	</channel-group-type>
+	<channel-type id="dhcp" advanced="true">
+		<item-type>Switch</item-type>
+		<label>DHCP</label>
+		<description>IP address is provided by DHCP server</description>
+	</channel-type>
+	<channel-type id="security" advanced="true">
+		<item-type>String</item-type>
+		<label>Security</label>
+		<description>Security protocol</description>
+		<state readOnly="true">
+			<options>
+				<option value="0">Open</option>
+				<option value="1">WEP open</option>
+				<option value="2">WEP shared</option>
+				<option value="3">WPA</option>
+				<option value="4">WPA2</option>
+				<option value="5">WPA + WPA2</option>
+				<option value="6">EAP-TLS</option>
+				<option value="7">Wildcard SSID</option>
+				<option value="UNKNOWN">Unknown</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-group-type id="position">
+		<label>Position</label>
+		<description>Current position information</description>
+		<channels>
+			<channel id="x" typeId="number">
+				<label>Position in X</label>
+				<description>Current robot position</description>
+			</channel>
+			<channel id="y" typeId="number">
+				<label>Position in Y</label>
+				<description>Current robot position</description>
+			</channel>
+			<channel id="theta" typeId="number">
+				<label>Orientation</label>
+				<description>Current robot orientation</description>
+			</channel>
+			<channel id="json" typeId="text">
+				<label>JSON message</label>
+				<description>JSON message replied by Roomba</description>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="schedule">
+		<label>Schedule</label>
+		<description>Current cleaning schedule</description>
+		<channels>
+			<channel id="monday_enabled" typeId="schedule_enabled">
+				<label>Clean on Monday</label>
+				<description>Monday schedule active</description>
+			</channel>
+			<channel id="monday_time" typeId="schedule_time">
+				<label>Clean on Monday</label>
+				<description>Monday schedule time point</description>
+			</channel>
+			<channel id="tuesday_enabled" typeId="schedule_enabled">
+				<label>Clean on Tuesday</label>
+				<description>Tuesday schedule active</description>
+			</channel>
+			<channel id="tuesday_time" typeId="schedule_time">
+				<label>Clean on Tuesday</label>
+				<description>Tuesday schedule time point</description>
+			</channel>
+			<channel id="wednesday_enabled" typeId="schedule_enabled">
+				<label>Clean on Wednesday</label>
+				<description>Wednesday schedule active</description>
+			</channel>
+			<channel id="wednesday_time" typeId="schedule_time">
+				<label>Clean on Wednesday</label>
+				<description>Wednesday schedule time point</description>
+			</channel>
+			<channel id="thirsday_enabled" typeId="schedule_enabled">
+				<label>Clean on Thirsday</label>
+				<description>Thirsday schedule active</description>
+			</channel>
+			<channel id="thirsday_time" typeId="schedule_time">
+				<label>Clean on Thirsday</label>
+				<description>Thirsday schedule time point</description>
+			</channel>
+			<channel id="friday_enabled" typeId="schedule_enabled">
+				<label>Clean on Friday</label>
+				<description>Friday schedule active</description>
+			</channel>
+			<channel id="friday_time" typeId="schedule_time">
+				<label>Clean on Friday</label>
+				<description>Friday schedule time point</description>
+			</channel>
+			<channel id="saturday_enabled" typeId="schedule_enabled">
+				<label>Clean on Saturday</label>
+				<description>Saturday schedule active</description>
+			</channel>
+			<channel id="saturday_time" typeId="schedule_time">
+				<label>Clean on Saturday</label>
+				<description>Saturday schedule time point</description>
+			</channel>
+			<channel id="sunday_enabled" typeId="schedule_enabled">
+				<label>Clean on Sunday</label>
+				<description>Sunday schedule active</description>
+			</channel>
+			<channel id="sunday_time" typeId="schedule_time">
+				<label>Clean on Sunday</label>
+				<description>Sunday schedule time point</description>
+			</channel>
+		</channels>
+	</channel-group-type>
+	<channel-type id="schedule_enabled">
+		<item-type>Switch</item-type>
+		<label>Schedule</label>
+		<description>Schedule is activated on the day</description>
+	</channel-type>
+	<channel-type id="schedule_time">
+		<item-type>DateTime</item-type>
+		<label>Schedule</label>
+		<description>Schedule is activated at the time</description>
+		<category>Time</category>
+	</channel-type>
+
+	<channel-group-type id="state">
+		<label>State</label>
+		<description>Robot state</description>
+		<channels>
+			<channel id="bin" typeId="bin"/>
+			<channel id="dock" typeId="dock"/>
+			<channel id="charge" typeId="system.battery-level"/>
+			<channel id="json" typeId="text">
+				<label>JSON message</label>
+				<description>JSON message replied by Roomba</description>
+			</channel>
+		</channels>
+	</channel-group-type>
+	<channel-type id="bin">
+		<item-type>String</item-type>
+		<label>Bin</label>
+		<description>Bin status</description>
+		<state readOnly="true">
+			<options>
+				<option value="ok">OK</option>
+				<option value="full">Full</option>
+				<option value="removed">Removed</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="dock">
+		<item-type>Switch</item-type>
+		<label>Docking station</label>
+		<description>Docking station is visible</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-group-type id="control">
+		<label>Control</label>
+		<description>Robot cleaning control</description>
+		<channels>
+			<channel id="command" typeId="command"/>
+			<channel id="find" typeId="find"/>
+			<channel id="always_finish" typeId="always_finish"/>
+			<channel id="language" typeId="language"/>
+			<channel id="clean_passes" typeId="clean_passes"/>
+			<channel id="power_boost" typeId="power_boost"/>
+			<channel id="upload_map" typeId="upload_map"/>
+		</channels>
+	</channel-group-type>
+	<channel-type id="command">
+		<item-type>String</item-type>
+		<label>Command</label>
+		<description>Command to execute</description>
+		<state>
+			<options>
+				<option value="clean">Clean</option>
+				<option value="stop">Stop</option>
+				<option value="pause">Pause</option>
+				<option value="dock">Dock</option>
+				<option value="spot">Spot</option>
+				<!--
+					<option value="start">Start</option>
+					<option value="resume">Resume</option>
+					<option value="evac">Evac</option>
+					<option value="train">Train</option>
+				-->
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="always_finish">
+		<item-type>Switch</item-type>
+		<label>Always finish</label>
+		<description>Do not pause current mission if the bin is full</description>
+	</channel-type>
+	<channel-type id="edge_clean">
+		<item-type>Switch</item-type>
+		<label>Edge clean</label>
+		<description>Seek out and clean along walls and furniture legs</description>
+	</channel-type>
+	<channel-type id="find">
+		<item-type>Switch</item-type>
+		<label>Find robot</label>
+		<description>Play acoustic signal</description>
+	</channel-type>
+	<channel-type id="learn_map">
+		<item-type>Switch</item-type>
+		<label>Learn maps</label>
+		<description>Allow map learning</description>
+	</channel-type>
+	<channel-type id="upload_map">
+		<item-type>Switch</item-type>
+		<label>Upload map</label>
+		<description>Allow map upload to iRobot cloud</description>
+	</channel-type>
+	<channel-type id="power_boost">
+		<item-type>String</item-type>
+		<label>Power boost</label>
+		<description>Carpet boost mode</description>
+		<state>
+			<options>
+				<option value="auto">Automatic</option>
+				<option value="performance">Performance mode</option>
+				<option value="eco">Eco mode</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="clean_passes" advanced="true">
+		<item-type>String</item-type>
+		<label>Cleaning passes</label>
+		<description>Number of cleaning passes</description>
+		<state>
+			<options>
+				<option value="auto">Automatic</option>
+				<option value="1">One pass</option>
+				<option value="2">Two passes</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="language" advanced="true">
+		<item-type>String</item-type>
+		<label>Language</label>
+		<description>The language the robot speaks</description>
+		<state>
+			<options>
+				<option value="UNKNOWN">Unknown</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-group-type id="mission">
+		<label>Mission</label>
+		<description>Robot cleaning control</description>
+		<channels>
+			<channel id="area" typeId="area"/>
+			<channel id="duration" typeId="duration">
+				<label>Duration</label>
+				<description>Mission duration</description>
+			</channel>
+			<channel id="number" typeId="number">
+				<label>Number</label>
+				<description>Mission number</description>
+			</channel>
+			<channel id="map" typeId="map"/>
+			<channel id="error" typeId="error"/>
+			<channel id="cycle" typeId="cycle"/>
+			<channel id="phase" typeId="phase"/>
+		</channels>
+	</channel-group-type>
+	<channel-type id="cycle">
+		<item-type>String</item-type>
+		<label>Mission</label>
+		<description>Current mission</description>
+		<state readOnly="true">
+			<options>
+				<option value="none">None</option>
+				<option value="clean">Clean</option>
+				<option value="spot">Spot</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="map">
+		<item-type>Image</item-type>
+		<label>Map</label>
+		<description>Map of the latest run</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="phase">
+		<item-type>String</item-type>
+		<label>State</label>
+		<description>Current state</description>
+		<state readOnly="true">
+			<options>
+				<option value="charge">Charging</option>
+				<option value="new">New Mission</option>
+				<option value="run">Running</option>
+				<option value="resume">Resumed</option>
+				<option value="hmMidMsn">Going for recharge in mission</option>
+				<option value="recharge">Recharging</option>
+				<option value="stuck">Stuck</option>
+				<option value="hmUsrDock">Going home</option>
+				<option value="dock">Docking</option>
+				<option value="dockend">Docking - End Mission</option>
+				<option value="cancelled">Cancelled</option>
+				<option value="stop">Stopped</option>
+				<option value="pause">Paused</option>
+				<option value="hmPostMsn">Going home after mission</option>
+				<option value="">None</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="error">
+		<item-type>String</item-type>
+		<label>Error</label>
+		<description>Error code</description>
+		<state readOnly="true">
+			<options>
+				<!-- Taken from Roomba980-Python, originally reverse engineered from phone app -->
+				<option value="0">None</option>
+				<option value="1">Left wheel off floor</option>
+				<option value="2">Main Brushes stuck</option>
+				<option value="3">Right wheel off floor</option>
+				<option value="4">Left wheel stuck</option>
+				<option value="5">Right wheel stuck</option>
+				<option value="6">Stuck near a cliff</option>
+				<option value="7">Left wheel error</option>
+				<option value="8">Bin error</option>
+				<option value="9">Bumper stuck</option>
+				<option value="10">Right wheel error</option>
+				<option value="11">Bin error</option>
+				<option value="12">Cliff sensor issue</option>
+				<option value="13">Both wheels off floor</option>
+				<option value="14">Bin missing</option>
+				<option value="15">Reboot required</option>
+				<option value="16">Bumped unexpectedly</option>
+				<option value="17">Path blocked</option>
+				<option value="18">Docking issue</option>
+				<option value="19">Undocking issue</option>
+				<option value="20">Docking issue</option>
+				<option value="21">Navigation problem</option>
+				<option value="22">Navigation problem</option>
+				<option value="23">Battery issue</option>
+				<option value="24">Navigation problem</option>
+				<option value="25">Reboot required</option>
+				<option value="26">Vacuum problem</option>
+				<option value="27">Vacuum problem</option>
+				<option value="29">Software update needed</option>
+				<option value="30">Vacuum problem</option>
+				<option value="31">Reboot required</option>
+				<option value="32">Smart map problem</option>
+				<option value="33">Path blocked</option>
+				<option value="34">Reboot required</option>
+				<option value="35">Unrecognized cleaning pad</option>
+				<option value="36">Bin full</option>
+				<option value="37">Tank needed refilling</option>
+				<option value="38">Vacuum problem</option>
+				<option value="39">Reboot required</option>
+				<option value="40">Navigation problem</option>
+				<option value="41">Timed out</option>
+				<option value="42">Localization problem</option>
+				<option value="43">Navigation problem</option>
+				<option value="44">Pump issue</option>
+				<option value="45">Lid open</option>
+				<option value="46">Low battery</option>
+				<option value="47">Reboot required</option>
+				<option value="48">Path blocked</option>
+				<option value="52">Pad required attention</option>
+				<option value="65">Hardware problem detected</option>
+				<option value="66">Low memory</option>
+				<option value="68">Hardware problem detected</option>
+				<option value="73">Pad type changed</option>
+				<option value="74">Max area reached</option>
+				<option value="75">Navigation problem</option>
+				<option value="76">Hardware problem detected</option>
+				<option value="null">Unknown</option>
+			</options>
+		</state>
+	</channel-type>
+
+</thing:thing-descriptions>
