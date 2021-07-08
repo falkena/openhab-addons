@@ -1,0 +1,28 @@
+{
+  "$id": "#Signal",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot WiFi signal package",
+  "type": "object",
+  "properties": {
+    "noise": {
+      "description": "Signal noise",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "rssi": {
+      "description": "Received signal strength indicator",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "snr": {
+      "description": "Signal to noise ratio",
+      "readOnly": true,
+      "type": "integer"
+    }
+  },
+  "required": [ "rssi", "snr" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

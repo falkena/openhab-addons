@@ -1,0 +1,21 @@
+{
+  "$id": "#CleanPasses",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot cleaning passes number package",
+  "type": "object",
+  "properties": {
+    "noAutoPasses": {
+      "description": "Write properly help",
+      "type": [ "boolean", "null" ]
+    },
+    "twoPass": {
+      "description": "Write properly help",
+      "type": [ "boolean", "null" ]
+    }
+  },
+  "required": [ ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

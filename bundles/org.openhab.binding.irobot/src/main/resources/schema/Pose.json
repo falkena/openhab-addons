@@ -1,0 +1,34 @@
+{
+  "$id": "#Pose",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot pose package",
+  "type": "object",
+  "properties": {
+    "theta": {
+      "description": "Robot orientation",
+      "readOnly": true,
+      "type": "number"
+    },
+    "point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Robot X-coordinate",
+          "readOnly": true,
+          "type": "number"
+        },
+        "y": {
+          "description": "Robot Y-coordinate",
+          "readOnly": true,
+          "type": "number"
+        }
+      },
+      "required": [ "x", "y" ]
+    }
+  },
+  "required": [ "theta", "point" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

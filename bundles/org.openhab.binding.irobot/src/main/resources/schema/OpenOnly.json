@@ -1,0 +1,16 @@
+{
+  "$id": "#OpenOnly",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot edge clean setting",
+  "type": "object",
+  "properties": {
+    "openOnly": {
+      "type": "boolean"
+    }
+  },
+  "required": [ "openOnly" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

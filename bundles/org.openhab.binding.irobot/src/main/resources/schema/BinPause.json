@@ -1,0 +1,16 @@
+{
+  "$id": "#BinPause",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot always finish setting",
+  "type": "object",
+  "properties": {
+    "binPause": {
+      "type": "boolean"
+    }
+  },
+  "required": [ "binPause" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

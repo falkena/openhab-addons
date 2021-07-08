@@ -14,16 +14,20 @@ package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
+import static org.openhab.core.library.unit.ImperialUnits.SQUARE_FOOT;
 import static org.openhab.core.thing.ThingStatus.INITIALIZING;
 import static org.openhab.core.thing.ThingStatus.OFFLINE;
 import static org.openhab.core.thing.ThingStatus.UNINITIALIZED;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -33,11 +37,28 @@ import java.util.regex.Pattern;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
+import org.openhab.binding.irobot.internal.dto.BatteryLoad;
+import org.openhab.binding.irobot.internal.dto.BinPause;
+import org.openhab.binding.irobot.internal.dto.BinStatus;
+import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
+import org.openhab.binding.irobot.internal.dto.CleanPasses;
+import org.openhab.binding.irobot.internal.dto.CleanSchedule;
+import org.openhab.binding.irobot.internal.dto.IRobotDTO;
+import org.openhab.binding.irobot.internal.dto.LastCommand;
 import org.openhab.binding.irobot.internal.dto.MQTTProtocol;
+import org.openhab.binding.irobot.internal.dto.MapUpload;
+import org.openhab.binding.irobot.internal.dto.OpenOnly;
+import org.openhab.binding.irobot.internal.dto.Pose;
+import org.openhab.binding.irobot.internal.dto.PowerBoost;
+import org.openhab.binding.irobot.internal.dto.Reported;
+import org.openhab.binding.irobot.internal.dto.Root;
+import org.openhab.binding.irobot.internal.dto.Signal;
 import org.openhab.binding.irobot.internal.utils.LoginRequester;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
+import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelGroupUID;
 import org.openhab.core.thing.ChannelUID;
@@ -56,14 +77,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.ParseContext;
-import com.jayway.jsonpath.TypeRef;
-import com.jayway.jsonpath.spi.json.GsonJsonProvider;
-import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 
 /**
  * The {@link RoombaHandler} is responsible for handling commands, which are
@@ -79,25 +92,29 @@ public class RoombaHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(RoombaHandler.class);
 
     private final Gson gson = new Gson();
-    private ParseContext jsonParser;
 
-    private Hashtable<ChannelUID, State> lastState = new Hashtable<>();
-    private MQTTProtocol.@Nullable Schedule lastSchedule = null;
-    private boolean autoPasses = true;
-    private @Nullable Boolean twoPasses = null;
-    private boolean carpetBoost = true;
-    private @Nullable Boolean vacHigh = null;
+    private Hashtable<ChannelUID, IRobotDTO> lastState = new Hashtable<>();
     private boolean isPaused = false;
 
     private @Nullable Future<?> credentialRequester;
     protected IRobotConnectionHandler connection = new IRobotConnectionHandler() {
         @Override
         public void receive(final String topic, final String json) {
-            // Skip desired messages, since AWS-related stuff
-            final DocumentContext document = jsonParser.parse(json);
-            if (document.read("$..desired", new TypeRef<List<String>>() {
-            }).isEmpty()) {
+            if (json != null) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Got topic {} data {}", topic, json);
+                }
                 RoombaHandler.this.receive(topic, json);
+
+                final Root root = gson.fromJson(json, Root.class);
+                if (root.getState() != null) {
+                    Reported reported = root.getState().getReported();
+                    if (reported != null) {
+                        RoombaHandler.this.receive(reported);
+                        final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thing.getUID(), STATE_GROUP_ID);
+                        updateState(new ChannelUID(stateGroupUID, CHANNEL_JSON), StringType.valueOf(json));
+                    }
+                }
             }
         }
 
@@ -115,11 +132,6 @@ public class RoombaHandler extends BaseThingHandler {
 
     public RoombaHandler(Thing thing) {
         super(thing);
-        Configuration.ConfigurationBuilder builder = Configuration.builder();
-        builder = builder.jsonProvider(new GsonJsonProvider());
-        builder = builder.mappingProvider(new GsonMappingProvider());
-        builder = builder.options(Option.ALWAYS_RETURN_LIST, Option.SUPPRESS_EXCEPTIONS);
-        jsonParser = JsonPath.using(builder.build());
     }
 
     @Override
@@ -156,13 +168,258 @@ public class RoombaHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+        final String channelId = channelUID.getIdWithoutGroup();
         if (command instanceof RefreshType) {
-            State value = lastState.get(channelUID);
-            updateState(channelUID, value != null ? value : UnDefType.UNDEF);
-            return;
+            final IRobotDTO cache = lastState.get(channelUID);
+            if (cache instanceof BatteryLoad) {
+                final BatteryLoad batteryLoad = (BatteryLoad) cache;
+                if (CHANNEL_STATE_CHARGE.equals(channelId)) {
+                    final BigDecimal load = batteryLoad.getBatPct();
+                    updateState(channelUID, load != null ? new DecimalType(load.longValue()) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for bin pause values.", channelUID);
+                }
+            } else if (cache instanceof BinPause) {
+                final BinPause binPause = (BinPause) cache;
+                if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
+                    final Boolean pause = binPause.getBinPause();
+                    updateState(channelUID, pause != null ? OnOffType.from(!pause) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for bin pause values.", channelUID);
+                }
+            } else if (cache instanceof BinStatus) {
+                final BinStatus binStatus = (BinStatus) cache;
+                if (CHANNEL_STATE_BIN.equals(channelId)) {
+                    // The bin cannot be both full and removed simultaneously, so let's encode it as a single value
+                    if (binStatus.getFull()) {
+                        updateState(channelUID, StringType.valueOf(STATE_BIN_FULL));
+                    } else if (binStatus.getPresent()) {
+                        updateState(channelUID, StringType.valueOf(STATE_BIN_OK));
+                    } else {
+                        updateState(channelUID, StringType.valueOf(STATE_BIN_REMOVED));
+                    }
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for clean passes values.", channelUID);
+                }
+            } else if (cache instanceof CleanMissionStatus) {
+                final CleanMissionStatus missionStatus = (CleanMissionStatus) cache;
+                if (CHANNEL_AREA.equals(channelId)) {
+                    final BigDecimal area = missionStatus.getSqft();
+                    updateState(channelUID, area != null ? new QuantityType<>(area, SQUARE_FOOT) : UnDefType.UNDEF);
+                } else if (CHANNEL_CONTROL_COMMAND.equals(channelId)) {
+                    final String cycle = missionStatus.getCycle();
+                    final String phase = missionStatus.getPhase();
+                    if ("none".equalsIgnoreCase(cycle)) {
+                        isPaused = Boolean.FALSE;
+                        updateState(channelUID, StringType.valueOf(COMMAND_STOP));
+                    } else {
+                        switch (phase) {
+                            case "pause": // Never observed in Roomba 930
+                            case "stop":
+                            case "stuck": { // CHECKME: could also be equivalent to "stop" command
+                                isPaused = Boolean.TRUE;
+                                updateState(channelUID, StringType.valueOf(COMMAND_PAUSE));
+                                break;
+                            }
+                            case "dock": // Never observed in Roomba 930
+                            case "hmUsrDock": {
+                                isPaused = Boolean.FALSE;
+                                updateState(channelUID, StringType.valueOf(COMMAND_DOCK));
+                                break;
+                            }
+                            default: {
+                                isPaused = Boolean.FALSE;
+                                updateState(channelUID, cycle != null ? StringType.valueOf(cycle) : UnDefType.UNDEF);
+                                break;
+                            }
+                        }
+                    }
+                } else if (CHANNEL_MISSION_CYCLE.equals(channelId)) {
+                    final String cycle = missionStatus.getCycle();
+                    updateState(channelUID, cycle != null ? StringType.valueOf(cycle) : UnDefType.UNDEF);
+                } else if (CHANNEL_MISSION_ERROR.equals(channelId)) {
+                    final BigInteger error = missionStatus.getError();
+                    updateState(channelUID, error != null ? StringType.valueOf(error.toString()) : UnDefType.UNDEF);
+                } else if (CHANNEL_MISSION_PHASE.equals(channelId)) {
+                    final String phase = missionStatus.getPhase();
+                    updateState(channelUID, phase != null ? StringType.valueOf(phase) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for clean passes values.", channelUID);
+                }
+            } else if (cache instanceof CleanPasses) {
+                final CleanPasses passes = (CleanPasses) cache;
+                if (CHANNEL_CONTROL_CLEAN_PASSES.equals(channelId)) {
+                    // To make the life more interesting, paired values may not appear together in the same message.
+                    if (Boolean.FALSE.equals(passes.getNoAutoPasses())) {
+                        // When set to false, overrides twoPass
+                        updateState(channelUID, StringType.valueOf(PASSES_AUTO));
+                    } else {
+                        if (Boolean.FALSE.equals(passes.getTwoPass())) {
+                            updateState(channelUID, StringType.valueOf(PASSES_1));
+                        } else if (Boolean.TRUE.equals(passes.getTwoPass())) {
+                            updateState(channelUID, StringType.valueOf(PASSES_2));
+                        } else {
+                            boolean isNoAutoPassesSet = (passes.getNoAutoPasses() != null);
+                            updateState(channelUID, isNoAutoPassesSet ? StringType.valueOf(PASSES_1) : UnDefType.UNDEF);
+                        }
+                    }
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for clean passes values.", channelUID);
+                }
+            } else if (cache instanceof CleanSchedule) {
+                final CleanSchedule schedule = (CleanSchedule) cache;
+                int index = Arrays.asList(DAY_OF_WEEK).indexOf(channelId.substring(0, channelId.indexOf("_")));
+                if (channelId.endsWith("_enabled")) {
+                    State state = UnDefType.UNDEF;
+                    final List<String> cycle = schedule.getCycle();
+                    try {
+                        state = OnOffType.from("start".equals(cycle.get(index)));
+                    } catch (IndexOutOfBoundsException exception) {
+                        // Eat exception, since UNDEF was already set
+                    }
+                    updateState(channelUID, state);
+                } else if (channelId.endsWith("_time")) {
+                    State state = UnDefType.UNDEF;
+                    final List<BigInteger> hour = schedule.getH();
+                    final List<BigInteger> minutes = schedule.getM();
+                    try {
+                        // state = new DateTimeType(
+                    } catch (IndexOutOfBoundsException exception) {
+                        // Eat exception, since UNDEF was already set
+                    }
+                    updateState(channelUID, state);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for schedule values.", channelUID);
+                }
+            } else if (cache instanceof MapUpload) {
+                final MapUpload mapUpload = (MapUpload) cache;
+                if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
+                    final Boolean upload = mapUpload.getMapUploadAllowed();
+                    updateState(channelUID, upload != null ? OnOffType.from(upload) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for map upload values.", channelUID);
+                }
+            } else if (cache instanceof OpenOnly) {
+                final OpenOnly openOnly = (OpenOnly) cache;
+                if (CHANNEL_CONTROL_EDGE_CLEAN.equals(channelId)) {
+                    final Boolean open = openOnly.getOpenOnly();
+                    updateState(channelUID, open != null ? OnOffType.from(!open) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for edge clean values.", channelUID);
+                }
+            } else if (cache instanceof Pose) {
+                final Pose pose = (Pose) cache;
+                if (CHANNEL_POSITION_THETA.equals(channelId)) {
+                    final BigDecimal theta = pose.getTheta();
+                    updateState(channelUID, theta != null ? new DecimalType(theta.longValue()) : UnDefType.UNDEF);
+                } else if (CHANNEL_POSITION_X.equals(channelId)) {
+                    final BigDecimal x = pose.getPoint().getX();
+                    updateState(channelUID, x != null ? new DecimalType(x.longValue()) : UnDefType.UNDEF);
+                } else if (CHANNEL_POSITION_Y.equals(channelId)) {
+                    final BigDecimal y = pose.getPoint().getY();
+                    updateState(channelUID, y != null ? new DecimalType(y.longValue()) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for pose values.", channelUID);
+                }
+            } else if (cache instanceof PowerBoost) {
+                final PowerBoost boost = (PowerBoost) cache;
+                if (CHANNEL_CONTROL_POWER_BOOST.equals(channelId)) {
+                    if (Boolean.TRUE.equals(boost.getCarpetBoost())) {
+                        // When set to true, overrides vacHigh
+                        updateState(channelUID, StringType.valueOf(BOOST_AUTO));
+                    } else if (Boolean.TRUE.equals(boost.getVacHigh())) {
+                        updateState(channelUID, StringType.valueOf(BOOST_PERFORMANCE));
+                    } else if (Boolean.FALSE.equals(boost.getVacHigh())) {
+                        updateState(channelUID, StringType.valueOf(BOOST_ECO));
+                    } else {
+                        updateState(channelUID, UnDefType.UNDEF);
+                    }
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for boost values.", channelUID);
+                }
+            } else if (cache instanceof Signal) {
+                final Signal signal = (Signal) cache;
+                if (CHANNEL_NETWORK_RSSI.equals(channelId)) {
+                    final BigInteger rssi = signal.getRssi();
+                    updateState(channelUID, rssi != null ? new DecimalType(rssi.longValue()) : UnDefType.UNDEF);
+                } else if (CHANNEL_NETWORK_SNR.equals(channelId)) {
+                    final BigInteger snr = signal.getSnr();
+                    updateState(channelUID, snr != null ? new DecimalType(snr.longValue()) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for signal values.", channelUID);
+                }
+            } else {
+                updateState(channelUID, UnDefType.UNDEF);
+            }
+        } else if (command instanceof DateTimeType) {
+            if (SCHEDULE_GROUP_ID.equals(channelUID.getGroupId())) {
+                /*
+                 * for (int i = 0; i < DAY_OF_WEEK.length; i++) {
+                 * final IRobotDTO cache = newLastState.get(new ChannelUID(SCHEDULE_GROUP_ID, DAY_OF_WEEK[i] +
+                 * "_enabled"));
+                 * final IRobotDTO cache = newLastState.get(new ChannelUID(SCHEDULE_GROUP_ID, DAY_OF_WEEK[i] +
+                 * "_time"));
+                 * }
+                 * final CleanSchedule state = new CleanSchedule();
+                 * state.setCycle();
+                 * state.setH();
+                 * state.setM();
+                 * connection.send("delta", "{\"state\":" + gson.toJson(state) + "}");
+                 */
+            } else if (logger.isTraceEnabled()) {
+                logger.trace("Received {} for channel {}.", command, channelId);
+            }
+        } else if (command instanceof OnOffType) {
+            if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
+                final BinPause state = new BinPause();
+                state.setBinPause(command.equals(OnOffType.OFF));
+                connection.send("delta", "{\"state\":" + gson.toJson(state) + "}");
+            } else if (CHANNEL_CONTROL_EDGE_CLEAN.equals(channelId)) {
+                final OpenOnly state = new OpenOnly();
+                state.setOpenOnly(command.equals(OnOffType.OFF));
+                connection.send("delta", "{\"state\":" + gson.toJson(state) + "}");
+            } else if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
+                final MapUpload state = new MapUpload();
+                state.setMapUploadAllowed(command.equals(OnOffType.ON));
+                connection.send("delta", "{\"state\":" + gson.toJson(state) + "}");
+            } else if (SCHEDULE_GROUP_ID.equals(channelUID.getGroupId())) {
+                String[] cycle = new String[DAY_OF_WEEK.length];
+                BigInteger[] hours = new BigInteger[DAY_OF_WEEK.length];
+                BigInteger[] minutes = new BigInteger[DAY_OF_WEEK.length];
+                final ChannelGroupUID groupUID = new ChannelGroupUID(channelUID.getThingUID(), SCHEDULE_GROUP_ID);
+                for (int i = 0; i < DAY_OF_WEEK.length; i++) {
+                    final ChannelUID cycleChannelUID = new ChannelUID(groupUID, DAY_OF_WEEK[i] + "_enabled");
+                    final CleanSchedule enabled = (CleanSchedule) lastState.get(cycleChannelUID);
+                    cycle[i] = enabled.getCycle().get(i);
+                    final ChannelUID timeChannelUID = new ChannelUID(groupUID, DAY_OF_WEEK[i] + "_time");
+                    final CleanSchedule time = (CleanSchedule) lastState.get(timeChannelUID);
+                    hours[i] = time.getH().get(i);
+                    minutes[i] = time.getM().get(i);
+                }
+                final CleanSchedule state = new CleanSchedule();
+                state.setCycle(Arrays.asList(cycle));
+                state.setH(Arrays.asList(hours));
+                state.setM(Arrays.asList(minutes));
+                // connection.send("delta", "{\"state\":" + gson.toJson(state) + "}");
+            } else if (logger.isTraceEnabled()) {
+                logger.trace("Received {} for channel {}.", command, channelId);
+            }
+        } else if (command instanceof StringType) {
+            if (CHANNEL_CONTROL_CLEAN_PASSES.equals(channelId)) {
+                final CleanPasses state = new CleanPasses();
+                state.setNoAutoPasses(!command.equals(PASSES_AUTO));
+                state.setTwoPass(command.equals(PASSES_2));
+                connection.send("delta", "{\"state\":" + gson.toJson(state) + "}");
+            } else if (CHANNEL_CONTROL_POWER_BOOST.equals(channelId)) {
+                final PowerBoost state = new PowerBoost();
+                state.setCarpetBoost(command.equals(BOOST_AUTO));
+                state.setVacHigh(command.equals(BOOST_PERFORMANCE));
+                connection.send("delta", "{\"state\":" + gson.toJson(state) + "}");
+            } else if (logger.isTraceEnabled()) {
+                logger.trace("Received {} for channel {}.", command, channelId);
+            }
         }
 
-        final String channelId = channelUID.getIdWithoutGroup();
         if (CHANNEL_CONTROL_COMMAND.equals(channelId)) {
             if (command instanceof StringType) {
                 String cmd = command.toString();
@@ -220,47 +477,12 @@ public class RoombaHandler extends BaseThingHandler {
                     connection.send(request.getTopic(), gson.toJson(request));
                 }
             }
-        } else if (SCHEDULE_GROUP_ID.equals(channelUID.getGroupId())) {
-            MQTTProtocol.Schedule schedule = lastSchedule;
-
-            // Schedule can only be updated in a bulk, so we have to store current
-            // schedule and modify components.
-            if ((command instanceof OnOffType) && (schedule != null) && (schedule.cycle != null)) {
-                MQTTProtocol.Schedule newSchedule = new MQTTProtocol.Schedule(schedule.cycle);
-                for (int i = 0; i < DAY_OF_WEEK.length; i++) {
-                    newSchedule.enableCycle(i, newSchedule.cycleEnabled(i));
-                    if (channelUID.getIdWithoutGroup().equals(DAY_OF_WEEK[i] + "_enabled")) {
-                        newSchedule.enableCycle(i, command.equals(OnOffType.ON));
-                    }
-                }
-                sendSchedule(newSchedule);
-            }
-        } else if (CHANNEL_CONTROL_EDGE_CLEAN.equals(channelId)) {
-            if (command instanceof OnOffType) {
-                sendDelta(new MQTTProtocol.OpenOnly(command.equals(OnOffType.OFF)));
-            }
-        } else if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
-            if (command instanceof OnOffType) {
-                sendDelta(new MQTTProtocol.BinPause(command.equals(OnOffType.OFF)));
-            }
-        } else if (CHANNEL_CONTROL_POWER_BOOST.equals(channelId)) {
-            sendDelta(new MQTTProtocol.PowerBoost(command.equals(BOOST_AUTO), command.equals(BOOST_PERFORMANCE)));
-        } else if (CHANNEL_CONTROL_CLEAN_PASSES.equals(channelId)) {
-            sendDelta(new MQTTProtocol.CleanPasses(!command.equals(PASSES_AUTO), command.equals(PASSES_2)));
-        } else if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
-            if (command instanceof OnOffType) {
-                sendDelta(new MQTTProtocol.MapUploadAllowed(command.equals(OnOffType.ON)));
-            }
         }
     }
 
-    private void sendSchedule(MQTTProtocol.Schedule schedule) {
-        sendDelta(new MQTTProtocol.CleanSchedule(schedule));
-    }
-
-    private void sendDelta(MQTTProtocol.StateValue state) {
-        MQTTProtocol.Request request = new MQTTProtocol.DeltaRequest(state);
-        connection.send(request.getTopic(), gson.toJson(request));
+    private void refresh(ChannelUID channelUID, IRobotDTO object) {
+        lastState.put(channelUID, object);
+        handleCommand(channelUID, RefreshType.REFRESH);
     }
 
     private synchronized void getCredentials() {
@@ -331,10 +553,120 @@ public class RoombaHandler extends BaseThingHandler {
         }
     }
 
+    public void receive(final Reported reported) {
+        final ThingUID thingUID = thing.getUID();
+
+        final BigDecimal batLoad = reported.getBatPct();
+        if (batLoad != null) {
+            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
+            BatteryLoad load = new BatteryLoad();
+            load.setBatPct(batLoad);
+            refresh(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), load);
+        }
+
+        final Boolean binPause = reported.getBinPause();
+        if (binPause != null) {
+            final BinPause pause = new BinPause();
+            pause.setBinPause(binPause);
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            refresh(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_ALWAYS_FINISH), pause);
+        }
+
+        final BinStatus binStatus = reported.getBin();
+        if (binStatus != null) {
+            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
+            refresh(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), binStatus);
+        }
+
+        final CleanMissionStatus missionStatus = reported.getCleanMissionStatus();
+        if (missionStatus != null) {
+            final ChannelGroupUID missionGroupUID = new ChannelGroupUID(thingUID, MISSION_GROUP_ID);
+            refresh(new ChannelUID(missionGroupUID, CHANNEL_AREA), missionStatus);
+            refresh(new ChannelUID(missionGroupUID, CHANNEL_MISSION_CYCLE), missionStatus);
+            refresh(new ChannelUID(missionGroupUID, CHANNEL_MISSION_ERROR), missionStatus);
+            refresh(new ChannelUID(missionGroupUID, CHANNEL_MISSION_PHASE), missionStatus);
+
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            refresh(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_COMMAND), missionStatus);
+        }
+
+        final CleanSchedule schedule = reported.getCleanSchedule();
+        if (schedule != null) {
+            final ChannelGroupUID scheduleGroupUID = new ChannelGroupUID(thingUID, SCHEDULE_GROUP_ID);
+            for (int i = 0; i < DAY_OF_WEEK.length; i++) {
+                refresh(new ChannelUID(scheduleGroupUID, DAY_OF_WEEK[i] + "_enabled"), schedule);
+                refresh(new ChannelUID(scheduleGroupUID, DAY_OF_WEEK[i] + "_time"), schedule);
+            }
+        }
+
+        final LastCommand lastCommand = reported.getLastCommand();
+        if (lastCommand != null) {
+            final ChannelGroupUID internalGroupUID = new ChannelGroupUID(thingUID, INTERNAL_GROUP_ID);
+            lastState.put(new ChannelUID(internalGroupUID, CHANNEL_INTERNAL_LAST_COMMAND), lastCommand);
+        }
+
+        final Boolean mapUploadAllowed = reported.getMapUploadAllowed();
+        if (mapUploadAllowed != null) {
+            MapUpload uploadAllowed = new MapUpload();
+            uploadAllowed.setMapUploadAllowed(mapUploadAllowed);
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            refresh(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_UPLOAD), uploadAllowed);
+        }
+
+        final Boolean openOnly = reported.getOpenOnly();
+        if (openOnly != null) {
+            OpenOnly open = new OpenOnly();
+            open.setOpenOnly(openOnly);
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            refresh(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_EDGE_CLEAN), open);
+        }
+
+        final Pose pose = reported.getPose();
+        if (pose != null) {
+            final ChannelGroupUID positionGroupUID = new ChannelGroupUID(thingUID, POSITION_GROUP_ID);
+            refresh(new ChannelUID(positionGroupUID, CHANNEL_POSITION_THETA), pose);
+            refresh(new ChannelUID(positionGroupUID, CHANNEL_POSITION_X), pose);
+            refresh(new ChannelUID(positionGroupUID, CHANNEL_POSITION_Y), pose);
+        }
+
+        final Signal signal = reported.getSignal();
+        if (signal != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            refresh(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), signal);
+            refresh(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), signal);
+            refresh(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_NOISE), signal);
+        }
+
+        final Boolean vacHigh = reported.getVacHigh();
+        final Boolean carpetBoost = reported.getCarpetBoost();
+        if ((carpetBoost != null) || (vacHigh != null)) {
+            // "vacHigh":false, "carpetBoost":false
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            final IRobotDTO cached = lastState.get(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST));
+            PowerBoost boost = cached instanceof PowerBoost ? (PowerBoost) cached : new PowerBoost();
+            boost.setCarpetBoost(carpetBoost);
+            boost.setVacHigh(vacHigh);
+            refresh(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST), boost);
+        }
+
+        final Boolean twoPass = reported.getTwoPass();
+        final Boolean noAutoPasses = reported.getNoAutoPasses();
+        if ((noAutoPasses != null) || (twoPass != null)) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            final IRobotDTO cached = lastState.get(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_CLEAN_PASSES));
+            CleanPasses passes = cached instanceof CleanPasses ? (CleanPasses) cached : new CleanPasses();
+            if (noAutoPasses != null) {
+                passes.setNoAutoPasses(noAutoPasses);
+            }
+            if (twoPass != null) {
+                passes.setTwoPass(twoPass);
+            }
+            refresh(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_CLEAN_PASSES), passes);
+        }
+    }
+
     public void receive(final String topic, final String json) {
         MQTTProtocol.StateMessage msg;
-
-        logger.trace("Got topic {} data {}", topic, json);
 
         try {
             // We are not consuming all the fields, so we have to create the reader explicitly
@@ -353,190 +685,30 @@ public class RoombaHandler extends BaseThingHandler {
 
         // Since all the fields are in fact optional, and a single message never
         // contains all of them, we have to check presence of each individually
-        if (msg.state == null || msg.state.reported == null) {
-            return;
-        }
+        if (msg.state != null && msg.state.reported != null) {
+            MQTTProtocol.GenericState reported = msg.state.reported;
 
-        final ThingUID thingUID = thing.getUID();
-        MQTTProtocol.GenericState reported = msg.state.reported;
+            reportProperty(Thing.PROPERTY_FIRMWARE_VERSION, reported.softwareVer);
+            reportProperty("navSwVer", reported.navSwVer);
+            reportProperty("wifiSwVer", reported.wifiSwVer);
+            reportProperty("mobilityVer", reported.mobilityVer);
+            reportProperty("bootloaderVer", reported.bootloaderVer);
+            reportProperty("umiVer", reported.umiVer);
+            reportProperty("sku", reported.sku);
+            reportProperty("batteryType", reported.batteryType);
 
-        if (reported.cleanMissionStatus != null) {
-            final ChannelGroupUID missionGroupUID = new ChannelGroupUID(thingUID, MISSION_GROUP_ID);
-
-            String cycle = reported.cleanMissionStatus.cycle;
-            String phase = reported.cleanMissionStatus.phase;
-            String command;
-
-            if (cycle.equals("none")) {
-                command = COMMAND_STOP;
-            } else {
-                switch (phase) {
-                    case "stop":
-                    case "stuck": // CHECKME: could also be equivalent to "stop" command
-                    case "pause": // Never observed in Roomba 930
-                        command = COMMAND_PAUSE;
-                        break;
-                    case "hmUsrDock":
-                    case "dock": // Never observed in Roomba 930
-                        command = COMMAND_DOCK;
-                        break;
-                    default:
-                        command = cycle; // "clean" or "spot"
-                        break;
-                }
-            }
-
-            isPaused = command.equals(COMMAND_PAUSE);
-
-            reportState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_CYCLE), StringType.valueOf(cycle));
-            reportState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_PHASE), StringType.valueOf(phase));
-            reportState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_ERROR),
-                    StringType.valueOf(String.valueOf(reported.cleanMissionStatus.error)));
-
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_COMMAND), StringType.valueOf(command));
-        }
-
-        if (reported.batPct != null) {
-            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
-            reportState(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), new DecimalType(reported.batPct));
-        }
-
-        if (reported.bin != null) {
-            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
-            // The bin cannot be both full and removed simultaneously, so let's encode it as a single value
-            if (!reported.bin.present) {
-                reportState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), StringType.valueOf(STATE_BIN_REMOVED));
-            } else if (reported.bin.full) {
-                reportState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), StringType.valueOf(STATE_BIN_FULL));
-            } else {
-                reportState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), StringType.valueOf(STATE_BIN_OK));
+            if (reported.subModSwVer != null) {
+                // This is used by i7 model. It has more capabilities, perhaps a dedicated
+                // handler should be written by someone who owns it.
+                reportProperty("subModSwVer.nav", reported.subModSwVer.nav);
+                reportProperty("subModSwVer.mob", reported.subModSwVer.mob);
+                reportProperty("subModSwVer.pwr", reported.subModSwVer.pwr);
+                reportProperty("subModSwVer.sft", reported.subModSwVer.sft);
+                reportProperty("subModSwVer.mobBtl", reported.subModSwVer.mobBtl);
+                reportProperty("subModSwVer.linux", reported.subModSwVer.linux);
+                reportProperty("subModSwVer.con", reported.subModSwVer.con);
             }
         }
-
-        if (reported.signal != null) {
-            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
-            reportState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), new DecimalType(reported.signal.rssi));
-            reportState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), new DecimalType(reported.signal.snr));
-        }
-
-        if (reported.cleanSchedule != null) {
-            final ChannelGroupUID scheduleGroupUID = new ChannelGroupUID(thingUID, SCHEDULE_GROUP_ID);
-            MQTTProtocol.Schedule schedule = reported.cleanSchedule;
-
-            if (schedule.cycle != null) {
-                for (int i = 0; i < DAY_OF_WEEK.length; i++) {
-                    reportState(new ChannelUID(scheduleGroupUID, DAY_OF_WEEK[i] + "_enabled"),
-                            OnOffType.from(schedule.cycleEnabled(i)));
-                }
-            }
-
-            lastSchedule = schedule;
-        }
-
-        if (reported.openOnly != null) {
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_EDGE_CLEAN),
-                    OnOffType.from(!reported.openOnly));
-        }
-
-        if (reported.binPause != null) {
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_ALWAYS_FINISH),
-                    OnOffType.from(!reported.binPause));
-        }
-
-        // To make the life more interesting, paired values may not appear together in the
-        // same message, so we have to keep track of current values.
-        if (reported.carpetBoost != null) {
-            carpetBoost = reported.carpetBoost;
-            if (reported.carpetBoost) {
-                // When set to true, overrides vacHigh
-                final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-                reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST),
-                        StringType.valueOf(BOOST_AUTO));
-            } else if (vacHigh != null) {
-                reportVacHigh();
-            }
-        }
-
-        if (reported.vacHigh != null) {
-            vacHigh = reported.vacHigh;
-            if (!carpetBoost) {
-                // Can be overridden by "carpetBoost":true
-                reportVacHigh();
-            }
-        }
-
-        if (reported.noAutoPasses != null) {
-            autoPasses = !reported.noAutoPasses;
-            if (!reported.noAutoPasses) {
-                // When set to false, overrides twoPass
-                final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-                reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_CLEAN_PASSES),
-                        StringType.valueOf(PASSES_AUTO));
-            } else if (twoPasses != null) {
-                reportTwoPasses();
-            }
-        }
-
-        if (reported.twoPass != null) {
-            twoPasses = reported.twoPass;
-            if (!autoPasses) {
-                // Can be overridden by "noAutoPasses":false
-                reportTwoPasses();
-            }
-        }
-
-        if (reported.lastCommand != null) {
-            final ChannelGroupUID internalGroupUID = new ChannelGroupUID(thingUID, INTERNAL_GROUP_ID);
-            reportState(new ChannelUID(internalGroupUID, CHANNEL_INTERNAL_LAST_COMMAND),
-                    StringType.valueOf(reported.lastCommand.toString()));
-        }
-
-        if (reported.mapUploadAllowed != null) {
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_UPLOAD),
-                    OnOffType.from(reported.mapUploadAllowed));
-        }
-
-        reportProperty(Thing.PROPERTY_FIRMWARE_VERSION, reported.softwareVer);
-        reportProperty("navSwVer", reported.navSwVer);
-        reportProperty("wifiSwVer", reported.wifiSwVer);
-        reportProperty("mobilityVer", reported.mobilityVer);
-        reportProperty("bootloaderVer", reported.bootloaderVer);
-        reportProperty("umiVer", reported.umiVer);
-        reportProperty("sku", reported.sku);
-        reportProperty("batteryType", reported.batteryType);
-
-        if (reported.subModSwVer != null) {
-            // This is used by i7 model. It has more capabilities, perhaps a dedicated
-            // handler should be written by someone who owns it.
-            reportProperty("subModSwVer.nav", reported.subModSwVer.nav);
-            reportProperty("subModSwVer.mob", reported.subModSwVer.mob);
-            reportProperty("subModSwVer.pwr", reported.subModSwVer.pwr);
-            reportProperty("subModSwVer.sft", reported.subModSwVer.sft);
-            reportProperty("subModSwVer.mobBtl", reported.subModSwVer.mobBtl);
-            reportProperty("subModSwVer.linux", reported.subModSwVer.linux);
-            reportProperty("subModSwVer.con", reported.subModSwVer.con);
-        }
-    }
-
-    private void reportVacHigh() {
-        final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thing.getUID(), CONTROL_GROUP_ID);
-        reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST),
-                StringType.valueOf(vacHigh ? BOOST_PERFORMANCE : BOOST_ECO));
-    }
-
-    private void reportTwoPasses() {
-        final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thing.getUID(), CONTROL_GROUP_ID);
-        reportState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_CLEAN_PASSES),
-                StringType.valueOf(twoPasses ? PASSES_2 : PASSES_1));
-    }
-
-    private void reportState(final ChannelUID channel, State value) {
-        lastState.put(channel, value);
-        updateState(channel, value);
     }
 
     private void reportProperty(String property, @Nullable String value) {

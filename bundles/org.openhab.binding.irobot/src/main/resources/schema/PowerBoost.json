@@ -1,0 +1,19 @@
+{
+  "$id": "#PowerBoost",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot vacuum settings package",
+  "type": "object",
+  "properties": {
+    "carpetBoost": {
+      "type": "boolean"
+    },
+    "vacHigh": {
+      "type": "boolean"
+    }
+  },
+  "required": [ ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "$id": "#State",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Current robot state data",
+  "type": "object",
+  "properties": {
+    "desired": {
+      "description": "Unknown. Related to AWS - Cloud",
+      "type": "object",
+      "properties": {
+        "echo": {
+          "description": "Unknown. Related to AWS - Cloud",
+          "type": [ "boolean", "null" ]
+        }
+      },
+      "required": [ ],
+      "extends" : {
+        "type" : "object",
+        "javaType" : "IRobotDTO"
+      }
+    },
+    "reported": {
+      "description": "Current reported robot data",
+      "type": "object",
+      "properties": {
+        "batPct": {
+          "description": "Robot battery load",
+          "readOnly": true,
+          "type": [ "number", "null" ]
+        },
+        "bbrun": {
+          "$ref": "BBrun.json"
+        },
+        "bin": {
+          "$ref": "BinStatus.json"
+        },
+        "binPause": {
+          "description": "Pause vacuum, if bin is full",
+          "type": [ "boolean", "null" ]
+        },
+        "carpetBoost": {
+          "description": "Write properly help",
+          "type": [ "boolean", "null" ]
+        },
+        "cleanMissionStatus": {
+          "$ref": "CleanMissionStatus.json"
+        },
+        "cleanSchedule": {
+          "$ref": "CleanSchedule.json"
+        },
+        "lastCommand": {
+          "$ref": "LastCommand.json"
+        },
+        "mapUploadAllowed": {
+          "description": "Allow to upload maps to iRobot claude",
+          "type": [ "boolean", "null" ]
+        },
+        "noAutoPasses": {
+          "description": "Write properly help",
+          "type": [ "boolean", "null" ]
+        },
+        "openOnly": {
+          "description": "Write properly help",
+          "type": [ "boolean", "null" ]
+        },
+        "pose": {
+          "$ref": "Pose.json"
+        },
+        "signal": {
+          "$ref": "Signal.json"
+        },
+        "twoPass": {
+          "description": "Write properly help",
+          "type": [ "boolean", "null" ]
+        },
+        "vacHigh": {
+          "description": "Write properly help",
+          "type": [ "boolean", "null" ]
+        }
+      },
+      "required": [ ],
+      "extends" : {
+        "type" : "object",
+        "javaType" : "IRobotDTO"
+      }
+    }
+  },
+  "required": [ ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

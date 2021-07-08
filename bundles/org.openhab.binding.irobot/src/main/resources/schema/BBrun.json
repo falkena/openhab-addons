@@ -1,0 +1,96 @@
+{
+  "$id": "BBRun",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot bbrun package",
+  "type": "object",
+  "properties": {
+    "hr": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "min": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "sqft": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "number"
+    },
+    "nCBump": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nCliffsF": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nCliffsR": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nPanics": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nPicks": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nStuck": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nWStll": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "$comment": "Roomba I7 and Braava M6 fields",
+    "nOvertemps": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "$comment": "Roomba 980 and Roomba I7 fields",
+    "nMBStll": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nScrubs": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "$comment": "Roomba I7 fields",
+    "nEvacs": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nOpticalDD": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nPiezoDD": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    }
+  },
+  "required": [ "hr", "min", "sqft", "nCBump", "nCliffsF", "nCliffsR", "nPanics", "nPicks", "nStuck", "nWStll" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

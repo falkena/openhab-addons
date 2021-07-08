@@ -1,0 +1,63 @@
+{
+  "$id": "#CleanMissionStatus",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot clean mission status package",
+  "type": "object",
+  "properties": {
+    "cycle": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "error": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "expireM": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "initiator": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "mssnM": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "nMssn": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "notReady": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "phase": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "rechrgM": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "sqft": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "number"
+    }
+  },
+  "required": [ "cycle", "error", "expireM", "initiator", "mssnM", "nMssn", "notReady", "phase", "rechrgM", "sqft" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

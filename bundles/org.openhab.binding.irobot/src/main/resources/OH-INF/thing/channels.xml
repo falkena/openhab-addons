@@ -232,6 +232,7 @@
 		<label>State</label>
 		<description>Robot state</description>
 		<channels>
+			<channel id="bin" typeId="bin"/>
 			<channel id="dock" typeId="dock"/>
 			<channel id="charge" typeId="system.battery-level"/>
 			<channel id="json" typeId="text">
@@ -267,7 +268,12 @@
 			<channel id="find" typeId="find"/>
 			<channel id="always_finish" typeId="always_finish"/>
 			<channel id="language" typeId="language"/>
-			<channel id="clean_passes" typeId="clean_passes"/>
+			<channel id="clean_passes" typeId="clean_passes">
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
+			</channel>
+			<channel id="power_boost" typeId="power_boost">
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
+			</channel>
 			<channel id="upload_map" typeId="upload_map"/>
 		</channels>
 	</channel-group-type>
@@ -295,11 +301,13 @@
 		<item-type>Switch</item-type>
 		<label>Always finish</label>
 		<description>Do not pause current mission if the bin is full</description>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="edge_clean">
 		<item-type>Switch</item-type>
 		<label>Edge clean</label>
 		<description>Seek out and clean along walls and furniture legs</description>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="find">
 		<item-type>Switch</item-type>
@@ -310,11 +318,13 @@
 		<item-type>Switch</item-type>
 		<label>Learn maps</label>
 		<description>Allow map learning</description>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="upload_map">
 		<item-type>Switch</item-type>
 		<label>Upload map</label>
 		<description>Allow map upload to iRobot cloud</description>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="power_boost">
 		<item-type>String</item-type>

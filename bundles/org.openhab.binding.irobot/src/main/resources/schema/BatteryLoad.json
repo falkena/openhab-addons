@@ -1,0 +1,18 @@
+{
+  "$id": "#BatteryLoad",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot battery load package",
+  "type": "object",
+  "properties": {
+    "batPct": {
+      "description": "Robot battery load",
+      "readOnly": true,
+      "type": [ "number", "null" ]
+    }
+  },
+  "required": [ "batPct" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

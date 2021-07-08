@@ -12,12 +12,10 @@
  */
 package org.openhab.binding.irobot.internal.dto;
 
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.DAY_OF_WEEK;
+import java.util.Arrays;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -94,103 +92,9 @@ public class MQTTProtocol {
         }
     }
 
-    public static class CleanMissionStatus {
-        public String cycle;
-        public String phase;
-        public String initiator;
-        public int error;
-    }
-
-    public static class BinStatus {
-        public boolean present;
-        public boolean full;
-    }
-
-    public static class SignalStrength {
-        public int rssi;
-        public int snr;
-    }
-
-    public static class Schedule {
-        public String[] cycle;
-        public int[] h;
-        public int[] m;
-
-        public Schedule(int cycles_bitmask) {
-            cycle = new String[DAY_OF_WEEK.length];
-            for (int i = 0; i < DAY_OF_WEEK.length; i++) {
-                enableCycle(i, (cycles_bitmask & (1 << i)) != 0);
-            }
-        }
-
-        public Schedule(String[] cycle) {
-            this.cycle = cycle;
-        }
-
-        public boolean cycleEnabled(int i) {
-            return cycle[i].equals("start");
-        }
-
-        public void enableCycle(int i, boolean enable) {
-            cycle[i] = enable ? "start" : "none";
-        }
-    }
-
     public static class StateValue {
         // Just some common type, nothing to do here
         protected StateValue() {
-        }
-    }
-
-    public static class OpenOnly extends StateValue {
-        public boolean openOnly;
-
-        public OpenOnly(boolean openOnly) {
-            this.openOnly = openOnly;
-        }
-    }
-
-    public static class BinPause extends StateValue {
-        public boolean binPause;
-
-        public BinPause(boolean binPause) {
-            this.binPause = binPause;
-        }
-    }
-
-    public static class PowerBoost extends StateValue {
-        public boolean carpetBoost;
-        public boolean vacHigh;
-
-        public PowerBoost(boolean carpetBoost, boolean vacHigh) {
-            this.carpetBoost = carpetBoost;
-            this.vacHigh = vacHigh;
-        }
-    }
-
-    public static class CleanPasses extends StateValue {
-        public boolean noAutoPasses;
-        public boolean twoPass;
-
-        public CleanPasses(boolean noAutoPasses, boolean twoPass) {
-            this.noAutoPasses = noAutoPasses;
-            this.twoPass = twoPass;
-        }
-    }
-
-    public static class CleanSchedule extends StateValue {
-        public Schedule cleanSchedule;
-
-        public CleanSchedule(Schedule schedule) {
-            cleanSchedule = schedule;
-        }
-    }
-
-    public static class MapUploadAllowed extends StateValue {
-        public boolean mapUploadAllowed;
-
-        public MapUploadAllowed(boolean mapUploadAllowed) {
-            this.mapUploadAllowed = mapUploadAllowed;
         }
     }
 
@@ -207,30 +111,6 @@ public class MQTTProtocol {
     // "reported" messages never contain the full state, only a part.
     // Therefore all the fields in this class are nullable
     public static class GenericState extends StateValue {
-        // "cleanMissionStatus":{"cycle":"clean","phase":"hmUsrDock","expireM":0,"rechrgM":0,"error":0,"notReady":0,"mssnM":1,"sqft":7,"initiator":"rmtApp","nMssn":39}
-        public CleanMissionStatus cleanMissionStatus;
-        // "batPct":100
-        public Integer batPct;
-        // "bin":{"present":true,"full":false}
-        public BinStatus bin;
-        // "signal":{"rssi":-55,"snr":33}
-        public SignalStrength signal;
-        // "cleanSchedule":{"cycle":["none","start","start","start","start","none","none"],"h":[9,12,12,12,12,12,9],"m":[0,0,0,0,0,0,0]}
-        public Schedule cleanSchedule;
-        // "openOnly":false
-        public Boolean openOnly;
-        // "binPause":true
-        public Boolean binPause;
-        // "carpetBoost":true
-        public Boolean carpetBoost;
-        // "vacHigh":false
-        public Boolean vacHigh;
-        // "noAutoPasses":true
-        public Boolean noAutoPasses;
-        // "twoPass":true
-        public Boolean twoPass;
-        // "mapUploadAllowed":true
-        public Boolean mapUploadAllowed;
         // "softwareVer":"v2.4.6-3"
         public String softwareVer;
         // "navSwVer":"01.12.01#1"
@@ -255,9 +135,6 @@ public class MQTTProtocol {
         // "mobBtl": "4.2", "linux":"linux+2.1.6_lock-1+lewis-release-rt419+12",
         // "con":"2.1.6-tags/release-2.1.6@c6b6585a/build"}
         public SubModSwVer subModSwVer;
-        // "lastCommand":
-        // {"command":"start","initiator":"localApp","time":1610283995,"ordered":1,"pmap_id":"AAABBBCCCSDDDEEEFFF","regions":[{"region_id":"6","type":"rid"}]}
-        public JsonElement lastCommand;
     }
 
     // Data comes as JSON string: {"state":{"reported":<Actual content here>}}

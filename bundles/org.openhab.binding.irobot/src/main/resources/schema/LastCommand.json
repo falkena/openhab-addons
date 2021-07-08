@@ -1,0 +1,63 @@
+{
+  "$id": "#LastCommand",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot last command package",
+  "type": "object",
+  "properties": {
+    "command": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "initiator": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "time": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "$comment": "Roomba I7 fields",
+    "ordered": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "pmap_id": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "region_id": {
+            "description": "Write properly help",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "type": {
+            "description": "Write properly help",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [ "region_id", "type" ]
+      }
+    },
+    "user_pmapv_id": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "required": [ "command", "initiator", "time" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

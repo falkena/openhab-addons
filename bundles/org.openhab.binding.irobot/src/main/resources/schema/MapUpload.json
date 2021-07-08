@@ -1,0 +1,16 @@
+{
+  "$id": "#MapUpload",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot map upload allowance setting",
+  "type": "object",
+  "properties": {
+    "mapUploadAllowed": {
+      "type": "boolean"
+    }
+  },
+  "required": [ "mapUploadAllowed" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}
