@@ -10,18 +10,6 @@
 			<label>Network Address</label>
 			<description>Network address of the robot</description>
 		</parameter>
-		<parameter name="family" type="text">
-			<label>IRobot Family</label>
-			<description>IRobot device family</description>
-			<options>
-				<option value="Braava-M">Braava M Series</option>
-				<option value="Roomba-9">Roomba 9 Series</option>
-				<option value="Roomba-E">Roomba E Series</option>
-				<option value="Roomba-I">Roomba I Series</option>
-				<option value="Roomba-S">Roomba S Series</option>
-			</options>
-			<required>true</required>
-		</parameter>
 		<parameter name="blid" type="text">
 			<label>Robot ID</label>
 			<description>ID of the robot</description>

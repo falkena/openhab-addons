@@ -28,6 +28,10 @@
           "readOnly": true,
           "type": [ "number", "null" ]
         },
+        "batteryType": {
+          "description": "Write properly help",
+          "type": "string"
+        },
         "bbrun": {
           "$ref": "BBrun.json"
         },
@@ -45,9 +49,6 @@
         "cleanMissionStatus": {
           "$ref": "CleanMissionStatus.json"
         },
-        "cleanSchedule": {
-          "$ref": "CleanSchedule.json"
-        },
         "lastCommand": {
           "$ref": "LastCommand.json"
         },
@@ -59,22 +60,71 @@
           "description": "Write properly help",
           "type": [ "boolean", "null" ]
         },
-        "openOnly": {
-          "description": "Write properly help",
-          "type": [ "boolean", "null" ]
-        },
         "pose": {
           "$ref": "Pose.json"
         },
         "signal": {
           "$ref": "Signal.json"
         },
+        "sku": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "softwareVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "$comment": "Roomba 980 fields",
+        "bootloaderVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "cleanSchedule": {
+          "$ref": "CleanSchedule.json"
+        },
+        "hardwareRev": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "mobilityVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "navSwVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "openOnly": {
+          "description": "Write properly help",
+          "type": [ "boolean", "null" ]
+        },
+        "soundVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
         "twoPass": {
           "description": "Write properly help",
           "type": [ "boolean", "null" ]
         },
+        "uiSwVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "umiVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
         "vacHigh": {
           "description": "Write properly help",
+          "type": [ "boolean", "null" ]
+        },
+        "wifiSwVer": {
+          "description": "Write properly help",
+          "type": "string"
+        },
+        "$comment": "Roomba I-Models fields",
+        "pmapLearningAllowed": {
+          "description": "Allow map learning",
           "type": [ "boolean", "null" ]
         }
       },

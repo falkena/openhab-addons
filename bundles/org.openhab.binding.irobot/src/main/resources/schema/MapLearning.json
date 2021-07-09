@@ -1,17 +1,15 @@
 {
-  "$id": "#PowerBoost",
+  "$id": "#MapLearning",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "iRobot vacuum settings package",
+  "description": "iRobot map learning setting",
   "type": "object",
   "properties": {
-    "carpetBoost": {
-      "type": "boolean"
-    },
-    "vacHigh": {
+    "pmapLearningAllowed": {
+      "description": "Allow map learning",
       "type": "boolean"
     }
   },
-  "required": [ "carpetBoost", "vacHigh" ],
+  "required": [ "pmapLearningAllowed" ],
   "extends" : {
     "type" : "object",
     "javaType" : "IRobotDTO"

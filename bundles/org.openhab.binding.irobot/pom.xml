@@ -29,8 +29,13 @@
           <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
           <targetPackage>org.openhab.binding.irobot.internal.dto</targetPackage>
           <annotationStyle>gson</annotationStyle>
-          <includeGeneratedAnnotation>false</includeGeneratedAnnotation>
+          <includeConstructors>true</includeConstructors>
+          <includeCopyConstructor>true</includeCopyConstructor>
+          <includeAllPropertiesConstructor>false</includeAllPropertiesConstructor>
+          <includeRequiredPropertiesConstructor>true</includeRequiredPropertiesConstructor>
+          <includeGeneratedAnnotation>true</includeGeneratedAnnotation>
           <includeTypeInfo>true</includeTypeInfo>
+          <serializable>true</serializable>
           <useBigDecimals>true</useBigDecimals>
           <useBigIntegers>true</useBigIntegers>
         </configuration>

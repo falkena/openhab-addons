@@ -31,41 +31,14 @@ public class IRobotBindingConstants {
     public static final String BINDING_ID = "irobot";
 
     // List of all type UIDs
-    public static final ThingTypeUID THING_TYPE_ROOMBA = new ThingTypeUID(BINDING_ID, "roomba");
+    public static final ThingTypeUID THING_TYPE_ROOMBA_9 = new ThingTypeUID(BINDING_ID, "roomba9");
+    public static final ThingTypeUID THING_TYPE_ROOMBA_I = new ThingTypeUID(BINDING_ID, "roombaI");
+
     public static final String CHANNEL_TYPE_NUMBER = "number";
     public static final String CHANNEL_TYPE_TEXT = "text";
 
     // Something goes wrong...
     public static final String UNKNOWN = "UNKNOWN";
-
-    // Model definitions
-    public enum Models {
-        BRAAVA_M_SERIES("Braava-M"),
-        ROOMBA_9_SERIES("Roomba-9"),
-        ROOMBA_E_SERIES("Roomba-E"),
-        ROOMBA_I_SERIES("Roomba-I"),
-        ROOMBA_S_SERIES("Roomba-S");
-
-        private String model;
-
-        Models(final String model) {
-            this.model = model;
-        }
-
-        @Override
-        public String toString() {
-            return model;
-        }
-
-        public static Models fromString(final String name) {
-            for (final Models model : Models.values()) {
-                if (model.model.equalsIgnoreCase(name.trim())) {
-                    return model;
-                }
-            }
-            throw new IllegalArgumentException("Can not find iRobot model " + name);
-        }
-    }
 
     // Common channel IDs
     public static final String CHANNEL_AREA = "area";

@@ -161,58 +161,72 @@
 			<channel id="monday_enabled" typeId="schedule_enabled">
 				<label>Clean on Monday</label>
 				<description>Monday schedule active</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="monday_time" typeId="schedule_time">
 				<label>Clean on Monday</label>
 				<description>Monday schedule time point</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="tuesday_enabled" typeId="schedule_enabled">
 				<label>Clean on Tuesday</label>
 				<description>Tuesday schedule active</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="tuesday_time" typeId="schedule_time">
 				<label>Clean on Tuesday</label>
 				<description>Tuesday schedule time point</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="wednesday_enabled" typeId="schedule_enabled">
 				<label>Clean on Wednesday</label>
 				<description>Wednesday schedule active</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="wednesday_time" typeId="schedule_time">
 				<label>Clean on Wednesday</label>
 				<description>Wednesday schedule time point</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="thirsday_enabled" typeId="schedule_enabled">
 				<label>Clean on Thirsday</label>
 				<description>Thirsday schedule active</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="thirsday_time" typeId="schedule_time">
 				<label>Clean on Thirsday</label>
 				<description>Thirsday schedule time point</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="friday_enabled" typeId="schedule_enabled">
 				<label>Clean on Friday</label>
 				<description>Friday schedule active</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="friday_time" typeId="schedule_time">
 				<label>Clean on Friday</label>
 				<description>Friday schedule time point</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="saturday_enabled" typeId="schedule_enabled">
 				<label>Clean on Saturday</label>
 				<description>Saturday schedule active</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="saturday_time" typeId="schedule_time">
 				<label>Clean on Saturday</label>
 				<description>Saturday schedule time point</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="sunday_enabled" typeId="schedule_enabled">
 				<label>Clean on Sunday</label>
 				<description>Sunday schedule active</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="sunday_time" typeId="schedule_time">
 				<label>Clean on Sunday</label>
 				<description>Sunday schedule time point</description>
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 		</channels>
 	</channel-group-type>
@@ -271,10 +285,9 @@
 			<channel id="clean_passes" typeId="clean_passes">
 				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
-			<channel id="power_boost" typeId="power_boost">
+			<channel id="upload_map" typeId="upload_map">
 				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
-			<channel id="upload_map" typeId="upload_map"/>
 		</channels>
 	</channel-group-type>
 	<channel-type id="command">
@@ -324,7 +337,6 @@
 		<item-type>Switch</item-type>
 		<label>Upload map</label>
 		<description>Allow map upload to iRobot cloud</description>
-		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="power_boost">
 		<item-type>String</item-type>
