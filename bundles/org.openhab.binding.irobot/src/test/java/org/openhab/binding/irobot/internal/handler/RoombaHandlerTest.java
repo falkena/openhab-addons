@@ -59,8 +59,10 @@ public class RoombaHandlerTest {
 
     @Nullable
     private RoombaHandler handler;
+
     // We have to initialize it to avoid compile errors
     private @Mock Thing thing = new ThingImpl(new ThingTypeUID("AA:BB"), "");
+
     @Nullable
     private ThingHandlerCallback callback;
 
@@ -72,7 +74,7 @@ public class RoombaHandlerTest {
         logLevelField.set(logger, LocationAwareLogger.TRACE_INT);
 
         Configuration config = new Configuration();
-        config.put("ipaddress", RoombaHandlerTest.IP_ADDRESS);
+        config.put("address", RoombaHandlerTest.IP_ADDRESS);
         config.put("password", RoombaHandlerTest.PASSWORD);
         Mockito.when(thing.getConfiguration()).thenReturn(config);
         Mockito.lenient().when(thing.getStatusInfo())
@@ -90,7 +92,7 @@ public class RoombaHandlerTest {
         handler.initialize();
 
         IRobotConfiguration config = thing.getConfiguration().as(IRobotConfiguration.class);
-        assertEquals(config.getIpAddress(), IP_ADDRESS);
+        assertEquals(config.getAddress(), IP_ADDRESS);
         assertEquals(config.getPassword(), PASSWORD);
 
         handler.dispose();

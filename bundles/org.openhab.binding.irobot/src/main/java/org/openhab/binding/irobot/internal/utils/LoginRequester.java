@@ -18,7 +18,6 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UDP_POR
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -32,11 +31,9 @@ import javax.net.ssl.SSLContext;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.irobot.internal.discovery.IRobotDiscoveryService;
-import org.openhab.binding.irobot.internal.dto.MQTTProtocol.BlidResponse;
+import org.openhab.binding.irobot.internal.dto.Identification;
 
 import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
 
 /**
  * Helper functions to get blid and password. Seems pretty much reinventing a bicycle,
@@ -50,8 +47,6 @@ import com.google.gson.stream.JsonReader;
  */
 @NonNullByDefault
 public class LoginRequester {
-    private static final Gson GSON = new Gson();
-
     public static @Nullable String getBlid(final String ip) throws IOException {
         DatagramSocket socket = new DatagramSocket();
         socket.setSoTimeout(1000); // One second
@@ -66,18 +61,20 @@ public class LoginRequester {
             DatagramPacket packet = new DatagramPacket(reply, reply.length);
             socket.receive(packet);
             reply = Arrays.copyOfRange(packet.getData(), packet.getOffset(), packet.getLength());
+        } catch (IOException exception) {
         } finally {
             socket.close();
         }
 
+        final Gson gson = new Gson();
         final String json = new String(reply, 0, reply.length, StandardCharsets.UTF_8);
-        JsonReader jsonReader = new JsonReader(new StringReader(json));
-        BlidResponse msg = GSON.fromJson(jsonReader, BlidResponse.class);
+        Identification identification = gson.fromJson(json, Identification.class);
 
         @Nullable
-        String blid = msg.robotid;
-        if (((blid == null) || blid.isEmpty()) && ((msg.hostname != null) && !msg.hostname.isEmpty())) {
-            String[] parts = msg.hostname.split("-");
+        String blid = identification.getRobotid();
+        final @Nullable String hostname = identification.getHostname();
+        if (((blid == null) || blid.isEmpty()) && ((hostname != null) && !hostname.isEmpty())) {
+            final String[] parts = hostname.split("-");
             if (parts.length == 2) {
                 blid = parts[1];
             }
@@ -88,8 +85,6 @@ public class LoginRequester {
 
     public static @Nullable String getPassword(final String ip)
             throws KeyManagementException, NoSuchAlgorithmException, IOException {
-        String password = null;
-
         SSLContext context = SSLContext.getInstance("SSL");
         context.init(null, TRUST_MANAGERS, new java.security.SecureRandom());
 
@@ -112,6 +107,8 @@ public class LoginRequester {
             buffer.flush();
         }
 
+        @Nullable
+        String password = null;
         final byte[] reply = buffer.toByteArray();
         if ((reply.length > request.length) && (reply.length == reply[1] + 2)) { // Add 2 bytes, see request doc above
             reply[1] = request[1]; // Hack, that we can find request packet in reply

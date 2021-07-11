@@ -26,11 +26,11 @@ not known, however, whether the password is eternal or can change during factory
 
 | Parameter | Type    | Required  | Default  | Description       |
 | --------- | :-----: | :-------: | :------: | ----------------- |
-| ipaddress | String  | Yes       |          | Robot IP address  |
+| address   | String  | Yes       |          | Robot IP address  |
 | blid      | String  | No        |          | Robot ID          |
 | password  | String  | No        |          | Robot Password    |
 
-All parameters will be autodiscovered. If using textual configuration, then `ipaddress` shall be specified.
+All parameters will be autodiscovered. If using textual configuration, then `address` shall be specified.
 
 ## Channels
 

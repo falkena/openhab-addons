@@ -24,16 +24,16 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  */
 @NonNullByDefault
 public class IRobotConfiguration {
-    private String ipaddress = UNKNOWN;
+    private String address = UNKNOWN;
     private String password = UNKNOWN;
     private String blid = UNKNOWN;
 
-    public String getIpAddress() {
-        return ipaddress;
+    public String getAddress() {
+        return address;
     }
 
-    public void setIpAddress(final String ipaddress) {
-        this.ipaddress = ipaddress.trim();
+    public void setAddress(final String address) {
+        this.address = address.trim();
     }
 
     public String getPassword() {
