@@ -12,39 +12,7 @@
  */
 package org.openhab.binding.irobot.internal.handler;
 
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BIN_FULL;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BIN_OK;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BIN_REMOVED;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_AUTO;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_ECO;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_PERFORMANCE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_ALWAYS_FINISH;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_BATTERY;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_BIN;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CLEAN_PASSES;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_COMMAND;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CYCLE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_EDGE_CLEAN;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_ERROR;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_LAST_COMMAND;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_MAP_UPLOAD;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_PHASE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_POWER_BOOST;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_RSSI;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHEDULE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHED_SWITCH;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHED_SWITCH_PREFIX;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SNR;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_CLEAN;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_CLEAN_REGIONS;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_DOCK;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_PAUSE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CMD_STOP;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.PASSES_1;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.PASSES_2;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.PASSES_AUTO;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.ROBOT_BLID;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.ROBOT_PASSWORD;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
 import static org.openhab.core.thing.ThingStatus.INITIALIZING;
 import static org.openhab.core.thing.ThingStatus.OFFLINE;
@@ -52,6 +20,8 @@ import static org.openhab.core.thing.ThingStatus.UNINITIALIZED;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
@@ -134,6 +104,14 @@ public class RoombaHandler extends BaseThingHandler {
     @Override
     public void initialize() {
         IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
+
+        try {
+            InetAddress.getByName(config.getAddress());
+        } catch (UnknownHostException exception) {
+            final String message = "Error connecting to host " + exception.toString();
+            updateStatus(OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, message);
+            return;
+        }
 
         if (UNKNOWN.equals(config.getPassword()) || UNKNOWN.equals(config.getBlid())) {
             final String message = "Robot authentication is required";
@@ -270,7 +248,7 @@ public class RoombaHandler extends BaseThingHandler {
                 @Nullable
                 String blid = null;
                 try {
-                    blid = LoginRequester.getBlid(config.getIpAddress());
+                    blid = LoginRequester.getBlid(config.getAddress());
                 } catch (IOException exception) {
                     updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, exception.toString());
                 }
@@ -286,7 +264,7 @@ public class RoombaHandler extends BaseThingHandler {
                 @Nullable
                 String password = null;
                 try {
-                    password = LoginRequester.getPassword(config.getIpAddress());
+                    password = LoginRequester.getPassword(config.getAddress());
                 } catch (KeyManagementException | NoSuchAlgorithmException exception) {
                     updateStatus(OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, exception.toString());
                     return; // This is internal system error, no retry
@@ -314,7 +292,7 @@ public class RoombaHandler extends BaseThingHandler {
     // and disconnect() are never running concurrently, so they are synchronized
     private synchronized void connect() {
         IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
-        final String address = config.getIpAddress();
+        final String address = config.getAddress();
         logger.debug("Connecting to {}", address);
 
         final String blid = config.getBlid();

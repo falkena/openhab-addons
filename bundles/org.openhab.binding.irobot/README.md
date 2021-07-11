@@ -28,11 +28,11 @@ You can also try using [these python scripts](https://github.com/NickWaterton/Ro
 
 | Parameter | Type    | Required  | Default  | Description       |
 | --------- | :-----: | :-------: | :------: | ----------------- |
-| ipaddress | String  | Yes       |          | Robot IP address  |
+| address   | String  | Yes       |          | Robot IP address  |
 | blid      | String  | No        |          | Robot ID          |
 | password  | String  | No        |          | Robot Password    |
 
-All parameters will be autodiscovered. If using textual configuration, then `ipaddress` shall be specified.
+All parameters will be autodiscovered. If using textual configuration, then `address` shall be specified.
 
 ## Channels
 

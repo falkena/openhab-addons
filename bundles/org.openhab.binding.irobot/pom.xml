@@ -13,4 +13,31 @@
   <artifactId>org.openhab.binding.irobot</artifactId>
 
   <name>openHAB Add-ons :: Bundles :: iRobot Binding</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jsonschema2pojo</groupId>
+        <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+        <version>1.1.1</version>
+        <configuration>
+          <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+          <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
+          <targetPackage>org.openhab.binding.irobot.internal.dto</targetPackage>
+          <annotationStyle>gson</annotationStyle>
+          <includeGeneratedAnnotation>false</includeGeneratedAnnotation>
+          <includeTypeInfo>true</includeTypeInfo>
+          <useBigDecimals>true</useBigDecimals>
+          <useBigIntegers>true</useBigIntegers>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
