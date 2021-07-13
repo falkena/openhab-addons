@@ -58,7 +58,7 @@ public class RoombaHandlerTest {
     private static final String PASSWORD = "<PasswordForIRobot>";
 
     @Nullable
-    private RoombaHandler handler;
+    private IRobotCommonHandler handler;
 
     // We have to initialize it to avoid compile errors
     private @Mock Thing thing = new ThingImpl(new ThingTypeUID("AA:BB"), "");
@@ -68,7 +68,7 @@ public class RoombaHandlerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        Logger logger = LoggerFactory.getLogger(RoombaHandler.class);
+        Logger logger = LoggerFactory.getLogger(IRobotCommonHandler.class);
         Field logLevelField = logger.getClass().getDeclaredField("currentLogLevel");
         logLevelField.setAccessible(true);
         logLevelField.set(logger, LocationAwareLogger.TRACE_INT);
@@ -83,7 +83,7 @@ public class RoombaHandlerTest {
 
         callback = Mockito.mock(ThingHandlerCallback.class);
 
-        handler = new RoombaHandler(thing);
+        handler = new IRobotCommonHandler(thing);
         handler.setCallback(callback);
     }
 

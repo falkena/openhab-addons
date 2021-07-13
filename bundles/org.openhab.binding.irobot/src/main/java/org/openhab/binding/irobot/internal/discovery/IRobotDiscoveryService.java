@@ -12,9 +12,11 @@
  */
 package org.openhab.binding.irobot.internal.discovery;
 
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_ROOMBA;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_ROOMBA_9;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_ROOMBA_I;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UDP_PORT;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
+import static org.openhab.binding.irobot.internal.IRobotHandlerFactory.SUPPORTED_THING_TYPES_UIDS;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -25,7 +27,6 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,7 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
     private @Nullable ScheduledFuture<?> backgroundFuture;
 
     public IRobotDiscoveryService() {
-        super(Collections.singleton(THING_TYPE_ROOMBA), 30, true);
+        super(SUPPORTED_THING_TYPES_UIDS, 30, true);
         scanner = createScanner();
     }
 
@@ -130,14 +131,27 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
                     final String mac = identification.getMac();
                     final String sku = identification.getSku();
                     if (!address.isEmpty() && !sku.isEmpty() && !mac.isEmpty()) {
-                        ThingUID thingUID = new ThingUID(THING_TYPE_ROOMBA, mac.replace(":", ""));
-                        DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(thingUID);
-                        builder = builder.withProperty("mac", mac).withRepresentationProperty("mac");
-                        builder = builder.withProperty("address", address);
+                        ThingUID thingUID = null;
+                        if (sku.regionMatches(true, 0, "M", 0, 1)) {
+                            thingUID = new ThingUID(THING_TYPE_ROOMBA_I, mac.replace(":", ""));
+                        } else if (sku.regionMatches(true, 0, "E", 0, 1)) {
+                            thingUID = new ThingUID(THING_TYPE_ROOMBA_I, mac.replace(":", ""));
+                        } else if (sku.regionMatches(true, 0, "I", 0, 1)) {
+                            thingUID = new ThingUID(THING_TYPE_ROOMBA_I, mac.replace(":", ""));
+                        } else if (sku.regionMatches(true, 0, "R", 0, 1)) {
+                            thingUID = new ThingUID(THING_TYPE_ROOMBA_9, mac.replace(":", ""));
+                        } else if (sku.regionMatches(true, 0, "S", 0, 1)) {
+                            thingUID = new ThingUID(THING_TYPE_ROOMBA_I, mac.replace(":", ""));
+                        }
+                        if (thingUID != null) {
+                            DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(thingUID);
+                            builder = builder.withProperty("mac", mac).withRepresentationProperty("mac");
+                            builder = builder.withProperty("address", address);
 
-                        String name = identification.getRobotname();
-                        builder = builder.withLabel("iRobot " + (!name.isEmpty() ? name : UNKNOWN));
-                        thingDiscovered(builder.build());
+                            final String name = identification.getRobotname();
+                            builder = builder.withLabel("iRobot " + (!name.isEmpty() ? name : UNKNOWN));
+                            thingDiscovered(builder.build());
+                        }
                     }
                 }
             }

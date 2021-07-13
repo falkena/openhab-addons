@@ -19,7 +19,6 @@ import static org.openhab.core.thing.ThingStatus.OFFLINE;
 import static org.openhab.core.thing.ThingStatus.UNINITIALIZED;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
@@ -53,11 +52,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.stream.JsonReader;
+import com.google.gson.JsonSyntaxException;
 
 /**
- * The {@link RoombaHandler} is responsible for handling commands, which are
+ * The {@link IRobotCommonHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author hkuhn42 - Initial contribution
@@ -66,24 +64,42 @@ import com.google.gson.stream.JsonReader;
  * @author Alexander Falkenstern - Add support for I7 series
  */
 @NonNullByDefault
-public class RoombaHandler extends BaseThingHandler {
-    private final Logger logger = LoggerFactory.getLogger(RoombaHandler.class);
+public class IRobotCommonHandler extends BaseThingHandler {
+    private final Logger logger = LoggerFactory.getLogger(IRobotCommonHandler.class);
 
     private final Gson gson = new Gson();
 
     private Hashtable<ChannelUID, State> lastState = new Hashtable<>();
-    private MQTTProtocol.@Nullable Schedule lastSchedule = null;
     private boolean autoPasses = true;
     private @Nullable Boolean twoPasses = null;
-    private boolean carpetBoost = true;
-    private @Nullable Boolean vacHigh = null;
     private boolean isPaused = false;
 
     private @Nullable Future<?> credentialRequester;
     protected IRobotConnectionHandler connection = new IRobotConnectionHandler() {
         @Override
         public void receive(final String topic, final String json) {
-            RoombaHandler.this.receive(topic, json);
+
+            logger.trace("Got topic {} data {}", topic, json);
+
+            MQTTProtocol.StateMessage msg;
+            try {
+                // We are not consuming all the fields, so we have to create the reader explicitly
+                // If we use fromJson(String) or fromJson(java.util.reader), it will throw
+                // "JSON not fully consumed" exception, because not all the reader's content has been
+                // used up. We want to avoid that also for compatibility reasons because newer iRobot
+                // versions may add fields.
+                msg = gson.fromJson(json, MQTTProtocol.StateMessage.class);
+            } catch (JsonSyntaxException exception) {
+                logger.warn("Failed to parse JSON message for {}: {}", thing.getLabel(), exception.toString());
+                logger.warn("Raw contents: {}", json);
+                return;
+            }
+
+            // Since all the fields are in fact optional, and a single message never
+            // contains all of them, we have to check presence of each individually
+            if (msg.state != null && msg.state.reported != null) {
+                IRobotCommonHandler.this.receive(topic, msg.state.reported);
+            }
         }
 
         @Override
@@ -98,7 +114,7 @@ public class RoombaHandler extends BaseThingHandler {
         }
     };
 
-    public RoombaHandler(Thing thing) {
+    public IRobotCommonHandler(Thing thing) {
         super(thing);
     }
 
@@ -196,31 +212,10 @@ public class RoombaHandler extends BaseThingHandler {
                     connection.send(request.getTopic(), gson.toJson(request));
                 }
             }
-        } else if (SCHEDULE_GROUP_ID.equals(channelUID.getGroupId())) {
-            MQTTProtocol.Schedule schedule = lastSchedule;
-
-            // Schedule can only be updated in a bulk, so we have to store current
-            // schedule and modify components.
-            if ((command instanceof OnOffType) && (schedule != null) && (schedule.cycle != null)) {
-                MQTTProtocol.Schedule newSchedule = new MQTTProtocol.Schedule(schedule.cycle);
-                for (int i = 0; i < DAY_OF_WEEK.length; i++) {
-                    newSchedule.enableCycle(i, newSchedule.cycleEnabled(i));
-                    if (channelUID.getIdWithoutGroup().equals(DAY_OF_WEEK[i] + "_enabled")) {
-                        newSchedule.enableCycle(i, command.equals(OnOffType.ON));
-                    }
-                }
-                sendSchedule(newSchedule);
-            }
-        } else if (CHANNEL_CONTROL_EDGE_CLEAN.equals(channelId)) {
-            if (command instanceof OnOffType) {
-                sendDelta(new MQTTProtocol.OpenOnly(command.equals(OnOffType.OFF)));
-            }
         } else if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
             if (command instanceof OnOffType) {
                 sendDelta(new MQTTProtocol.BinPause(command.equals(OnOffType.OFF)));
             }
-        } else if (CHANNEL_CONTROL_POWER_BOOST.equals(channelId)) {
-            sendDelta(new MQTTProtocol.PowerBoost(command.equals(BOOST_AUTO), command.equals(BOOST_PERFORMANCE)));
         } else if (CHANNEL_CONTROL_CLEAN_PASSES.equals(channelId)) {
             sendDelta(new MQTTProtocol.CleanPasses(!command.equals(PASSES_AUTO), command.equals(PASSES_2)));
         } else if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
@@ -230,11 +225,7 @@ public class RoombaHandler extends BaseThingHandler {
         }
     }
 
-    private void sendSchedule(MQTTProtocol.Schedule schedule) {
-        sendDelta(new MQTTProtocol.CleanSchedule(schedule));
-    }
-
-    private void sendDelta(MQTTProtocol.StateValue state) {
+    protected void sendDelta(MQTTProtocol.StateValue state) {
         MQTTProtocol.Request request = new MQTTProtocol.DeltaRequest(state);
         connection.send(request.getTopic(), gson.toJson(request));
     }
@@ -307,33 +298,8 @@ public class RoombaHandler extends BaseThingHandler {
         }
     }
 
-    public void receive(final String topic, final String json) {
-        MQTTProtocol.StateMessage msg;
-
-        logger.trace("Got topic {} data {}", topic, json);
-
-        try {
-            // We are not consuming all the fields, so we have to create the reader explicitly
-            // If we use fromJson(String) or fromJson(java.util.reader), it will throw
-            // "JSON not fully consumed" exception, because not all the reader's content has been
-            // used up. We want to avoid that also for compatibility reasons because newer iRobot
-            // versions may add fields.
-            JsonReader jsonReader = new JsonReader(new StringReader(json));
-            msg = gson.fromJson(jsonReader, MQTTProtocol.StateMessage.class);
-        } catch (JsonParseException exception) {
-            logger.warn("Failed to parse JSON message for {}: {}", thing.getLabel(), exception.toString());
-            logger.warn("Raw contents: {}", json);
-            return;
-        }
-
-        // Since all the fields are in fact optional, and a single message never
-        // contains all of them, we have to check presence of each individually
-        if (msg.state == null || msg.state.reported == null) {
-            return;
-        }
-
+    public void receive(final String topic, final MQTTProtocol.GenericState reported) {
         final ThingUID thingUID = thing.getUID();
-        MQTTProtocol.GenericState reported = msg.state.reported;
 
         if (reported.cleanMissionStatus != null) {
             final ChannelGroupUID missionGroupUID = new ChannelGroupUID(thingUID, MISSION_GROUP_ID);
@@ -395,49 +361,9 @@ public class RoombaHandler extends BaseThingHandler {
             updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), reported.signal.snr);
         }
 
-        if (reported.cleanSchedule != null) {
-            final ChannelGroupUID scheduleGroupUID = new ChannelGroupUID(thingUID, SCHEDULE_GROUP_ID);
-            MQTTProtocol.Schedule schedule = reported.cleanSchedule;
-
-            if (schedule.cycle != null) {
-                for (int i = 0; i < DAY_OF_WEEK.length; i++) {
-                    updateState(new ChannelUID(scheduleGroupUID, DAY_OF_WEEK[i] + "_enabled"),
-                            schedule.cycleEnabled(i));
-                }
-            }
-
-            lastSchedule = schedule;
-        }
-
-        if (reported.openOnly != null) {
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_EDGE_CLEAN), !reported.openOnly);
-        }
-
         if (reported.binPause != null) {
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
             updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_ALWAYS_FINISH), !reported.binPause);
-        }
-
-        // To make the life more interesting, paired values may not appear together in the
-        // same message, so we have to keep track of current values.
-        if (reported.carpetBoost != null) {
-            carpetBoost = reported.carpetBoost;
-            if (reported.carpetBoost) {
-                // When set to true, overrides vacHigh
-                final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-                updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST), BOOST_AUTO);
-            } else if (vacHigh != null) {
-                reportVacHigh();
-            }
-        }
-
-        if (reported.vacHigh != null) {
-            vacHigh = reported.vacHigh;
-            if (!carpetBoost) {
-                // Can be overridden by "carpetBoost":true
-                reportVacHigh();
-            }
         }
 
         if (reported.noAutoPasses != null) {
@@ -469,33 +395,6 @@ public class RoombaHandler extends BaseThingHandler {
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
             updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_UPLOAD), reported.mapUploadAllowed);
         }
-
-        updateProperty(Thing.PROPERTY_FIRMWARE_VERSION, reported.softwareVer);
-        updateProperty("navSwVer", reported.navSwVer);
-        updateProperty("wifiSwVer", reported.wifiSwVer);
-        updateProperty("mobilityVer", reported.mobilityVer);
-        updateProperty("bootloaderVer", reported.bootloaderVer);
-        updateProperty("umiVer", reported.umiVer);
-        updateProperty("sku", reported.sku);
-        updateProperty("batteryType", reported.batteryType);
-
-        if (reported.subModSwVer != null) {
-            // This is used by i7 model. It has more capabilities, perhaps a dedicated
-            // handler should be written by someone who owns it.
-            updateProperty("subModSwVer.nav", reported.subModSwVer.nav);
-            updateProperty("subModSwVer.mob", reported.subModSwVer.mob);
-            updateProperty("subModSwVer.pwr", reported.subModSwVer.pwr);
-            updateProperty("subModSwVer.sft", reported.subModSwVer.sft);
-            updateProperty("subModSwVer.mobBtl", reported.subModSwVer.mobBtl);
-            updateProperty("subModSwVer.linux", reported.subModSwVer.linux);
-            updateProperty("subModSwVer.con", reported.subModSwVer.con);
-        }
-    }
-
-    private void reportVacHigh() {
-        final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thing.getUID(), CONTROL_GROUP_ID);
-        updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST),
-                vacHigh ? BOOST_PERFORMANCE : BOOST_ECO);
     }
 
     private void reportTwoPasses() {

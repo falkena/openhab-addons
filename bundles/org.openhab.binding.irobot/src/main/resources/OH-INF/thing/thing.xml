@@ -4,9 +4,28 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<thing-type id="roomba">
+	<thing-type id="roomba9">
 		<label>Roomba</label>
-		<description>A Roomba vacuum robot</description>
+		<description>A Roomba 9-series vacuum robot</description>
+		<category>CleaningRobot</category>
+
+		<channel-groups>
+			<channel-group id="control" typeId="control"/>
+			<channel-group id="schedule" typeId="schedule"/>
+			<channel-group id="state" typeId="state"/>
+			<channel-group id="mission" typeId="mission"/>
+			<channel-group id="network" typeId="network"/>
+			<channel-group id="position" typeId="position"/>
+			<channel-group id="common" typeId="common"/>
+		</channel-groups>
+
+		<representation-property>mac</representation-property>
+		<config-description-ref uri="thing-type:irobot:thing"/>
+	</thing-type>
+
+	<thing-type id="roombaI">
+		<label>Roomba</label>
+		<description>A Roomba I-series vacuum robot</description>
 		<category>CleaningRobot</category>
 
 		<channel-groups>
