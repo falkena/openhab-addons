@@ -1,0 +1,23 @@
+{
+  "$id": "#BinState",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot bin status package",
+  "type": "object",
+  "properties": {
+    "full": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "boolean"
+    },
+    "present": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "boolean"
+    }
+  },
+  "required": [ "full", "present" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

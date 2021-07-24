@@ -1,0 +1,25 @@
+{
+  "$id": "#IRobotCommand",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Robot delta request data",
+  "type": "object",
+  "properties": {
+    "command": {
+      "description": "Write properly help",
+      "type": "string"
+    },
+    "initiator": {
+      "description": "Write properly help",
+      "type": "string"
+    },
+    "time": {
+      "description": "Write properly help",
+      "type": "integer"
+    }
+  },
+  "required": [ "command", "initiator", "time" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

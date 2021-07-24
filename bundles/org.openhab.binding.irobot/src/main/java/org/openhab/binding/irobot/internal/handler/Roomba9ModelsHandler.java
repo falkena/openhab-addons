@@ -18,13 +18,24 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_E
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_PERFORMANCE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_EDGE_CLEAN;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_POWER_BOOST;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHEDULE_ENABLED;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHEDULE_TIMESTAMP;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL_GROUP_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.DAY_OF_WEEK;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.SCHEDULE_GROUP_ID;
+import static org.openhab.core.thing.Thing.PROPERTY_HARDWARE_VERSION;
+
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.irobot.internal.dto.MQTTProtocol;
+import org.openhab.binding.irobot.internal.dto.CleanSchedule;
+import org.openhab.binding.irobot.internal.dto.Reported;
+import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelGroupUID;
@@ -36,7 +47,7 @@ import org.openhab.core.thing.binding.builder.ThingBuilder;
 import org.openhab.core.thing.type.AutoUpdatePolicy;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.Command;
-import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +63,6 @@ import org.slf4j.LoggerFactory;
 @NonNullByDefault
 public class Roomba9ModelsHandler extends IRobotCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(Roomba9ModelsHandler.class);
-
-    private boolean carpetBoost = true;
-    private @Nullable Boolean vacHigh = null;
-    private MQTTProtocol.@Nullable Schedule lastSchedule = null;
 
     public Roomba9ModelsHandler(Thing thing) {
         super(thing);
@@ -93,31 +100,68 @@ public class Roomba9ModelsHandler extends IRobotCommonHandler {
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         final String channelId = channelUID.getIdWithoutGroup();
-        if (command instanceof RefreshType) {
-            super.handleCommand(channelUID, command);
+        if (command instanceof DateTimeType) {
+            if (SCHEDULE_GROUP_ID.equals(channelUID.getGroupId())) {
+                CleanSchedule schedule = new CleanSchedule();
+                List<String> cycle = schedule.getCycle();
+                List<BigInteger> hour = schedule.getH();
+                List<BigInteger> minute = schedule.getM();
+                final ChannelGroupUID groupUID = new ChannelGroupUID(channelUID.getThingUID(), SCHEDULE_GROUP_ID);
+                for (int i = 0; i < DAY_OF_WEEK.length; i++) {
+                    final ChannelUID enabledChannelUID = new ChannelUID(groupUID, CHANNEL_SCHEDULE_ENABLED[i]);
+                    cycle.add(OnOffType.ON.equals(getCacheEntry(enabledChannelUID)) ? "start" : "none");
+
+                    final ChannelUID timeChannelUID = new ChannelUID(groupUID, CHANNEL_SCHEDULE_TIMESTAMP[i]);
+                    DateTimeType timestamp = (DateTimeType) getCacheEntry(timeChannelUID);
+                    if ((timestamp == null) || channelId.equals(CHANNEL_SCHEDULE_TIMESTAMP[i])) {
+                        timestamp = (DateTimeType) command;
+                    }
+                    hour.add(BigInteger.valueOf(timestamp.getZonedDateTime().getHour()));
+                    minute.add(BigInteger.valueOf(timestamp.getZonedDateTime().getMinute()));
+                }
+
+                Reported request = new Reported();
+                request.setCleanSchedule(schedule);
+                sendSetting(request);
+            } else {
+                super.handleCommand(channelUID, command);
+            }
         } else if (command instanceof OnOffType) {
             if (SCHEDULE_GROUP_ID.equals(channelUID.getGroupId())) {
-                MQTTProtocol.Schedule schedule = lastSchedule;
-
-                // Schedule can only be updated in a bulk, so we have to store current schedule and modify components.
-                if ((schedule != null) && (schedule.cycle != null)) {
-                    MQTTProtocol.Schedule newSchedule = new MQTTProtocol.Schedule(schedule.cycle);
-                    for (int i = 0; i < DAY_OF_WEEK.length; i++) {
-                        newSchedule.enableCycle(i, newSchedule.cycleEnabled(i));
-                        if (channelUID.getIdWithoutGroup().equals(DAY_OF_WEEK[i] + "_enabled")) {
-                            newSchedule.enableCycle(i, command.equals(OnOffType.ON));
-                        }
+                CleanSchedule schedule = new CleanSchedule();
+                List<String> cycle = schedule.getCycle();
+                List<BigInteger> hour = schedule.getH();
+                List<BigInteger> minute = schedule.getM();
+                final ChannelGroupUID groupUID = new ChannelGroupUID(channelUID.getThingUID(), SCHEDULE_GROUP_ID);
+                for (int i = 0; i < DAY_OF_WEEK.length; i++) {
+                    final ChannelUID enabledChannelUID = new ChannelUID(groupUID, CHANNEL_SCHEDULE_ENABLED[i]);
+                    OnOffType enabled = (OnOffType) getCacheEntry(enabledChannelUID);
+                    if ((enabled == null) || channelId.equals(CHANNEL_SCHEDULE_ENABLED[i])) {
+                        enabled = (OnOffType) command;
                     }
-                    sendDelta(new MQTTProtocol.CleanSchedule(newSchedule));
+                    cycle.add(OnOffType.ON.equals(enabled) ? "start" : "none");
+
+                    final ChannelUID timeChannelUID = new ChannelUID(groupUID, CHANNEL_SCHEDULE_TIMESTAMP[i]);
+                    DateTimeType timestamp = (DateTimeType) getCacheEntry(timeChannelUID);
+                    hour.add(BigInteger.valueOf(timestamp.getZonedDateTime().getHour()));
+                    minute.add(BigInteger.valueOf(timestamp.getZonedDateTime().getMinute()));
                 }
+                Reported request = new Reported();
+                request.setCleanSchedule(schedule);
+                sendSetting(request);
             } else if (CHANNEL_CONTROL_EDGE_CLEAN.equals(channelId)) {
-                sendDelta(new MQTTProtocol.OpenOnly(command.equals(OnOffType.OFF)));
+                Reported request = new Reported();
+                request.setOpenOnly(command.equals(OnOffType.OFF));
+                sendSetting(request);
             } else {
                 super.handleCommand(channelUID, command);
             }
         } else if (command instanceof StringType) {
             if (CHANNEL_CONTROL_POWER_BOOST.equals(channelId)) {
-                sendDelta(new MQTTProtocol.PowerBoost(command.equals(BOOST_AUTO), command.equals(BOOST_PERFORMANCE)));
+                Reported request = new Reported();
+                request.setCarpetBoost(command.equals(BOOST_AUTO));
+                request.setVacHigh(command.equals(BOOST_PERFORMANCE));
+                sendSetting(request);
             } else {
                 super.handleCommand(channelUID, command);
             }
@@ -127,64 +171,66 @@ public class Roomba9ModelsHandler extends IRobotCommonHandler {
     }
 
     @Override
-    public void receive(final String topic, final MQTTProtocol.GenericState reported) {
+    protected void receive(final Reported reported) {
         final ThingUID thingUID = thing.getUID();
 
-        if (reported.cleanSchedule != null) {
-            final ChannelGroupUID scheduleGroupUID = new ChannelGroupUID(thingUID, SCHEDULE_GROUP_ID);
-            MQTTProtocol.Schedule schedule = reported.cleanSchedule;
-
-            if (schedule.cycle != null) {
+        final CleanSchedule cleanSchedule = reported.getCleanSchedule();
+        if (cleanSchedule != null) {
+            final List<String> cycles = cleanSchedule.getCycle();
+            final List<BigInteger> hours = cleanSchedule.getH();
+            final List<BigInteger> minutes = cleanSchedule.getM();
+            if ((cycles != null) && (hours != null) && (minutes != null)) {
+                final LocalDate today = LocalDate.now();
+                final ChannelGroupUID scheduleGroupUID = new ChannelGroupUID(thingUID, SCHEDULE_GROUP_ID);
                 for (int i = 0; i < DAY_OF_WEEK.length; i++) {
-                    updateState(new ChannelUID(scheduleGroupUID, DAY_OF_WEEK[i] + "_enabled"),
-                            schedule.cycleEnabled(i));
+                    final OnOffType enabled = OnOffType.from("start".equalsIgnoreCase(cycles.get(i)));
+                    updateState(new ChannelUID(scheduleGroupUID, CHANNEL_SCHEDULE_ENABLED[i]), enabled);
+                    final LocalTime time = LocalTime.of(hours.get(i).intValue(), minutes.get(i).intValue());
+                    DateTimeType timestamp = new DateTimeType(ZonedDateTime.of(today, time, ZoneId.systemDefault()));
+                    updateState(new ChannelUID(scheduleGroupUID, CHANNEL_SCHEDULE_TIMESTAMP[i]), timestamp);
+                }
+            }
+        }
+
+        final Boolean boost = reported.getCarpetBoost();
+        final Boolean vacHigh = reported.getVacHigh();
+        if ((boost != null) || (vacHigh != null)) {
+            // To make the life more interesting, paired values may not appear together in the
+            // same message, so we have to keep track of current values.
+            String state = null;
+            final ChannelUID channelUID = new ChannelUID(thingUID, CONTROL_GROUP_ID, CHANNEL_CONTROL_POWER_BOOST);
+
+            if (boost != null) {
+                state = Boolean.TRUE.equals(boost) ? BOOST_AUTO : BOOST_ECO;
+                setCacheEntry(channelUID, new StringType(state));
+            }
+
+            if (vacHigh != null) {
+                // Can be overridden by "carpetBoost":true
+                final State cache = getCacheEntry(channelUID);
+                if ((cache != null) && !cache.equals(BOOST_AUTO)) {
+                    state = Boolean.TRUE.equals(vacHigh) ? BOOST_PERFORMANCE : BOOST_ECO;
                 }
             }
 
-            lastSchedule = schedule;
+            updateState(channelUID, state);
         }
 
-        if (reported.openOnly != null) {
+        final Boolean openOnly = reported.getOpenOnly();
+        if (openOnly != null) {
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_EDGE_CLEAN), !reported.openOnly);
+            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_EDGE_CLEAN), OnOffType.from(!openOnly));
         }
 
-        // To make the life more interesting, paired values may not appear together in the same message,
-        // so we have to keep track of current values.
-        if (reported.carpetBoost != null) {
-            carpetBoost = reported.carpetBoost;
-            if (reported.carpetBoost) {
-                // When set to true, overrides vacHigh
-                final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-                updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST), BOOST_AUTO);
-            } else if (vacHigh != null) {
-                reportVacHigh();
-            }
-        }
+        updateProperty("bootloaderVersion", reported.getBootloaderVer());
+        updateProperty(PROPERTY_HARDWARE_VERSION, reported.getHardwareRev());
+        updateProperty("mobilityVersion", reported.getMobilityVer());
+        updateProperty("navigationSoftwareVersion", reported.getNavSwVer());
+        updateProperty("soundVer", reported.getSoundVer());
+        updateProperty("umiVer", reported.getUmiVer());
+        updateProperty("uiSwVer", reported.getUiSwVer());
+        updateProperty("wifiSoftwareVersion", reported.getWifiSwVer());
 
-        if (reported.vacHigh != null) {
-            vacHigh = reported.vacHigh;
-            if (!carpetBoost) {
-                // Can be overridden by "carpetBoost":true
-                reportVacHigh();
-            }
-        }
-
-        updateProperty(Thing.PROPERTY_FIRMWARE_VERSION, reported.softwareVer);
-        updateProperty("navSwVer", reported.navSwVer);
-        updateProperty("wifiSwVer", reported.wifiSwVer);
-        updateProperty("mobilityVer", reported.mobilityVer);
-        updateProperty("bootloaderVer", reported.bootloaderVer);
-        updateProperty("umiVer", reported.umiVer);
-        updateProperty("sku", reported.sku);
-        updateProperty("batteryType", reported.batteryType);
-
-        super.receive(topic, reported);
-    }
-
-    private void reportVacHigh() {
-        final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thing.getUID(), CONTROL_GROUP_ID);
-        updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_POWER_BOOST),
-                vacHigh ? BOOST_PERFORMANCE : BOOST_ECO);
+        super.receive(reported);
     }
 }

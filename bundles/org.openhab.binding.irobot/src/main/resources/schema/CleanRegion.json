@@ -1,0 +1,21 @@
+{
+  "$id": "#CleanRegions",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot clean regions package",
+  "type": "object",
+  "properties": {
+    "region_id": {
+      "description": "Write properly help",
+      "type": "integer"
+    },
+    "type": {
+      "description": "Write properly help",
+      "type": "string"
+    }
+  },
+  "required": [ "region_id", "type" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

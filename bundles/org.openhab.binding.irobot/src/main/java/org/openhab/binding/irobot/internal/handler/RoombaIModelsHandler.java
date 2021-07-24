@@ -13,15 +13,26 @@
 package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BINDING_ID;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_COMMAND;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_MAP_LEARN;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_NOISE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_TYPE_NUMBER;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.COMMAND_CLEAN_REGIONS;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL_GROUP_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.NETWORK_GROUP_ID;
+import static org.openhab.core.thing.Thing.PROPERTY_HARDWARE_VERSION;
+
+import java.math.BigDecimal;
+import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.irobot.internal.dto.MQTTProtocol;
+import org.openhab.binding.irobot.internal.dto.HwPartsRev;
+import org.openhab.binding.irobot.internal.dto.Reported;
+import org.openhab.binding.irobot.internal.dto.Signal;
+import org.openhab.binding.irobot.internal.dto.SubModSwVer;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.StringType;
+import org.openhab.core.thing.ChannelGroupUID;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingUID;
@@ -30,7 +41,6 @@ import org.openhab.core.thing.binding.builder.ThingBuilder;
 import org.openhab.core.thing.type.AutoUpdatePolicy;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.Command;
-import org.openhab.core.types.RefreshType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,31 +92,90 @@ public class RoombaIModelsHandler extends IRobotCommonHandler {
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         final String channelId = channelUID.getIdWithoutGroup();
-        if (command instanceof RefreshType) {
-            super.handleCommand(channelUID, command);
-        } else if (command instanceof OnOffType) {
-            super.handleCommand(channelUID, command);
+        if (command instanceof OnOffType) {
+            if (CHANNEL_CONTROL_MAP_LEARN.equals(channelId)) {
+                Reported request = new Reported();
+                request.setPmapLearningAllowed(command.equals(OnOffType.ON));
+                sendSetting(request);
+            } else {
+                super.handleCommand(channelUID, command);
+            }
+        } else if (command instanceof StringType) {
+            if (CHANNEL_CONTROL_COMMAND.equals(channelId)) {
+                String request = command.toString();
+                if (request.startsWith(COMMAND_CLEAN_REGIONS)) {
+                    // format: regions:<pmid>;<region_id1>,<region_id2>,...
+                    if (Pattern.matches("regions:[^:;,]+;.+(,[^:;,]+)*", request)) {
+                        final String[] regions = request.split(":");
+                        final String[] params = regions[1].split(";");
+
+                        String arguments = String.format("\"ordered\":1, \"pmap_id\":\"%s\", \"regions\":[", params[0]);
+                        for (final String region : params[1].split(",")) {
+                            arguments += String.format("{\"region_id\":\"%s\", \"type\":\"rid\"},", region);
+                        }
+                        sendCommand("start", arguments.replaceAll(",$", "") + "]");
+                    } else {
+                        logger.warn("Invalid request: {}", request);
+                        logger.warn("Correct format: regions:<pmid>;<region_id1>,<region_id2>,...>");
+                    }
+                } else {
+                    super.handleCommand(channelUID, command);
+                }
+            } else {
+                super.handleCommand(channelUID, command);
+            }
         } else {
             super.handleCommand(channelUID, command);
         }
     }
 
     @Override
-    public void receive(final String topic, final MQTTProtocol.GenericState reported) {
+    protected void receive(final Reported reported) {
         final ThingUID thingUID = thing.getUID();
 
-        if (reported.subModSwVer != null) {
-            // This is used by i7 model. It has more capabilities, perhaps a dedicated
-            // handler should be written by someone who owns it.
-            updateProperty("subModSwVer.nav", reported.subModSwVer.nav);
-            updateProperty("subModSwVer.mob", reported.subModSwVer.mob);
-            updateProperty("subModSwVer.pwr", reported.subModSwVer.pwr);
-            updateProperty("subModSwVer.sft", reported.subModSwVer.sft);
-            updateProperty("subModSwVer.mobBtl", reported.subModSwVer.mobBtl);
-            updateProperty("subModSwVer.linux", reported.subModSwVer.linux);
-            updateProperty("subModSwVer.con", reported.subModSwVer.con);
+        final Boolean mapLearn = reported.getPmapLearningAllowed();
+        if (mapLearn != null) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_LEARN), OnOffType.from(mapLearn));
         }
 
-        super.receive(topic, reported);
+        final Signal signal = reported.getSignal();
+        if (signal != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            final BigDecimal noise = new BigDecimal(signal.getNoise());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_NOISE), noise);
+        }
+
+        // "batInfo": {"mDate": "2019-3-12", "mName": "F12432832R", "mDaySerial": 34361, "mData":
+        // "303030333034303200000000000000000000000000", "mLife":
+        // "0C570B2210800A7A4E3900160507F6EE00D7FE9F2B0CFFFF005D320100000000", "cCount": 164, "afCount": 0}
+
+        // "hwPartsRev": {
+        // "csscID": 0,
+        // "mobBlid": "XXXXXXXXXXXXXXXXXX",
+        // "imuPartNo": "XXXXXXXXX",
+        // "navSerialNo": "XXXXXXXXXX",
+        // "wlan0HwAddr": "FF:FF:FF:FF:FF:FF",
+        // "NavBrd": 0
+        // }
+        final HwPartsRev hardwareRevision = reported.getHwPartsRev();
+        if (hardwareRevision != null) {
+            updateProperty(PROPERTY_HARDWARE_VERSION, hardwareRevision.getMobBrd());
+        }
+
+        // "subModSwVer": {
+        // "pwr": "0.5.5+ubuntu-HEAD-da83355e66c+21",
+        // "sft": "1.2.0+Lewis-Builds/Lewis-Certified-Safety/lewis-safety-ca6f27d09c6+31",
+        // "linux": "linux+3.8.6.1+lewis-release-121+21"
+        // }
+        final SubModSwVer softwareVersion = reported.getSubModSwVer();
+        if (softwareVersion != null) {
+            updateProperty("bootloaderVersion", softwareVersion.getMobBtl());
+            updateProperty("mobilityVersion", softwareVersion.getMob());
+            updateProperty("navigationSoftwareVersion", softwareVersion.getNav());
+            updateProperty("wifiSoftwareVersion", softwareVersion.getCon());
+        }
+
+        super.receive(reported);
     }
 }

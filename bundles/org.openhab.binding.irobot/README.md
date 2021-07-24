@@ -179,7 +179,7 @@ Error codes. Data type is string in order to be able to utilize mapping to human
 You can clean one or many specific regions of a given map by sending the following String to the command channel:
 
 ```
- cleanRegions:<pmapId>;<region_id1>,<region_id2>,..
+ regions:<pmapId>;<region_id1>,<region_id2>,..
 ```
 
 The easiest way to determine the pmapId and region_ids is to monitor the last_command channel while starting a new mission for the specific region with the iRobot-App.

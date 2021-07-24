@@ -1,0 +1,49 @@
+{
+  "$id": "#HwPartsRev",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Write properly comment",
+  "description": "iRobot hardware information",
+  "type": "object",
+  "properties": {
+    "csscID": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "mobBrd": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "mobBlid": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "imuPartNo": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "navSerialNo": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "wlan0HwAddr": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "NavBrd": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    }
+  },
+  "required": [ "csscID", "mobBrd", "mobBlid", "imuPartNo", "navSerialNo", "wlan0HwAddr", "NavBrd" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

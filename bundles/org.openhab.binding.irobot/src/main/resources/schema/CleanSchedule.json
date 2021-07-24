@@ -1,0 +1,35 @@
+{
+  "$id": "#CleanSchedule",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Roomba 980 schedule description",
+  "description": "iRobot schedule package",
+  "type": "object",
+  "properties": {
+    "cycle": {
+      "description": "Write properly help",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "h": {
+      "description": "Write properly help",
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "m": {
+      "description": "Write properly help",
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  },
+  "required": [ "cycle", "h", "m" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

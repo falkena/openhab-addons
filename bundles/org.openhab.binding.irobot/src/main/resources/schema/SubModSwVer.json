@@ -1,0 +1,49 @@
+{
+  "$id": "#SubModSwVer",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Write properly comment",
+  "description": "iRobot hardware information",
+  "type": "object",
+  "properties": {
+    "con": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "linux": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "nav": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "mob": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "mobBtl": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "pwr": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "sft": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "required": [ "con", "linux", "nav", "mob", "mobBtl", "pwr", "sft" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

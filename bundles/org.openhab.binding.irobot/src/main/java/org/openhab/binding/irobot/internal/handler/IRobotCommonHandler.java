@@ -14,11 +14,15 @@ package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
+import static org.openhab.core.thing.Thing.PROPERTY_FIRMWARE_VERSION;
+import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 import static org.openhab.core.thing.ThingStatus.INITIALIZING;
 import static org.openhab.core.thing.ThingStatus.OFFLINE;
 import static org.openhab.core.thing.ThingStatus.UNINITIALIZED;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
@@ -26,12 +30,17 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
-import org.openhab.binding.irobot.internal.dto.MQTTProtocol;
+import org.openhab.binding.irobot.internal.dto.BinState;
+import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
+import org.openhab.binding.irobot.internal.dto.IRobotDTO;
+import org.openhab.binding.irobot.internal.dto.LastCommand;
+import org.openhab.binding.irobot.internal.dto.Reported;
+import org.openhab.binding.irobot.internal.dto.Root;
+import org.openhab.binding.irobot.internal.dto.Signal;
 import org.openhab.binding.irobot.internal.utils.LoginRequester;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.DecimalType;
@@ -65,40 +74,37 @@ import com.google.gson.JsonSyntaxException;
  */
 @NonNullByDefault
 public class IRobotCommonHandler extends BaseThingHandler {
+    String PROPERTY_BATTERY_TYPE = "batteryType";
+
     private final Logger logger = LoggerFactory.getLogger(IRobotCommonHandler.class);
 
     private final Gson gson = new Gson();
 
     private Hashtable<ChannelUID, State> lastState = new Hashtable<>();
-    private boolean autoPasses = true;
-    private @Nullable Boolean twoPasses = null;
-    private boolean isPaused = false;
 
     private @Nullable Future<?> credentialRequester;
     protected IRobotConnectionHandler connection = new IRobotConnectionHandler() {
         @Override
         public void receive(final String topic, final String json) {
-
-            logger.trace("Got topic {} data {}", topic, json);
-
-            MQTTProtocol.StateMessage msg;
-            try {
-                // We are not consuming all the fields, so we have to create the reader explicitly
-                // If we use fromJson(String) or fromJson(java.util.reader), it will throw
-                // "JSON not fully consumed" exception, because not all the reader's content has been
-                // used up. We want to avoid that also for compatibility reasons because newer iRobot
-                // versions may add fields.
-                msg = gson.fromJson(json, MQTTProtocol.StateMessage.class);
-            } catch (JsonSyntaxException exception) {
-                logger.warn("Failed to parse JSON message for {}: {}", thing.getLabel(), exception.toString());
-                logger.warn("Raw contents: {}", json);
-                return;
+            if (logger.isTraceEnabled()) {
+                logger.trace("Got topic {} data {}", topic, json);
             }
 
-            // Since all the fields are in fact optional, and a single message never
-            // contains all of them, we have to check presence of each individually
-            if (msg.state != null && msg.state.reported != null) {
-                IRobotCommonHandler.this.receive(topic, msg.state.reported);
+            @Nullable
+            Reported reported = null;
+            try {
+                final Root root = gson.fromJson(json, Root.class);
+                if ((root != null) && (root.getState() != null)) {
+                    reported = root.getState().getReported();
+                }
+            } catch (JsonSyntaxException exception) {
+                logger.warn("Failed to parse {} for {}: {}", json, thing.getLabel(), exception.toString());
+            }
+
+            if (reported != null) {
+                IRobotCommonHandler.this.receive(reported);
+                final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thing.getUID(), STATE_GROUP_ID);
+                updateState(new ChannelUID(stateGroupUID, CHANNEL_JSON), StringType.valueOf(json));
             }
         }
 
@@ -150,84 +156,201 @@ public class IRobotCommonHandler extends BaseThingHandler {
         scheduler.execute(connection::disconnect);
     }
 
-    protected void updateState(ChannelUID channelUID, Boolean state) {
-        updateState(channelUID, OnOffType.from(state));
+    protected void updateState(ChannelUID channelUID, @Nullable BigDecimal state) {
+        if (state != null) {
+            updateState(channelUID, new DecimalType(state));
+        }
     }
 
-    protected void updateState(ChannelUID channelUID, Integer state) {
-        updateState(channelUID, new DecimalType(state));
-    }
-
-    protected void updateState(ChannelUID channelUID, String state) {
-        updateState(channelUID, new StringType(state));
+    protected void updateState(ChannelUID channelUID, @Nullable String state) {
+        if (state != null) {
+            updateState(channelUID, new StringType(state));
+        }
     }
 
     @Override
     protected void updateState(ChannelUID channelUID, State state) {
-        lastState.put(channelUID, state);
+        setCacheEntry(channelUID, state);
         super.updateState(channelUID, state);
+    }
+
+    protected void setCacheEntry(final ChannelUID channelUID, final State value) {
+        lastState.put(channelUID, value);
+    }
+
+    protected @Nullable State getCacheEntry(final ChannelUID channelUID) {
+        return lastState.get(channelUID);
+    }
+
+    protected void updateProperty(String property, @Nullable BigInteger value) {
+        updateProperty(property, value != null ? value.toString() : UNKNOWN);
     }
 
     @Override
     protected void updateProperty(String property, @Nullable String value) {
-        if (value != null) {
-            super.updateProperty(property, value);
+        final String existing = thing.getProperties().get(property);
+        if ((existing == null) || UNKNOWN.equals(existing)) {
+            super.updateProperty(property, value != null ? value : UNKNOWN);
         }
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (command instanceof RefreshType) {
-            State value = lastState.get(channelUID);
-            super.updateState(channelUID, value != null ? value : UnDefType.UNDEF);
-            return;
-        }
-
         final String channelId = channelUID.getIdWithoutGroup();
-        if (CHANNEL_CONTROL_COMMAND.equals(channelId)) {
-            if (command instanceof StringType) {
-                String cmd = command.toString();
-
-                if (cmd.equals(COMMAND_CLEAN)) {
-                    cmd = isPaused ? "resume" : "start";
-                }
-
-                if (cmd.startsWith(COMMAND_CLEAN_REGIONS)) {
-                    // format: cleanRegions:<pmid>;<region_id1>,<region_id2>,...
-                    if (Pattern.matches("cleanRegions:[^:;,]+;.+(,[^:;,]+)*", cmd)) {
-                        String[] cmds = cmd.split(":");
-                        String[] params = cmds[1].split(";");
-
-                        String mapId = params[0];
-                        String[] regionIds = params[1].split(",");
-
-                        MQTTProtocol.Request request = new MQTTProtocol.CleanRoomsRequest("start", mapId, regionIds);
-                        connection.send(request.getTopic(), gson.toJson(request));
-                    } else {
-                        logger.warn("Invalid request: {}", cmd);
-                        logger.warn("Correct format: cleanRegions:<pmid>;<region_id1>,<region_id2>,...>");
-                    }
-                } else {
-                    MQTTProtocol.Request request = new MQTTProtocol.CommandRequest(cmd);
-                    connection.send(request.getTopic(), gson.toJson(request));
-                }
+        if (command instanceof RefreshType) {
+            final @Nullable State value = getCacheEntry(channelUID);
+            super.updateState(channelUID, value != null ? value : UnDefType.UNDEF);
+        } else if (command instanceof OnOffType) {
+            if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
+                Reported request = new Reported();
+                request.setBinPause(command.equals(OnOffType.OFF));
+                sendSetting(request);
+            } else if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
+                Reported request = new Reported();
+                request.setMapUploadAllowed(command.equals(OnOffType.ON));
+                sendSetting(request);
             }
-        } else if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
-            if (command instanceof OnOffType) {
-                sendDelta(new MQTTProtocol.BinPause(command.equals(OnOffType.OFF)));
-            }
-        } else if (CHANNEL_CONTROL_CLEAN_PASSES.equals(channelId)) {
-            sendDelta(new MQTTProtocol.CleanPasses(!command.equals(PASSES_AUTO), command.equals(PASSES_2)));
-        } else if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
-            if (command instanceof OnOffType) {
-                sendDelta(new MQTTProtocol.MapUploadAllowed(command.equals(OnOffType.ON)));
+        } else if (command instanceof StringType) {
+            if (CHANNEL_CONTROL_CLEAN_PASSES.equals(channelId)) {
+                Reported request = new Reported();
+                request.setNoAutoPasses(!command.equals(PASSES_AUTO));
+                request.setTwoPass(command.equals(PASSES_2));
+                sendSetting(request);
+            } else if (CHANNEL_CONTROL_COMMAND.equals(channelId)) {
+                String request = command.toString();
+                if (request.equals(COMMAND_CLEAN)) {
+                    final @Nullable State cache = getCacheEntry(channelUID);
+                    request = (cache != null) && cache.equals(COMMAND_PAUSE) ? "resume" : "start";
+                }
+                sendCommand(request, null);
             }
         }
     }
 
-    protected void sendDelta(MQTTProtocol.StateValue state) {
-        MQTTProtocol.Request request = new MQTTProtocol.DeltaRequest(state);
-        connection.send(request.getTopic(), gson.toJson(request));
+    protected void receive(final Reported reported) {
+        final ThingUID thingUID = thing.getUID();
+
+        final BigInteger batteryLoad = reported.getBatPct();
+        if (batteryLoad != null) {
+            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
+            updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), new BigDecimal(batteryLoad));
+        }
+
+        final BinState binState = reported.getBin();
+        if (binState != null) {
+            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
+            // The bin cannot be both full and removed simultaneously, so let's encode it as a single value
+            if (!binState.getPresent()) {
+                updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), STATE_BIN_REMOVED);
+            } else if (binState.getFull()) {
+                updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), STATE_BIN_FULL);
+            } else {
+                updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), STATE_BIN_OK);
+            }
+        }
+
+        final Boolean binPause = reported.getBinPause();
+        if (binPause != null) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_ALWAYS_FINISH), OnOffType.from(!binPause));
+        }
+
+        final CleanMissionStatus missionStatus = reported.getCleanMissionStatus();
+        if (missionStatus != null) {
+            final ChannelGroupUID missionGroupUID = new ChannelGroupUID(thingUID, MISSION_GROUP_ID);
+
+            String cycle = missionStatus.getCycle();
+            String phase = missionStatus.getPhase();
+
+            String command;
+            if ("none".equals(cycle)) {
+                command = COMMAND_STOP;
+            } else {
+                switch (phase) {
+                    case "stop":
+                    case "stuck": // CHECKME: could also be equivalent to "stop" command
+                    case "pause": // Never observed in Roomba 930
+                        command = COMMAND_PAUSE;
+                        break;
+                    case "hmUsrDock":
+                    case "dock": // Never observed in Roomba 930
+                        command = COMMAND_DOCK;
+                        break;
+                    default:
+                        command = cycle; // "clean" or "spot"
+                        break;
+                }
+            }
+
+            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_CYCLE), cycle);
+            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_PHASE), phase);
+            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_ERROR),
+                    String.valueOf(missionStatus.getError()));
+
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_COMMAND), command);
+        }
+
+        final LastCommand lastCommand = reported.getLastCommand();
+        if (lastCommand != null) {
+            final ChannelGroupUID internalGroupUID = new ChannelGroupUID(thingUID, INTERNAL_GROUP_ID);
+            updateState(new ChannelUID(internalGroupUID, CHANNEL_INTERNAL_LAST_COMMAND), lastCommand.toString());
+        }
+
+        final Boolean mapUploadAllowed = reported.getMapUploadAllowed();
+        if (mapUploadAllowed != null) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_UPLOAD), OnOffType.from(mapUploadAllowed));
+        }
+
+        final Boolean noAutoPasses = reported.getNoAutoPasses();
+        final Boolean twoPasses = reported.getTwoPass();
+        if ((noAutoPasses != null) || (twoPasses != null)) {
+            // To make the life more interesting, paired values may not appear together in the
+            // same message, so we have to keep track of current values.
+            String state = null;
+            final ChannelUID channelUID = new ChannelUID(thingUID, CONTROL_GROUP_ID, CHANNEL_CONTROL_CLEAN_PASSES);
+            if (noAutoPasses != null) {
+                state = Boolean.FALSE.equals(noAutoPasses) ? PASSES_AUTO : PASSES_1;
+                setCacheEntry(channelUID, new StringType(state));
+            }
+
+            if (twoPasses != null) {
+                // Can be overridden by "noAutoPasses":false
+                final State cache = getCacheEntry(channelUID);
+                if ((cache != null) && !PASSES_AUTO.equals(cache.toString())) {
+                    state = Boolean.TRUE.equals(twoPasses) ? PASSES_2 : PASSES_1;
+                }
+            }
+
+            updateState(channelUID, state);
+        }
+
+        final Signal signal = reported.getSignal();
+        if (signal != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            final BigDecimal rssi = new BigDecimal(signal.getRssi());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), rssi);
+            final BigDecimal snr = new BigDecimal(signal.getSnr());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), snr);
+        }
+
+        updateProperty(PROPERTY_BATTERY_TYPE, reported.getBatteryType());
+        updateProperty(PROPERTY_FIRMWARE_VERSION, reported.getSoftwareVer());
+        updateProperty(PROPERTY_MODEL_ID, reported.getSku());
+    }
+
+    protected void sendSetting(final IRobotDTO setting) {
+        connection.send("delta", String.format("{\"state\":%s}", gson.toJson(setting)));
+    }
+
+    protected void sendCommand(final String command, final @Nullable String arguments) {
+        final String time = String.format("\"time\":%d", System.currentTimeMillis() / 1000);
+        String request = String.format("\"command\":\"%s\", %s, \"initiator\":\"openhab\"", command, time);
+        if ((arguments != null) && !arguments.isBlank()) {
+            request = String.format("%s, %s", request, arguments);
+        }
+        connection.send("cmd", String.format("{ %s }", request));
     }
 
     private synchronized void getCredentials() {
@@ -296,109 +419,5 @@ public class IRobotCommonHandler extends BaseThingHandler {
             updateStatus(ThingStatus.ONLINE, ThingStatusDetail.CONFIGURATION_PENDING, message);
             connection.connect(address, blid, password);
         }
-    }
-
-    public void receive(final String topic, final MQTTProtocol.GenericState reported) {
-        final ThingUID thingUID = thing.getUID();
-
-        if (reported.cleanMissionStatus != null) {
-            final ChannelGroupUID missionGroupUID = new ChannelGroupUID(thingUID, MISSION_GROUP_ID);
-
-            String cycle = reported.cleanMissionStatus.cycle;
-            String phase = reported.cleanMissionStatus.phase;
-            String command;
-
-            if ("none".equals(cycle)) {
-                command = COMMAND_STOP;
-            } else {
-                switch (phase) {
-                    case "stop":
-                    case "stuck": // CHECKME: could also be equivalent to "stop" command
-                    case "pause": // Never observed in Roomba 930
-                        command = COMMAND_PAUSE;
-                        break;
-                    case "hmUsrDock":
-                    case "dock": // Never observed in Roomba 930
-                        command = COMMAND_DOCK;
-                        break;
-                    default:
-                        command = cycle; // "clean" or "spot"
-                        break;
-                }
-            }
-
-            isPaused = command.equals(COMMAND_PAUSE);
-
-            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_CYCLE), cycle);
-            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_PHASE), phase);
-            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_ERROR),
-                    StringType.valueOf(String.valueOf(reported.cleanMissionStatus.error)));
-
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_COMMAND), command);
-        }
-
-        if (reported.batPct != null) {
-            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
-            updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), reported.batPct);
-        }
-
-        if (reported.bin != null) {
-            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
-            // The bin cannot be both full and removed simultaneously, so let's encode it as a single value
-            if (!reported.bin.present) {
-                updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), STATE_BIN_REMOVED);
-            } else if (reported.bin.full) {
-                updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), STATE_BIN_FULL);
-            } else {
-                updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), STATE_BIN_OK);
-            }
-        }
-
-        if (reported.signal != null) {
-            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
-            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), reported.signal.rssi);
-            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), reported.signal.snr);
-        }
-
-        if (reported.binPause != null) {
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_ALWAYS_FINISH), !reported.binPause);
-        }
-
-        if (reported.noAutoPasses != null) {
-            autoPasses = !reported.noAutoPasses;
-            if (!reported.noAutoPasses) {
-                // When set to false, overrides twoPass
-                final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-                updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_CLEAN_PASSES), PASSES_AUTO);
-            } else if (twoPasses != null) {
-                reportTwoPasses();
-            }
-        }
-
-        if (reported.twoPass != null) {
-            twoPasses = reported.twoPass;
-            if (!autoPasses) {
-                // Can be overridden by "noAutoPasses":false
-                reportTwoPasses();
-            }
-        }
-
-        if (reported.lastCommand != null) {
-            final ChannelGroupUID internalGroupUID = new ChannelGroupUID(thingUID, INTERNAL_GROUP_ID);
-            updateState(new ChannelUID(internalGroupUID, CHANNEL_INTERNAL_LAST_COMMAND),
-                    reported.lastCommand.toString());
-        }
-
-        if (reported.mapUploadAllowed != null) {
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_UPLOAD), reported.mapUploadAllowed);
-        }
-    }
-
-    private void reportTwoPasses() {
-        final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thing.getUID(), CONTROL_GROUP_ID);
-        updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_CLEAN_PASSES), twoPasses ? PASSES_2 : PASSES_1);
     }
 }

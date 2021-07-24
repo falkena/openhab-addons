@@ -27,6 +27,13 @@ import org.openhab.core.thing.ThingTypeUID;
  */
 @NonNullByDefault
 public class IRobotBindingConstants {
+    private static String[] append(String[] input, String suffix) {
+        String[] output = new String[input.length];
+        for (int index = 0; index < input.length; index++) {
+            output[index] = input[index] + suffix;
+        }
+        return output;
+    }
 
     public static final String BINDING_ID = "irobot";
 
@@ -100,9 +107,9 @@ public class IRobotBindingConstants {
     public static final String[] DAY_OF_WEEK = {
             "sunday", "monday", "tuesday", "wednesday", "thirsday", "friday", "saturday"
     };
+    public static final String[] CHANNEL_SCHEDULE_ENABLED = append(DAY_OF_WEEK, "_enabled");
+    public static final String[] CHANNEL_SCHEDULE_TIMESTAMP = append(DAY_OF_WEEK, "_time");
     // @formatter:on
-    public static final int DEFAULT_HOUR = 12;
-    public static final int DEFAULT_MINUTE = 0;
 
     /**
      * Control group ID, channels within and possible commands
@@ -128,7 +135,7 @@ public class IRobotBindingConstants {
 
     public static final String CHANNEL_CONTROL_COMMAND = "command";
     public static final String COMMAND_CLEAN = "clean";
-    public static final String COMMAND_CLEAN_REGIONS = "cleanRegions";
+    public static final String COMMAND_CLEAN_REGIONS = "regions";
     public static final String COMMAND_DOCK = "dock";
     public static final String COMMAND_FIND = CHANNEL_CONTROL_FIND;
     public static final String COMMAND_SPOT = "spot";

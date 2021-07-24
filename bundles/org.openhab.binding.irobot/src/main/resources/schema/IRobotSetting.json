@@ -1,0 +1,18 @@
+{
+  "$id": "#IRobotSetting",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Robot delta request data",
+  "type": "object",
+  "properties": {
+    "state": {
+      "description": "Current reported robot data",
+      "type" : "object",
+      "javaType" : "IRobotDTO"
+    }
+  },
+  "required": [ "state" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

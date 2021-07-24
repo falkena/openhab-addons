@@ -1,0 +1,16 @@
+{
+  "$id": "#Root",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot data protocol",
+  "type": "object",
+  "properties": {
+    "state": {
+      "$ref": "State.json"
+    }
+  },
+  "required": [ "state" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}
