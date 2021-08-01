@@ -34,6 +34,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.dto.Identification;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * Helper functions to get blid and password. Seems pretty much reinventing a bicycle,
@@ -62,17 +63,23 @@ public class LoginRequester {
             socket.receive(packet);
             reply = Arrays.copyOfRange(packet.getData(), packet.getOffset(), packet.getLength());
         } catch (IOException exception) {
+            // Roomba 980 send no properly EOF, so eat the exception
         } finally {
             socket.close();
         }
 
-        final Gson gson = new Gson();
-        final String json = new String(reply, 0, reply.length, StandardCharsets.UTF_8);
-        Identification identification = gson.fromJson(json, Identification.class);
+        Identification identification = null;
+        try {
+            final Gson gson = new Gson();
+            final String json = new String(reply, 0, reply.length, StandardCharsets.UTF_8);
+            identification = gson.fromJson(json, Identification.class);
+        } catch (JsonSyntaxException exception) {
+            // May be properly logging shall be add here.
+        }
 
         @Nullable
-        String blid = identification.getRobotid();
-        final @Nullable String hostname = identification.getHostname();
+        String blid = identification != null ? identification.getRobotid() : null;
+        final @Nullable String hostname = identification != null ? identification.getHostname() : null;
         if (((blid == null) || blid.isEmpty()) && ((hostname != null) && !hostname.isEmpty())) {
             final String[] parts = hostname.split("-");
             if (parts.length == 2) {

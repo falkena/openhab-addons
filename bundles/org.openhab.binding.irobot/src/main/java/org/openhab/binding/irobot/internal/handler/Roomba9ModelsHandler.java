@@ -33,6 +33,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.dto.CleanSchedule;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.core.library.types.DateTimeType;
@@ -64,8 +65,8 @@ import org.slf4j.LoggerFactory;
 public class Roomba9ModelsHandler extends IRobotCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(Roomba9ModelsHandler.class);
 
-    public Roomba9ModelsHandler(Thing thing) {
-        super(thing);
+    public Roomba9ModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+        super(thing, channelContentProvider);
     }
 
     @Override

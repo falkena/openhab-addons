@@ -13,7 +13,6 @@
 package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
 import static org.openhab.core.thing.Thing.PROPERTY_FIRMWARE_VERSION;
 import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 import static org.openhab.core.thing.ThingStatus.INITIALIZING;
@@ -27,17 +26,22 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
 import org.openhab.binding.irobot.internal.dto.BinState;
 import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
 import org.openhab.binding.irobot.internal.dto.LastCommand;
+import org.openhab.binding.irobot.internal.dto.Pose;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Root;
 import org.openhab.binding.irobot.internal.dto.Signal;
@@ -80,6 +84,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
 
     private final Gson gson = new Gson();
 
+    private IRobotChannelContentProvider channelContentProvider;
     private Hashtable<ChannelUID, State> lastState = new Hashtable<>();
 
     private @Nullable Future<?> credentialRequester;
@@ -120,8 +125,9 @@ public class IRobotCommonHandler extends BaseThingHandler {
         }
     };
 
-    public IRobotCommonHandler(Thing thing) {
+    public IRobotCommonHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
         super(thing);
+        this.channelContentProvider = channelContentProvider;
     }
 
     @Override
@@ -164,7 +170,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
 
     protected void updateState(ChannelUID channelUID, @Nullable String state) {
         if (state != null) {
-            updateState(channelUID, new StringType(state));
+            updateState(channelUID, new StringType(state.trim()));
         }
     }
 
@@ -223,6 +229,18 @@ public class IRobotCommonHandler extends BaseThingHandler {
                     request = (cache != null) && cache.equals(COMMAND_PAUSE) ? "resume" : "start";
                 }
                 sendCommand(request, null);
+            } else if (CHANNEL_CONTROL_LANGUAGE.equals(channelId)) {
+                Reported request = new Reported();
+                request.setLanguage(new BigInteger(command.toString()));
+                sendSetting(request);
+            } else if (CHANNEL_COMMON_NAME.equals(channelId)) {
+                Reported request = new Reported();
+                request.setName(command.toString());
+                sendSetting(request);
+            } else if (CHANNEL_COMMON_TIMEZONE.equals(channelId)) {
+                Reported request = new Reported();
+                request.setTimezone(command.toString());
+                sendSetting(request);
             }
         }
     }
@@ -291,6 +309,35 @@ public class IRobotCommonHandler extends BaseThingHandler {
             updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_COMMAND), command);
         }
 
+        final BigInteger language = reported.getLanguage();
+        final List<Map<String, Number>> languages = reported.getLangs();
+        if ((language != null) || ((languages != null) && !languages.isEmpty())) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            final ChannelUID languageChannelUID = new ChannelUID(controlGroupUID, CHANNEL_CONTROL_LANGUAGE);
+            if (language != null) {
+                if (channelContentProvider.isChannelPopulated(languageChannelUID)) {
+                    updateState(languageChannelUID, language.toString());
+                } else {
+                    setCacheEntry(languageChannelUID, new StringType(language.toString()));
+                }
+            }
+
+            if (languages != null) {
+                if (!channelContentProvider.isChannelPopulated(languageChannelUID)) {
+                    final Map<String, String> buffer = new HashMap<>();
+                    for (final Map<String, Number> lang : languages) {
+                        final String[] keys = lang.keySet().toArray(new String[lang.size()]);
+                        buffer.put(String.valueOf(lang.get(keys[0])), keys[0]);
+                    }
+                    channelContentProvider.setLanguages(languageChannelUID, buffer);
+                }
+                final State state = getCacheEntry(languageChannelUID);
+                if ((state != null) && channelContentProvider.isChannelPopulated(languageChannelUID)) {
+                    updateState(languageChannelUID, state.toString());
+                }
+            }
+        }
+
         final LastCommand lastCommand = reported.getLastCommand();
         if (lastCommand != null) {
             final ChannelGroupUID internalGroupUID = new ChannelGroupUID(thingUID, INTERNAL_GROUP_ID);
@@ -301,6 +348,12 @@ public class IRobotCommonHandler extends BaseThingHandler {
         if (mapUploadAllowed != null) {
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
             updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_UPLOAD), OnOffType.from(mapUploadAllowed));
+        }
+
+        final String name = reported.getName();
+        if (name != null) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            updateState(new ChannelUID(controlGroupUID, CHANNEL_COMMON_NAME), name);
         }
 
         final Boolean noAutoPasses = reported.getNoAutoPasses();
@@ -326,6 +379,15 @@ public class IRobotCommonHandler extends BaseThingHandler {
             updateState(channelUID, state);
         }
 
+        final Pose pose = reported.getPose();
+        if ((pose != null) && (pose.getPoint() != null)) {
+            final ChannelGroupUID poseGroupUID = new ChannelGroupUID(thingUID, POSITION_GROUP_ID);
+            updateState(new ChannelUID(poseGroupUID, CHANNEL_POSITION_X), pose.getPoint().getX());
+            updateState(new ChannelUID(poseGroupUID, CHANNEL_POSITION_Y), pose.getPoint().getY());
+            updateState(new ChannelUID(poseGroupUID, CHANNEL_POSITION_THETA), pose.getTheta());
+            updateState(new ChannelUID(poseGroupUID, CHANNEL_JSON), gson.toJson(pose));
+        }
+
         final Signal signal = reported.getSignal();
         if (signal != null) {
             final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
@@ -333,6 +395,16 @@ public class IRobotCommonHandler extends BaseThingHandler {
             updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), rssi);
             final BigDecimal snr = new BigDecimal(signal.getSnr());
             updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), snr);
+        }
+
+        final String timezone = reported.getTimezone();
+        if (timezone != null) {
+            final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            final ChannelUID timeZoneChannelUID = new ChannelUID(commonGroupUID, CHANNEL_COMMON_TIMEZONE);
+            if (!channelContentProvider.isChannelPopulated(timeZoneChannelUID)) {
+                channelContentProvider.setTimeZones(timeZoneChannelUID);
+            }
+            updateState(timeZoneChannelUID, timezone);
         }
 
         updateProperty(PROPERTY_BATTERY_TYPE, reported.getBatteryType());

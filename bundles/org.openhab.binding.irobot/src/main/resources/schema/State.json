@@ -1,5 +1,5 @@
 {
-  "$id": "#state",
+  "$id": "#State",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Current robot state data",
   "type": "object",
@@ -43,12 +43,37 @@
         "cleanMissionStatus": {
           "$ref": "CleanMissionStatus.json"
         },
+        "language": {
+          "description": "Robot language index in langs",
+          "type": [ "integer", "null" ]
+        },
+        "langs": {
+          "readOnly": true,
+          "type": [ "array", "null" ],
+          "items": {
+            "description": "Robot supported languages",
+            "additionalProperties" : {
+              "type" : [ "string", "null" ]
+            },
+            "patternProperties": {
+              ".*": { "type": "integer" }
+            },
+            "readOnly": true,
+            "existingJavaType" : "java.util.Map<String,Number>",
+            "type": "object"
+          },
+          "default" : null
+        },
         "lastCommand": {
           "$ref": "LastCommand.json"
         },
         "mapUploadAllowed": {
           "description": "Allow to upload maps to iRobot claude",
           "type": [ "boolean", "null" ]
+        },
+        "name": {
+          "description": "Robot name",
+          "type": "string"
         },
         "noAutoPasses": {
           "description": "Write properly help",
@@ -57,6 +82,9 @@
         "twoPass": {
           "description": "Write properly help",
           "type": [ "boolean", "null" ]
+        },
+        "pose": {
+          "$ref": "Pose.json"
         },
         "signal": {
           "$ref": "Signal.json"
@@ -70,6 +98,10 @@
           "description": "Write properly help",
           "readOnly": true,
           "type": "string"
+        },
+        "timezone": {
+          "description": "Robot time zone",
+          "type": [ "string", "null" ]
         },
         "$comment": "Roomba 980 fields",
         "bootloaderVer": {
@@ -127,6 +159,9 @@
           "type": "string"
         },
         "$comment": "Roomba I-Models fields",
+        "langs2": {
+          "$ref": "Languages.json"
+        },
         "pmapLearningAllowed": {
           "description": "Allow map learning",
           "type": [ "boolean", "null" ]

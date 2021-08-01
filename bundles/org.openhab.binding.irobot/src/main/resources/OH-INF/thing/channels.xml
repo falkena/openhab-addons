@@ -33,9 +33,8 @@
 		<label>Common information</label>
 		<description>Robot common information</description>
 		<channels>
-			<channel id="name" typeId="text">
-				<label>Name</label>
-				<description>Robot name</description>
+			<channel id="name" typeId="name">
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>
 			<channel id="area" typeId="area"/>
 			<channel id="duration" typeId="duration">
@@ -50,9 +49,16 @@
 				<label>Battery type</label>
 				<description>Robot battery type</description>
 			</channel>
-			<channel id="timezone" typeId="timezone"/>
+			<channel id="timezone" typeId="timezone">
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
+			</channel>
 		</channels>
 	</channel-group-type>
+	<channel-type id="name">
+		<item-type>String</item-type>
+		<label>Name</label>
+		<description>Robot name</description>
+	</channel-type>
 	<channel-type id="timezone" advanced="true">
 		<item-type>String</item-type>
 		<label>Time zone</label>
@@ -281,7 +287,9 @@
 			<channel id="command" typeId="command"/>
 			<channel id="find" typeId="find"/>
 			<channel id="always_finish" typeId="always_finish"/>
-			<channel id="language" typeId="language"/>
+			<channel id="language" typeId="language">
+				<autoUpdatePolicy>veto</autoUpdatePolicy>
+			</channel>
 			<channel id="clean_passes" typeId="clean_passes">
 				<autoUpdatePolicy>veto</autoUpdatePolicy>
 			</channel>

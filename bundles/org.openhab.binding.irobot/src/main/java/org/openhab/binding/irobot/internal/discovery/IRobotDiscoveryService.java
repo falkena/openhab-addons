@@ -121,7 +121,7 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
 
             final Gson gson = new Gson();
             for (final String json : robots) {
-                Identification identification = gson.fromJson(json, Identification.class);
+                final Identification identification = gson.fromJson(json, Identification.class);
 
                 // Only firmware version 2 and above are supported via MQTT, therefore check it
                 final String protocol = identification.getProto();

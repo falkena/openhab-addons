@@ -14,6 +14,7 @@ package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BINDING_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_COMMAND;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_LANGUAGE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_MAP_LEARN;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_NOISE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_TYPE_NUMBER;
@@ -23,10 +24,15 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.NETWORK
 import static org.openhab.core.thing.Thing.PROPERTY_HARDWARE_VERSION;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
+import org.openhab.binding.irobot.internal.dto.DLangs;
 import org.openhab.binding.irobot.internal.dto.HwPartsRev;
+import org.openhab.binding.irobot.internal.dto.Languages;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Signal;
 import org.openhab.binding.irobot.internal.dto.SubModSwVer;
@@ -57,8 +63,11 @@ import org.slf4j.LoggerFactory;
 public class RoombaIModelsHandler extends IRobotCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(Roomba9ModelsHandler.class);
 
-    public RoombaIModelsHandler(Thing thing) {
-        super(thing);
+    private IRobotChannelContentProvider channelContentProvider;
+
+    public RoombaIModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+        super(thing, channelContentProvider);
+        this.channelContentProvider = channelContentProvider;
     }
 
     @Override
@@ -121,6 +130,12 @@ public class RoombaIModelsHandler extends IRobotCommonHandler {
                 } else {
                     super.handleCommand(channelUID, command);
                 }
+            } else if (CHANNEL_CONTROL_LANGUAGE.equals(channelId)) {
+                Languages languages = new Languages();
+                languages.setsLang(command.toString());
+                Reported request = new Reported();
+                request.setLangs2(languages);
+                sendSetting(request);
             } else {
                 super.handleCommand(channelUID, command);
             }
@@ -132,6 +147,20 @@ public class RoombaIModelsHandler extends IRobotCommonHandler {
     @Override
     protected void receive(final Reported reported) {
         final ThingUID thingUID = thing.getUID();
+
+        final Languages languages = reported.getLangs2();
+        if (languages != null) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            final ChannelUID languageChannelUID = new ChannelUID(controlGroupUID, CHANNEL_CONTROL_LANGUAGE);
+
+            final DLangs langs = languages.getdLangs();
+            if ((langs != null) && !channelContentProvider.isChannelPopulated(languageChannelUID)) {
+                final Map<String, String> buffer = new HashMap<>();
+                langs.getLangs().forEach(element -> buffer.put(element, element));
+                channelContentProvider.setLanguages(languageChannelUID, buffer);
+            }
+            updateState(languageChannelUID, languages.getsLang());
+        }
 
         final Boolean mapLearn = reported.getPmapLearningAllowed();
         if (mapLearn != null) {
