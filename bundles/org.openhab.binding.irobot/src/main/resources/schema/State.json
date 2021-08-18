@@ -75,6 +75,9 @@
           "description": "Robot name",
           "type": "string"
         },
+        "netinfo": {
+          "$ref": "NetInfo.json"
+        },
         "noAutoPasses": {
           "description": "Write properly help",
           "type": [ "boolean", "null" ]
@@ -102,6 +105,9 @@
         "timezone": {
           "description": "Robot time zone",
           "type": [ "string", "null" ]
+        },
+        "wlcfg": {
+          "$ref": "WlanConfig.json"
         },
         "$comment": "Roomba 980 fields",
         "bootloaderVer": {

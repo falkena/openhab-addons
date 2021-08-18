@@ -18,10 +18,16 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_E
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_PERFORMANCE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_EDGE_CLEAN;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_POWER_BOOST;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_ADDRESS;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS1;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS2;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_GATEWAY;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_MASK;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHEDULE_ENABLED;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_SCHEDULE_TIMESTAMP;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL_GROUP_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.DAY_OF_WEEK;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.NETWORK_GROUP_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.SCHEDULE_GROUP_ID;
 import static org.openhab.core.thing.Thing.PROPERTY_HARDWARE_VERSION;
 
@@ -33,8 +39,10 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.dto.CleanSchedule;
+import org.openhab.binding.irobot.internal.dto.NetInfo;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
@@ -217,6 +225,25 @@ public class Roomba9ModelsHandler extends IRobotCommonHandler {
             updateState(channelUID, state);
         }
 
+        final NetInfo netinfo = reported.getNetinfo();
+        if (netinfo != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            final String address = convertNumber2IP(netinfo.getAddr());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_ADDRESS), address);
+
+            final String mask = convertNumber2IP(netinfo.getMask());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_MASK), mask);
+
+            final String gateway = convertNumber2IP(netinfo.getGw());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_GATEWAY), gateway);
+
+            final String dns1 = convertNumber2IP(netinfo.getDns1());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DNS1), dns1);
+
+            final String dns2 = convertNumber2IP(netinfo.getDns2());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DNS2), dns2);
+        }
+
         final Boolean openOnly = reported.getOpenOnly();
         if (openOnly != null) {
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
@@ -233,5 +260,19 @@ public class Roomba9ModelsHandler extends IRobotCommonHandler {
         updateProperty("wifiSoftwareVersion", reported.getWifiSwVer());
 
         super.receive(reported);
+    }
+
+    private String convertNumber2IP(@Nullable String number) {
+        String result = new String();
+        if ((number != null) && !number.equalsIgnoreCase("0")) {
+            long value = Long.parseLong(number, 10);
+            while (value > 0) {
+                result = value % 256 + "." + result;
+                value = value / 256;
+            }
+        } else {
+            result = "0.0.0.0.";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }

@@ -41,10 +41,12 @@ import org.openhab.binding.irobot.internal.dto.BinState;
 import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
 import org.openhab.binding.irobot.internal.dto.LastCommand;
+import org.openhab.binding.irobot.internal.dto.NetInfo;
 import org.openhab.binding.irobot.internal.dto.Pose;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Root;
 import org.openhab.binding.irobot.internal.dto.Signal;
+import org.openhab.binding.irobot.internal.dto.WlanConfig;
 import org.openhab.binding.irobot.internal.utils.LoginRequester;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.DecimalType;
@@ -356,6 +358,18 @@ public class IRobotCommonHandler extends BaseThingHandler {
             updateState(new ChannelUID(controlGroupUID, CHANNEL_COMMON_NAME), name);
         }
 
+        final NetInfo netinfo = reported.getNetinfo();
+        if (netinfo != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            final String bssid = netinfo.getBssid();
+            if (bssid != null) {
+                updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_BSSID), bssid.toUpperCase());
+            }
+
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DHCP), OnOffType.from(netinfo.getDhcp()));
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), new BigDecimal(netinfo.getSec()));
+        }
+
         final Boolean noAutoPasses = reported.getNoAutoPasses();
         final Boolean twoPasses = reported.getTwoPass();
         if ((noAutoPasses != null) || (twoPasses != null)) {
@@ -405,6 +419,23 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 channelContentProvider.setTimeZones(timeZoneChannelUID);
             }
             updateState(timeZoneChannelUID, timezone);
+        }
+
+        final WlanConfig wlanConfig = reported.getWlcfg();
+        if (wlanConfig != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), new BigDecimal(wlanConfig.getSec()));
+
+            final String ssid = wlanConfig.getSsid();
+            if (ssid != null) {
+                String buffer = new String();
+                for (int i = 0; i < ssid.length() / 2; i++) {
+                    int hi = Character.digit(ssid.charAt(2 * i + 0), 16);
+                    int lo = Character.digit(ssid.charAt(2 * i + 1), 16);
+                    buffer = buffer + Character.toString(16 * hi + lo);
+                }
+                updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SSID), buffer);
+            }
         }
 
         updateProperty(PROPERTY_BATTERY_TYPE, reported.getBatteryType());

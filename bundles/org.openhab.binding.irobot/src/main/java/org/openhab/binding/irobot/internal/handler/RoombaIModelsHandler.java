@@ -16,6 +16,11 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BINDING
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_COMMAND;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_LANGUAGE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_MAP_LEARN;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_ADDRESS;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS1;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS2;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_GATEWAY;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_MASK;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_NOISE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_TYPE_NUMBER;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.COMMAND_CLEAN_REGIONS;
@@ -33,6 +38,7 @@ import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.dto.DLangs;
 import org.openhab.binding.irobot.internal.dto.HwPartsRev;
 import org.openhab.binding.irobot.internal.dto.Languages;
+import org.openhab.binding.irobot.internal.dto.NetInfo;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Signal;
 import org.openhab.binding.irobot.internal.dto.SubModSwVer;
@@ -166,6 +172,16 @@ public class RoombaIModelsHandler extends IRobotCommonHandler {
         if (mapLearn != null) {
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
             updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_LEARN), OnOffType.from(mapLearn));
+        }
+
+        final NetInfo netinfo = reported.getNetinfo();
+        if (netinfo != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_ADDRESS), netinfo.getAddr());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DNS1), netinfo.getDns1());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DNS2), netinfo.getDns2());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_GATEWAY), netinfo.getGw());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_MASK), netinfo.getMask());
         }
 
         final Signal signal = reported.getSignal();
