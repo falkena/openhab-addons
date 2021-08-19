@@ -13,6 +13,8 @@
 package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
+import static org.openhab.core.library.unit.ImperialUnits.SQUARE_FOOT;
+import static org.openhab.core.library.unit.Units.MINUTE;
 import static org.openhab.core.thing.Thing.PROPERTY_FIRMWARE_VERSION;
 import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 import static org.openhab.core.thing.ThingStatus.INITIALIZING;
@@ -37,6 +39,9 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
+import org.openhab.binding.irobot.internal.dto.BBMssn;
+import org.openhab.binding.irobot.internal.dto.BBRun;
+import org.openhab.binding.irobot.internal.dto.Bbsys;
 import org.openhab.binding.irobot.internal.dto.BinState;
 import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
@@ -51,6 +56,7 @@ import org.openhab.binding.irobot.internal.utils.LoginRequester;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelGroupUID;
 import org.openhab.core.thing.ChannelUID;
@@ -170,6 +176,12 @@ public class IRobotCommonHandler extends BaseThingHandler {
         }
     }
 
+    protected void updateState(ChannelUID channelUID, @Nullable BigInteger state) {
+        if (state != null) {
+            updateState(channelUID, new BigDecimal(state));
+        }
+    }
+
     protected void updateState(ChannelUID channelUID, @Nullable String state) {
         if (state != null) {
             updateState(channelUID, new StringType(state.trim()));
@@ -253,7 +265,44 @@ public class IRobotCommonHandler extends BaseThingHandler {
         final BigInteger batteryLoad = reported.getBatPct();
         if (batteryLoad != null) {
             final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
-            updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), new BigDecimal(batteryLoad));
+            updateState(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), batteryLoad);
+        }
+
+        final BBMssn bbMssn = reported.getBbmssn();
+        if (bbMssn != null) {
+            final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_MISSION_COUNT), bbMssn.getnMssn());
+
+        }
+
+        final BBRun bbRun = reported.getBbrun();
+        if (bbRun != null) {
+            final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+
+            final BigInteger sqft = bbRun.getSqft();
+            if (sqft != null) {
+                updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_AREA), new QuantityType<>(sqft, SQUARE_FOOT));
+            }
+
+            final BigInteger hours = bbRun.getHr();
+            final BigInteger minutes = bbRun.getMin();
+            if ((hours != null) && (minutes != null)) {
+                final long clean = 60 * hours.longValueExact() + minutes.longValueExact();
+                updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_DURATION), new QuantityType<>(clean, MINUTE));
+            }
+
+            updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_SCRUBS_COUNT), bbRun.getnScrubs());
+        }
+
+        final Bbsys bbSys = reported.getBbsys();
+        if (bbSys != null) {
+            final BigInteger hours = bbSys.getHr();
+            final BigInteger minutes = bbSys.getMin();
+            if ((hours != null) && (minutes != null)) {
+                final long uptime = 60 * hours.longValueExact() + minutes.longValueExact();
+                final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+                updateState(new ChannelUID(commonGroupUID, CHANNEL_COMMON_UPTIME), new QuantityType<>(uptime, MINUTE));
+            }
         }
 
         final BinState binState = reported.getBin();
@@ -279,10 +328,9 @@ public class IRobotCommonHandler extends BaseThingHandler {
         if (missionStatus != null) {
             final ChannelGroupUID missionGroupUID = new ChannelGroupUID(thingUID, MISSION_GROUP_ID);
 
-            String cycle = missionStatus.getCycle();
-            String phase = missionStatus.getPhase();
-
             String command;
+            final String cycle = missionStatus.getCycle();
+            final String phase = missionStatus.getPhase();
             if ("none".equals(cycle)) {
                 command = COMMAND_STOP;
             } else {
@@ -306,6 +354,10 @@ public class IRobotCommonHandler extends BaseThingHandler {
             updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_PHASE), phase);
             updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_ERROR),
                     String.valueOf(missionStatus.getError()));
+            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_NUMBER), missionStatus.getnMssn());
+
+            final BigInteger runtime = missionStatus.getMssnM();
+            updateState(new ChannelUID(missionGroupUID, CHANNEL_MISSION_DURATION), new QuantityType<>(runtime, MINUTE));
 
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
             updateState(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_COMMAND), command);
@@ -367,7 +419,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
             }
 
             updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DHCP), OnOffType.from(netinfo.getDhcp()));
-            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), new BigDecimal(netinfo.getSec()));
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), netinfo.getSec());
         }
 
         final Boolean noAutoPasses = reported.getNoAutoPasses();
@@ -405,10 +457,8 @@ public class IRobotCommonHandler extends BaseThingHandler {
         final Signal signal = reported.getSignal();
         if (signal != null) {
             final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
-            final BigDecimal rssi = new BigDecimal(signal.getRssi());
-            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), rssi);
-            final BigDecimal snr = new BigDecimal(signal.getSnr());
-            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), snr);
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), signal.getRssi());
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), signal.getSnr());
         }
 
         final String timezone = reported.getTimezone();
@@ -424,7 +474,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
         final WlanConfig wlanConfig = reported.getWlcfg();
         if (wlanConfig != null) {
             final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
-            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), new BigDecimal(wlanConfig.getSec()));
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), wlanConfig.getSec());
 
             final String ssid = wlanConfig.getSsid();
             if (ssid != null) {

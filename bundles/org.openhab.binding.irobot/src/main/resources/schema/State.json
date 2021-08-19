@@ -33,6 +33,30 @@
           "readOnly": true,
           "type": "string"
         },
+        "bbmssn": {
+          "$ref": "BBMssn.json"
+        },
+        "bbrun": {
+          "$ref": "BBRun.json"
+        },
+        "bbsys": {
+          "description": "Robot system uptime",
+          "readOnly": true,
+          "type": [ "object", "null" ],
+          "properties": {
+            "hr": {
+              "description": "Write properly help",
+              "readOnly": true,
+              "type": [ "integer", "null" ]
+            },
+            "min": {
+              "description": "Write properly help",
+              "readOnly": true,
+              "type": [ "integer", "null" ]
+            }
+          },
+          "required": [ "hr", "min" ]
+        },
         "bin": {
           "$ref": "BinState.json"
         },

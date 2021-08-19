@@ -1,0 +1,44 @@
+{
+  "$id": "#BBMssn",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot lifetime missions package",
+  "readOnly": true,
+  "type": "object",
+  "properties": {
+    "aCycleM": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "aMssnM": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nMssn": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nMssnOk": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nMssnC": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nMssnF": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    }
+  },
+  "required": [ "aCycleM", "aMssnM", "nMssn", "nMssnOk", "nMssnC", "nMssnF" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

@@ -28,7 +28,6 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.NETWORK_GROUP_ID;
 import static org.openhab.core.thing.Thing.PROPERTY_HARDWARE_VERSION;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -187,8 +186,7 @@ public class RoombaIModelsHandler extends IRobotCommonHandler {
         final Signal signal = reported.getSignal();
         if (signal != null) {
             final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
-            final BigDecimal noise = new BigDecimal(signal.getNoise());
-            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_NOISE), noise);
+            updateState(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_NOISE), signal.getNoise());
         }
 
         // "batInfo": {"mDate": "2019-3-12", "mName": "F12432832R", "mDaySerial": 34361, "mData":

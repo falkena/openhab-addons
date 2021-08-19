@@ -36,60 +36,64 @@ All parameters will be autodiscovered. If using textual configuration, then `add
 
 ## Channels
 
-| Group    | Channel           | Type     | Read-only | Description                                                   |
-| -------- | :---------------: | :------: | :-------: | ------------------------------------------------------------- |
-| common   | name              | String   | No        | Robot name                                                    |
-|          | area              |          | Yes       |                                                               |
-|          | mission_count     |          | Yes       |                                                               |
-|          | battery_type      |          | Yes       |                                                               |
-|          | timezone          |          |           |                                                               |
-| network  | address           | String   | Yes       |                                                               |
-|          | dhcp              | Number   | Yes       |                                                               |
-|          | mac               | Number   | Yes       |                                                               |
-|          | mask              | Number   | Yes       |                                                               |
-|          | gateway           | Number   | Yes       |                                                               |
-|          | primary_dns       | Number   | Yes       |                                                               |
-|          | secondary_dns     | Number   | Yes       |                                                               |
-|          | ssid              | Number   | Yes       |                                                               |
-|          | bssid             | Number   | Yes       |                                                               |
-|          | security          | String   | Yes       |                                                               |
-|          | noise             | Number   | Yes       |                                                               |
-|          | rssi              | Number   | Yes       | Wi-Fi Received Signal Strength indicator in db                |
-|          | snr               | Number   | Yes       | Wi-Fi Signal to noise ratio                                   |
-| position | x                 | Number   | Yes       | Current robot position along X-axis                           |
-|          | y                 | Number   | Yes       | Current robot position along Y-axis                           |
-|          | theta             | Number   | Yes       | Current robot orientation                                     |
-|          | json              | String   | Yes       | Current robot position/orientation as JSON string             |
-| schedule | monday_enabled    | Switch   | No        | Scheduled clean enabled for Monday                            |
-|          | monday_time       | DateTime | No        |                                                               |
-|          | tuesday_enabled   | Switch   | No        | Scheduled clean enabled for Tuesday                           |
-|          | tuesday_time      | DateTime | No        |                                                               |
-|          | wednesday_enabled | Switch   | No        | Scheduled clean enabled for Wednesday                         |
-|          | wednesday_time    | DateTime | No        |                                                               |
-|          | thirsday_enabled  | Switch   | No        | Scheduled clean enabled for Thursday                          |
-|          | thirsday_time     | DateTime | No        |                                                               |
-|          | friday_enabled    | Switch   | No        | Scheduled clean enabled for Friday                            |
-|          | friday_time       | DateTime | No        |                                                               |
-|          | saturday_enabled  | Switch   | No        | Scheduled clean enabled for Saturday                          |
-|          | saturday_time     | DateTime | No        |                                                               |
-|          | sunday_enabled    | Switch   | No        | Scheduled clean enabled for Sunday                            |
-|          | sunday_time       | DateTime | No        |                                                               |
-| state    | bin               | String   | Yes       | Bin status: ok, removed, full                                 |
-|          | dock              | Switch   | Yes       |                                                               |
-|          | charge            | Number   | Yes       | Battery charge in percents                                    |
-|          | json              | String   | Yes       | Json string containing the last executed command              |
-| control  | command           | String   | No        | Command to execute: clean, spot, dock, pause, stop            |
-|          | find              | Switch   | No        |                                                               |
-|          | always_finish     | Switch   | No        | Whether to keep cleaning if the bin becomes full              |
-|          | language          | Switch   | No        | Current robot language                                        |
-|          | clean_passes      | String   | No        | Number of cleaning passes: "auto", "1", "2"                   |
-|          | upload_map        | Switch   | No        | Enable or disable uploading Clean Map(tm) to cloud            |
-|          | edge_clean        | Switch   | No        | Seek out and clean along walls and furniture legs             |
-|          | power_boost       | String   | No        | Power boost mode: "auto", "performance", "eco"                |
-| mission  | cycle             | String   | Yes       | Current mission: none, clean, spot                            |
-|          | phase             | String   | Yes       | Current phase of the mission; see below.                      |
-|          | error             | String   | Yes       | Error code; see below                                         |
-|          | map
+| Group    | Channel           | Type        | Read-only | Description                                                   |
+| -------- | :---------------: | :---------: | :-------: | ------------------------------------------------------------- |
+| common   | name              | String      | No        | Robot name                                                    |
+|          | area              | Number:Area | Yes       | Lifetime cleaned area                                         |
+|          | duration          | Number:Time | Yes       | Lifetime missions duration                                    |
+|          | mission_count     |             | Yes       | Lifetime missions count                                       |
+|          | scrubs_count      |             | Yes       | Lifetime scrubs count                                         |
+|          | timezone          |             |           |                                                               |
+|          | uptime            | Number:Time | Yes       | System uptime                                                 |
+| network  | address           | String      | Yes       |                                                               |
+|          | dhcp              | Number      | Yes       |                                                               |
+|          | mac               | Number      | Yes       |                                                               |
+|          | mask              | Number      | Yes       |                                                               |
+|          | gateway           | Number      | Yes       |                                                               |
+|          | primary_dns       | Number      | Yes       |                                                               |
+|          | secondary_dns     | Number      | Yes       |                                                               |
+|          | ssid              | Number      | Yes       |                                                               |
+|          | bssid             | Number      | Yes       |                                                               |
+|          | security          | String      | Yes       |                                                               |
+|          | noise             | Number      | Yes       |                                                               |
+|          | rssi              | Number      | Yes       | Wi-Fi Received Signal Strength indicator in db                |
+|          | snr               | Number      | Yes       | Wi-Fi Signal to noise ratio                                   |
+| position | x                 | Number      | Yes       | Current robot position along X-axis                           |
+|          | y                 | Number      | Yes       | Current robot position along Y-axis                           |
+|          | theta             | Number      | Yes       | Current robot orientation                                     |
+|          | json              | String      | Yes       | Current robot position/orientation as JSON string             |
+| schedule | monday_enabled    | Switch      | No        | Scheduled clean enabled for Monday                            |
+|          | monday_time       | DateTime    | No        |                                                               |
+|          | tuesday_enabled   | Switch      | No        | Scheduled clean enabled for Tuesday                           |
+|          | tuesday_time      | DateTime    | No        |                                                               |
+|          | wednesday_enabled | Switch      | No        | Scheduled clean enabled for Wednesday                         |
+|          | wednesday_time    | DateTime    | No        |                                                               |
+|          | thirsday_enabled  | Switch      | No        | Scheduled clean enabled for Thursday                          |
+|          | thirsday_time     | DateTime    | No        |                                                               |
+|          | friday_enabled    | Switch      | No        | Scheduled clean enabled for Friday                            |
+|          | friday_time       | DateTime    | No        |                                                               |
+|          | saturday_enabled  | Switch      | No        | Scheduled clean enabled for Saturday                          |
+|          | saturday_time     | DateTime    | No        |                                                               |
+|          | sunday_enabled    | Switch      | No        | Scheduled clean enabled for Sunday                            |
+|          | sunday_time       | DateTime    | No        |                                                               |
+| state    | bin               | String      | Yes       | Bin status: ok, removed, full                                 |
+|          | dock              | Switch      | Yes       |                                                               |
+|          | charge            | Number      | Yes       | Battery charge in percents                                    |
+|          | json              | String      | Yes       | Json string containing the last executed command              |
+| control  | command           | String      | No        | Command to execute: clean, spot, dock, pause, stop            |
+|          | find              | Switch      | No        |                                                               |
+|          | always_finish     | Switch      | No        | Whether to keep cleaning if the bin becomes full              |
+|          | language          | Switch      | No        | Current robot language                                        |
+|          | clean_passes      | String      | No        | Number of cleaning passes: "auto", "1", "2"                   |
+|          | upload_map        | Switch      | No        | Enable or disable uploading Clean Map(tm) to cloud            |
+|          | edge_clean        | Switch      | No        | Seek out and clean along walls and furniture legs             |
+|          | power_boost       | String      | No        | Power boost mode: "auto", "performance", "eco"                |
+| mission  | cycle             | String      | Yes       | Current mission: none, clean, spot                            |
+|          | phase             | String      | Yes       | Current phase of the mission; see below.                      |
+|          | duration          | Number:Time | Yes       | Current mission duration                                      |
+|          | error             | String      | Yes       | Error code; see below                                         |
+|          | map               | Image       | Yes       | Current mission map                                           |
+|          | number            | Number      | Yes       | Current mission number                                        |
 
 Known phase strings and their meanings:
 

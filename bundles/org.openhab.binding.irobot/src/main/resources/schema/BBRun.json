@@ -1,0 +1,95 @@
+{
+  "$id": "#BBRun",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot lifetime cleaning run package",
+  "readOnly": true,
+  "type": "object",
+  "properties": {
+    "hr": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "min": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nCBump": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nCliffsF": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nCliffsR": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nMBStll": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nPanics": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nPicks": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nScrubs": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nStuck": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nWStll": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "sqft": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "$comment": "Roomba I-Models fields",
+    "nEvacs":  {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nOpticalDD":  {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nOvertemps": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    },
+    "nPiezoDD":  {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": [ "integer", "null" ]
+    }
+  },
+  "required": [ "hr", "min", "nCBump", "nCliffsF", "nCliffsR", "nMBStll", "nPanics", "nPicks", "nScrubs", "nStuck", "nWStll", "sqft" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

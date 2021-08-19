@@ -39,18 +39,22 @@
 			<channel id="area" typeId="area"/>
 			<channel id="duration" typeId="duration">
 				<label>Cleaning duration</label>
-				<description>Robot lifetime cleaning duration</description>
+				<description>Robot lifetime cleaning duration in minutes</description>
 			</channel>
 			<channel id="mission_count" typeId="number">
 				<label>Mission count</label>
 				<description>Robot lifetime mission count</description>
 			</channel>
-			<channel id="battery_type" typeId="text">
-				<label>Battery type</label>
-				<description>Robot battery type</description>
+			<channel id="scrubs_count" typeId="number">
+				<label>Scrub count</label>
+				<description>Robot lifetime scrub count</description>
 			</channel>
 			<channel id="timezone" typeId="timezone">
 				<autoUpdatePolicy>veto</autoUpdatePolicy>
+			</channel>
+			<channel id="uptime" typeId="duration">
+				<label>System uptime</label>
+				<description>Robot system uptime in minutes</description>
 			</channel>
 		</channels>
 	</channel-group-type>
