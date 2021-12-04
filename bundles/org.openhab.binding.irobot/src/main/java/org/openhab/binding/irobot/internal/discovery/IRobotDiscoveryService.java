@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.irobot.internal.discovery;
 
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_BRAAVA_M;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_ROOMBA_9;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_ROOMBA_I;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UDP_PORT;
@@ -133,7 +134,7 @@ public class IRobotDiscoveryService extends AbstractDiscoveryService {
                     if (!address.isEmpty() && !sku.isEmpty() && !mac.isEmpty()) {
                         ThingUID thingUID = null;
                         if (sku.regionMatches(true, 0, "M", 0, 1)) {
-                            thingUID = new ThingUID(THING_TYPE_ROOMBA_I, mac.replace(":", ""));
+                            thingUID = new ThingUID(THING_TYPE_BRAAVA_M, mac.replace(":", ""));
                         } else if (sku.regionMatches(true, 0, "E", 0, 1)) {
                             thingUID = new ThingUID(THING_TYPE_ROOMBA_I, mac.replace(":", ""));
                         } else if (sku.regionMatches(true, 0, "I", 0, 1)) {

@@ -246,7 +246,6 @@
 		<label>State</label>
 		<description>Robot state</description>
 		<channels>
-			<channel id="bin" typeId="bin"/>
 			<channel id="dock" typeId="dock"/>
 			<channel id="charge" typeId="system.battery-level"/>
 			<channel id="json" typeId="text">
@@ -280,7 +279,6 @@
 		<channels>
 			<channel id="command" typeId="command"/>
 			<channel id="find" typeId="find"/>
-			<channel id="always_finish" typeId="always_finish"/>
 			<channel id="language" typeId="language"/>
 			<channel id="clean_passes" typeId="clean_passes">
 				<autoUpdatePolicy>veto</autoUpdatePolicy>

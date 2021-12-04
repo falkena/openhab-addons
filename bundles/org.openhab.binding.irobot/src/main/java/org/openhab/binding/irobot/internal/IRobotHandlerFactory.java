@@ -12,15 +12,15 @@
  */
 package org.openhab.binding.irobot.internal;
 
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_BRAAVA_M;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_ROOMBA_9;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.THING_TYPE_ROOMBA_I;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.irobot.internal.handler.BraavaMModelsHandler;
 import org.openhab.binding.irobot.internal.handler.Roomba9ModelsHandler;
 import org.openhab.binding.irobot.internal.handler.RoombaIModelsHandler;
 import org.openhab.core.thing.Thing;
@@ -31,23 +31,23 @@ import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * The {@link IRobotHandlerFactory} is responsible for creating things and thing
- * handlers.
+ * The {@link IRobotHandlerFactory} is responsible for creating things and thing handlers.
  *
  * @author hkuhn42 - Initial contribution
  * @author Pavel Fedin - rename and update
+ * @author Alexander Falkenstern - add braava M6 handler
  */
 @Component(configurationPid = "binding.irobot", service = ThingHandlerFactory.class)
 @NonNullByDefault
 public class IRobotHandlerFactory extends BaseThingHandlerFactory {
 
-    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS;
-    static {
-        Set<ThingTypeUID> buffer = new HashSet<>();
-        buffer.add(THING_TYPE_ROOMBA_9);
-        buffer.add(THING_TYPE_ROOMBA_I);
-        SUPPORTED_THING_TYPES_UIDS = Collections.unmodifiableSet(buffer);
-    }
+    // @formatter:off
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(
+            THING_TYPE_BRAAVA_M,
+            THING_TYPE_ROOMBA_9,
+            THING_TYPE_ROOMBA_I
+    );
+    // @formatter:on
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -58,7 +58,9 @@ public class IRobotHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (thingTypeUID.equals(THING_TYPE_ROOMBA_9)) {
+        if (thingTypeUID.equals(THING_TYPE_BRAAVA_M)) {
+            return new BraavaMModelsHandler(thing);
+        } else if (thingTypeUID.equals(THING_TYPE_ROOMBA_9)) {
             return new Roomba9ModelsHandler(thing);
         } else if (thingTypeUID.equals(THING_TYPE_ROOMBA_I)) {
             return new RoombaIModelsHandler(thing);

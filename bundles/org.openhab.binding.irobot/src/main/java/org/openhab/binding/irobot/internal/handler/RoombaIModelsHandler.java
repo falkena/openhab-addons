@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * @author Alexander Falkenstern - Introduce handler for I-series vacuum robots
  */
 @NonNullByDefault
-public class RoombaIModelsHandler extends IRobotCommonHandler {
+public class RoombaIModelsHandler extends RoombaCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(RoombaIModelsHandler.class);
 
     public RoombaIModelsHandler(Thing thing) {

@@ -39,8 +39,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
 import org.openhab.binding.irobot.internal.dto.BatteryLoad;
-import org.openhab.binding.irobot.internal.dto.BinPause;
-import org.openhab.binding.irobot.internal.dto.BinStatus;
 import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
 import org.openhab.binding.irobot.internal.dto.CleanPasses;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
@@ -173,28 +171,6 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for bin pause values.", channelUID);
                 }
-            } else if (cache instanceof BinPause) {
-                final BinPause binPause = (BinPause) cache;
-                if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
-                    final Boolean pause = binPause.getBinPause();
-                    updateState(channelUID, pause != null ? OnOffType.from(!pause) : UnDefType.UNDEF);
-                } else if (logger.isTraceEnabled()) {
-                    logger.trace("Received unknown channel {} for bin pause values.", channelUID);
-                }
-            } else if (cache instanceof BinStatus) {
-                final BinStatus binStatus = (BinStatus) cache;
-                if (CHANNEL_STATE_BIN.equals(channelId)) {
-                    // The bin cannot be both full and removed simultaneously, so let's encode it as a single value
-                    if (binStatus.getFull()) {
-                        updateState(channelUID, StringType.valueOf(STATE_BIN_FULL));
-                    } else if (binStatus.getPresent()) {
-                        updateState(channelUID, StringType.valueOf(STATE_BIN_OK));
-                    } else {
-                        updateState(channelUID, StringType.valueOf(STATE_BIN_REMOVED));
-                    }
-                } else if (logger.isTraceEnabled()) {
-                    logger.trace("Received unknown channel {} for clean passes values.", channelUID);
-                }
             } else if (cache instanceof CleanMissionStatus) {
                 final CleanMissionStatus missionStatus = (CleanMissionStatus) cache;
                 if (CHANNEL_AREA.equals(channelId)) {
@@ -297,9 +273,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 updateState(channelUID, UnDefType.UNDEF);
             }
         } else if (command instanceof OnOffType) {
-            if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {
-                sendSetting(new BinPause(command.equals(OnOffType.OFF)));
-            } else if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
+            if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
                 sendSetting(new MapUpload(command.equals(OnOffType.ON)));
             } else if (logger.isTraceEnabled()) {
                 logger.trace("Received {} for channel {}.", command, channelId);
@@ -467,19 +441,6 @@ public class IRobotCommonHandler extends BaseThingHandler {
             final BatteryLoad load = new BatteryLoad(batLoad);
             final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
             setCacheEntry(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), load);
-        }
-
-        final Boolean binPause = reported.getBinPause();
-        if (binPause != null) {
-            final BinPause pause = new BinPause(binPause);
-            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
-            setCacheEntry(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_ALWAYS_FINISH), pause);
-        }
-
-        final BinStatus binStatus = reported.getBin();
-        if (binStatus != null) {
-            final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
-            setCacheEntry(new ChannelUID(stateGroupUID, CHANNEL_STATE_BIN), binStatus);
         }
 
         final CleanMissionStatus missionStatus = reported.getCleanMissionStatus();
