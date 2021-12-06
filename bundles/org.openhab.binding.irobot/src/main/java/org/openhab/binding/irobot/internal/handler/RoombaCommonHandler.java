@@ -22,12 +22,12 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.STATE_B
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.STATE_GROUP_ID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.dto.BinPause;
 import org.openhab.binding.irobot.internal.dto.BinStatus;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelGroupUID;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -52,8 +52,8 @@ import org.slf4j.LoggerFactory;
 public class RoombaCommonHandler extends IRobotCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(RoombaCommonHandler.class);
 
-    public RoombaCommonHandler(Thing thing) {
-        super(thing);
+    public RoombaCommonHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+        super(thing, channelContentProvider);
     }
 
     @Override
@@ -99,17 +99,17 @@ public class RoombaCommonHandler extends IRobotCommonHandler {
                 if (CHANNEL_STATE_BIN.equals(channelId)) {
                     // The bin cannot be both full and removed simultaneously, so let's encode it as a single value
                     if (binStatus.getFull()) {
-                        updateState(channelUID, StringType.valueOf(STATE_BIN_FULL));
+                        updateState(channelUID, STATE_BIN_FULL);
                     } else if (binStatus.getPresent()) {
-                        updateState(channelUID, StringType.valueOf(STATE_BIN_OK));
+                        updateState(channelUID, STATE_BIN_OK);
                     } else {
-                        updateState(channelUID, StringType.valueOf(STATE_BIN_REMOVED));
+                        updateState(channelUID, STATE_BIN_REMOVED);
                     }
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for clean passes values.", channelUID);
                 }
             } else {
-                updateState(channelUID, UnDefType.UNDEF);
+                super.handleCommand(channelUID, command);
             }
         } else if (command instanceof OnOffType) {
             if (CHANNEL_CONTROL_ALWAYS_FINISH.equals(channelId)) {

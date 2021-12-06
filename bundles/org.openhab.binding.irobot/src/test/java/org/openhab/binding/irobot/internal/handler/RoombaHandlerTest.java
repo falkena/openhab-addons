@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
 import org.openhab.binding.irobot.internal.dto.CleanPasses;
 import org.openhab.core.config.core.Configuration;
@@ -67,12 +69,17 @@ public class RoombaHandlerTest {
 
     class IRobotCommonHandlerMock extends IRobotCommonHandler {
         public IRobotCommonHandlerMock(Thing thing) {
-            super(thing);
+            super(thing, new IRobotChannelContentProvider());
         }
 
         @Override
         public void updateState(ChannelUID channelUID, State state) {
             super.updateState(channelUID, state);
+        }
+
+        @Override
+        public void updateState(ChannelUID channelUID, @Nullable String value) {
+            super.updateState(channelUID, value);
         }
     }
 
@@ -172,26 +179,26 @@ public class RoombaHandlerTest {
         // No twoPasses value received
         passes.setTwoPass(null);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_AUTO), invocation.getArgument(1));
+            assertEquals(PASSES_AUTO, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
         // Received twoPasses
         passes.setTwoPass(false);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_AUTO), invocation.getArgument(1));
+            assertEquals(PASSES_AUTO, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
         passes.setTwoPass(true);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_AUTO), invocation.getArgument(1));
+            assertEquals(PASSES_AUTO, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
@@ -219,17 +226,17 @@ public class RoombaHandlerTest {
         // Received twoPasses
         passes.setTwoPass(false);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_1), invocation.getArgument(1));
+            assertEquals(PASSES_1, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
         passes.setTwoPass(true);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_2), invocation.getArgument(1));
+            assertEquals(PASSES_2, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
@@ -247,25 +254,25 @@ public class RoombaHandlerTest {
 
         passes.setNoAutoPasses(null);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_1), invocation.getArgument(1));
+            assertEquals(PASSES_1, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
         passes.setNoAutoPasses(false);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_AUTO), invocation.getArgument(1));
+            assertEquals(PASSES_AUTO, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
         passes.setNoAutoPasses(true);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_1), invocation.getArgument(1));
+            assertEquals(PASSES_1, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
@@ -283,25 +290,25 @@ public class RoombaHandlerTest {
 
         passes.setNoAutoPasses(null);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_2), invocation.getArgument(1));
+            assertEquals(PASSES_2, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
         passes.setNoAutoPasses(false);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_AUTO), invocation.getArgument(1));
+            assertEquals(PASSES_AUTO, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 
         passes.setNoAutoPasses(true);
         doAnswer(invocation -> {
-            assertEquals(StringType.valueOf(PASSES_2), invocation.getArgument(1));
+            assertEquals(PASSES_2, invocation.getArgument(1));
             return null;
-        }).when(handler).updateState(any(ChannelUID.class), any(State.class));
+        }).when(handler).updateState(any(ChannelUID.class), any(String.class));
         Mockito.when(handler.getCacheEntry(channelUID)).thenReturn(passes);
         handler.handleCommand(channelUID, RefreshType.REFRESH);
 

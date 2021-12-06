@@ -54,6 +54,7 @@ public class IRobotBindingConstants {
     public static final String CHANNEL_COMMON_MISSION_COUNT = "mission_count";
     public static final String CHANNEL_COMMON_NAME = "name";
     public static final String CHANNEL_COMMON_SCRUBS = "scrubs";
+    public static final String CHANNEL_COMMON_TIMEZONE = "timezone";
 
     /**
      * Network group ID and channels within

@@ -10,7 +10,8 @@
       "type": "number"
     },
     "point": {
-      "type": "object",
+      "description": "Robot position",
+      "readOnly": true,
       "properties": {
         "x": {
           "description": "Robot X-coordinate",
@@ -21,7 +22,8 @@
           "description": "Robot Y-coordinate",
           "readOnly": true,
           "type": "number"
-        }
+        },
+        "type": "object"
       },
       "required": [ "x", "y" ]
     }

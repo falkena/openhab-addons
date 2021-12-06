@@ -14,6 +14,7 @@
 package org.openhab.binding.irobot.internal.handler;
 
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BINDING_ID;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_LANGUAGE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_MAP_LEARN;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_NOISE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_RSSI;
@@ -23,14 +24,20 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.NETWORK_GROUP_ID;
 
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
+import org.openhab.binding.irobot.internal.dto.Langs2;
+import org.openhab.binding.irobot.internal.dto.Languages2;
 import org.openhab.binding.irobot.internal.dto.MapLearning;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Signal;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelGroupUID;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -55,8 +62,11 @@ import org.slf4j.LoggerFactory;
 public class RoombaIModelsHandler extends RoombaCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(RoombaIModelsHandler.class);
 
-    public RoombaIModelsHandler(Thing thing) {
-        super(thing);
+    private IRobotChannelContentProvider channelContentProvider;
+
+    public RoombaIModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+        super(thing, channelContentProvider);
+        this.channelContentProvider = channelContentProvider;
     }
 
     @Override
@@ -92,7 +102,18 @@ public class RoombaIModelsHandler extends RoombaCommonHandler {
         final String channelId = channelUID.getIdWithoutGroup();
         if (command instanceof RefreshType) {
             final IRobotDTO cache = getCacheEntry(channelUID);
-            if (cache instanceof MapLearning) {
+            if (cache instanceof Langs2) {
+                final Langs2 languages2 = (Langs2) cache;
+                if (CHANNEL_CONTROL_LANGUAGE.equals(channelId)) {
+                    if (channelContentProvider.isChannelPopulated(channelUID)) {
+                        updateState(channelUID, languages2.getsLang());
+                    } else {
+                        updateState(channelUID, UnDefType.UNDEF);
+                    }
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for map upload values.", channelUID);
+                }
+            } else if (cache instanceof MapLearning) {
                 final MapLearning mapLearning = (MapLearning) cache;
                 if (CHANNEL_CONTROL_MAP_LEARN.equals(channelId)) {
                     final Boolean learn = mapLearning.getPmapLearningAllowed();
@@ -119,6 +140,12 @@ public class RoombaIModelsHandler extends RoombaCommonHandler {
             } else {
                 super.handleCommand(channelUID, command);
             }
+        } else if (command instanceof StringType) {
+            if (CHANNEL_CONTROL_LANGUAGE.equals(channelId)) {
+                sendSetting(new Languages2(new Langs2(null, null, command.toString(), null)));
+            } else {
+                super.handleCommand(channelUID, command);
+            }
         } else {
             super.handleCommand(channelUID, command);
         }
@@ -127,6 +154,20 @@ public class RoombaIModelsHandler extends RoombaCommonHandler {
     @Override
     protected void receive(final Reported reported) {
         final ThingUID thingUID = thing.getUID();
+
+        Langs2 languages2 = reported.getLangs2();
+        if (languages2 != null) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            final ChannelUID languageChannelUID = new ChannelUID(controlGroupUID, CHANNEL_CONTROL_LANGUAGE);
+            if (!channelContentProvider.isChannelPopulated(languageChannelUID)) {
+                final Map<String, String> buffer = new HashMap<>();
+                for (final String lang : languages2.getdLangs().getLangs()) {
+                    buffer.put(lang, lang);
+                }
+                channelContentProvider.setLanguages(languageChannelUID, buffer);
+            }
+            setCacheEntry(languageChannelUID, languages2);
+        }
 
         final Boolean mapLearning = reported.getPmapLearningAllowed();
         if (mapLearning != null) {

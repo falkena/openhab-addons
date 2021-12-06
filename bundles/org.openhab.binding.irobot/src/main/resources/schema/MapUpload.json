@@ -5,7 +5,8 @@
   "type": "object",
   "properties": {
     "mapUploadAllowed": {
-      "type": "boolean"
+      "description": "Allow to upload maps to iRobot claude",
+      "type": [ "boolean", "null" ]
     }
   },
   "required": [ "mapUploadAllowed" ],

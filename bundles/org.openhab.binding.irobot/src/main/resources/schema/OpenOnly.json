@@ -5,7 +5,8 @@
   "type": "object",
   "properties": {
     "openOnly": {
-      "type": "boolean"
+      "description": "Write properly help",
+      "type": [ "boolean", "null" ]
     }
   },
   "required": [ "openOnly" ],

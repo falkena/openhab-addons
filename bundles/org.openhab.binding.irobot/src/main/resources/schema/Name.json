@@ -1,0 +1,17 @@
+{
+  "$id": "#Name",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot name setting",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Robot name",
+      "type": [ "string", "null" ]
+    }
+  },
+  "required": [ "name" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

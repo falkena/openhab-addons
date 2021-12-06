@@ -1,0 +1,34 @@
+{
+  "$id": "#Languages1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot language package",
+  "type": "object",
+  "properties": {
+    "language": {
+      "description": "Robot language index in langs",
+      "type": [ "integer", "null" ]
+    },
+    "langs": {
+      "readOnly": true,
+      "type": [ "array", "null" ],
+      "items": {
+        "description": "Robot supported languages",
+        "readOnly": true,
+        "additionalProperties" : {
+          "type" : [ "string", "null" ]
+        },
+        "patternProperties": {
+          ".*": { "type": "integer" }
+        },
+        "existingJavaType" : "java.util.Map<String,Number>",
+        "type": "object"
+      },
+      "default" : null
+    }
+  },
+  "required": [ "language", "langs" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

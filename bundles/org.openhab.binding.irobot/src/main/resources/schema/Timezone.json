@@ -1,0 +1,17 @@
+{
+  "$id": "#Timezone",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot time zone setting",
+  "type": "object",
+  "properties": {
+    "timezone": {
+      "description": "Robot time zone",
+      "type": [ "string", "null" ]
+    }
+  },
+  "required": [ "timezone" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

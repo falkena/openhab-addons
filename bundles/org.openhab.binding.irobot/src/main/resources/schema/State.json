@@ -24,12 +24,11 @@
       "type": "object",
       "properties": {
         "batPct": {
-          "description": "Robot battery load",
-          "readOnly": true,
-          "type": [ "number", "null" ]
+          "$ref": "BatteryLoad.json#/properties/batPct"
         },
         "batteryType": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "bbrun": {
@@ -42,23 +41,23 @@
           "description": "Pause vacuum, if bin is full",
           "type": [ "boolean", "null" ]
         },
-        "carpetBoost": {
-          "description": "Write properly help",
-          "type": [ "boolean", "null" ]
-        },
         "cleanMissionStatus": {
           "$ref": "CleanMissionStatus.json"
+        },
+        "language": {
+          "$ref": "Languages1.json#/properties/language"
+        },
+        "langs": {
+          "$ref": "Languages1.json#/properties/langs"
         },
         "lastCommand": {
           "$ref": "LastCommand.json"
         },
         "mapUploadAllowed": {
-          "description": "Allow to upload maps to iRobot claude",
-          "type": [ "boolean", "null" ]
+          "$ref": "MapUpload.json#/properties/mapUploadAllowed"
         },
-        "noAutoPasses": {
-          "description": "Write properly help",
-          "type": [ "boolean", "null" ]
+        "name": {
+          "$ref": "Name.json#/properties/name"
         },
         "pose": {
           "$ref": "Pose.json"
@@ -68,64 +67,82 @@
         },
         "sku": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "softwareVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
+        },
+        "timezone": {
+          "$ref": "Timezone.json#/properties/timezone"
         },
         "$comment": "Roomba 980 fields",
         "bootloaderVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "cleanSchedule": {
           "$ref": "CleanSchedule.json"
         },
+        "carpetBoost": {
+          "$ref": "PowerBoost.json#/properties/carpetBoost"
+        },
+        "vacHigh": {
+          "$ref": "PowerBoost.json#/properties/vacHigh"
+        },
         "hardwareRev": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "mobilityVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "navSwVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "openOnly": {
-          "description": "Write properly help",
-          "type": [ "boolean", "null" ]
+          "$ref": "OpenOnly.json#/properties/openOnly"
         },
         "soundVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
+        "noAutoPasses": {
+          "$ref": "CleanPasses.json#/properties/noAutoPasses"
+        },
         "twoPass": {
-          "description": "Write properly help",
-          "type": [ "boolean", "null" ]
+          "$ref": "CleanPasses.json#/properties/twoPass"
         },
         "uiSwVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "umiVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
-        },
-        "vacHigh": {
-          "description": "Write properly help",
-          "type": [ "boolean", "null" ]
         },
         "wifiSwVer": {
           "description": "Write properly help",
+          "readOnly": true,
           "type": "string"
         },
         "$comment": "Roomba I-Models fields",
+        "langs2": {
+          "$ref": "Languages2.json#/properties/langs2"
+        },
         "pmapLearningAllowed": {
-          "description": "Allow map learning",
-          "type": [ "boolean", "null" ]
+          "$ref": "MapLearning.json#/properties/pmapLearningAllowed"
         }
       },
       "required": [ ],

@@ -17,6 +17,7 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_A
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_ECO;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_PERFORMANCE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_EDGE_CLEAN;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_LANGUAGE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_POWER_BOOST;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL_GROUP_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.DAY_OF_WEEK;
@@ -26,12 +27,16 @@ import static org.openhab.core.thing.Thing.PROPERTY_HARDWARE_VERSION;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.dto.CleanSchedule;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
+import org.openhab.binding.irobot.internal.dto.Languages1;
 import org.openhab.binding.irobot.internal.dto.OpenOnly;
 import org.openhab.binding.irobot.internal.dto.PowerBoost;
 import org.openhab.binding.irobot.internal.dto.Reported;
@@ -56,14 +61,20 @@ import org.slf4j.LoggerFactory;
  * The {@link Roomba9ModelsHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
- * @author Alexander Falkenstern - Introduce handle for 9-series vacuum robots
+ * @author hkuhn42 - Initial contribution
+ * @author Pavel Fedin - Rewrite for 900 series
+ * @author Florian Binder - added cleanRegions command and lastCommand channel
+ * @author Alexander Falkenstern - Introduce handler for 9-series vacuum robots
  */
 @NonNullByDefault
 public class Roomba9ModelsHandler extends RoombaCommonHandler {
     private final Logger logger = LoggerFactory.getLogger(Roomba9ModelsHandler.class);
 
-    public Roomba9ModelsHandler(Thing thing) {
-        super(thing);
+    private IRobotChannelContentProvider channelContentProvider;
+
+    public Roomba9ModelsHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
+        super(thing, channelContentProvider);
+        this.channelContentProvider = channelContentProvider;
     }
 
     @Override
@@ -112,6 +123,18 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for schedule values.", channelUID);
                 }
+            } else if (cache instanceof Languages1) {
+                final Languages1 languages1 = (Languages1) cache;
+                if (CHANNEL_CONTROL_LANGUAGE.equals(channelId)) {
+                    final BigInteger language = languages1.getLanguage();
+                    if (channelContentProvider.isChannelPopulated(channelUID)) {
+                        updateState(channelUID, language != null ? language.toString() : null);
+                    } else {
+                        updateState(channelUID, UnDefType.UNDEF);
+                    }
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for edge clean values.", channelUID);
+                }
             } else if (cache instanceof OpenOnly) {
                 final OpenOnly openOnly = (OpenOnly) cache;
                 if (CHANNEL_CONTROL_EDGE_CLEAN.equals(channelId)) {
@@ -125,11 +148,11 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
                 if (CHANNEL_CONTROL_POWER_BOOST.equals(channelId)) {
                     if (Boolean.TRUE.equals(boost.getCarpetBoost())) {
                         // When set to true, overrides vacHigh
-                        updateState(channelUID, StringType.valueOf(BOOST_AUTO));
+                        updateState(channelUID, BOOST_AUTO);
                     } else if (Boolean.TRUE.equals(boost.getVacHigh())) {
-                        updateState(channelUID, StringType.valueOf(BOOST_PERFORMANCE));
+                        updateState(channelUID, BOOST_PERFORMANCE);
                     } else if (Boolean.FALSE.equals(boost.getVacHigh())) {
-                        updateState(channelUID, StringType.valueOf(BOOST_ECO));
+                        updateState(channelUID, BOOST_ECO);
                     } else {
                         updateState(channelUID, UnDefType.UNDEF);
                     }
@@ -173,6 +196,8 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
         } else if (command instanceof StringType) {
             if (CHANNEL_CONTROL_POWER_BOOST.equals(channelId)) {
                 sendSetting(new PowerBoost(command.equals(BOOST_AUTO), command.equals(BOOST_PERFORMANCE)));
+            } else if (CHANNEL_CONTROL_LANGUAGE.equals(channelId)) {
+                sendSetting(new Languages1(new BigInteger(command.toString()), null));
             } else {
                 super.handleCommand(channelUID, command);
             }
@@ -184,6 +209,33 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
     @Override
     protected void receive(final Reported reported) {
         final ThingUID thingUID = thing.getUID();
+
+        final BigInteger language = reported.getLanguage();
+        final List<Map<String, Number>> languages = reported.getLangs();
+        if ((language != null) || ((languages != null) && !languages.isEmpty())) {
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
+            final ChannelUID languageChannelUID = new ChannelUID(controlGroupUID, CHANNEL_CONTROL_LANGUAGE);
+
+            final IRobotDTO cached = getCacheEntry(languageChannelUID);
+            Languages1 languages1 = cached instanceof Languages1 ? (Languages1) cached : new Languages1();
+
+            if (language != null) {
+                languages1.setLanguage(language);
+            }
+
+            if (languages != null) {
+                if (!channelContentProvider.isChannelPopulated(languageChannelUID)) {
+                    final Map<String, String> buffer = new HashMap<>();
+                    for (final Map<String, Number> lang : languages) {
+                        final String[] keys = lang.keySet().toArray(new String[lang.size()]);
+                        buffer.put(String.valueOf(lang.get(keys[0])), keys[0]);
+                    }
+                    channelContentProvider.setLanguages(languageChannelUID, buffer);
+                }
+                languages1.setLangs(languages);
+            }
+            setCacheEntry(languageChannelUID, languages1);
+        }
 
         final Boolean openOnly = reported.getOpenOnly();
         if (openOnly != null) {

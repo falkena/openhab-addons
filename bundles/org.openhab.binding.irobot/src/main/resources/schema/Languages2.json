@@ -1,0 +1,57 @@
+{
+  "$id": "#Languages2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot language package",
+  "type": "object",
+  "properties": {
+    "langs2": {
+      "description": "iRobot language package",
+      "properties": {
+        "sVer": {
+          "readOnly": true,
+          "type": [ "string", "null" ]
+        },
+        "dLangs": {
+          "readOnly": true,
+          "properties": {
+            "ver": {
+              "readOnly": true,
+              "type": [ "string", "null" ]
+            },
+            "langs": {
+              "description": "Robot supported languages",
+              "readOnly": true,
+              "type": [ "array", "null" ],
+              "items": {
+                "readOnly": true,
+                "type": [ "string", "null" ]
+              },
+              "default" : null
+            }
+          },
+          "type": "object",
+          "required": [ "ver", "langs" ]
+        },
+        "sLang": {
+          "type": [ "string", "null" ]
+        },
+        "aSlots": {
+          "readOnly": true,
+          "type": [ "integer", "null" ]
+        },
+        "type": "object"
+      },
+      "required": [ "sVer", "dLangs", "sLang", "aSlots" ],
+      "javaType" : "Langs2",
+      "extends" : {
+        "type" : "object",
+        "javaType" : "IRobotDTO"
+      }
+    }
+  },
+  "required": [ "langs2" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

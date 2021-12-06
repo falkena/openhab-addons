@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
 import org.openhab.binding.irobot.internal.dto.BatteryLoad;
 import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
@@ -45,10 +46,12 @@ import org.openhab.binding.irobot.internal.dto.IRobotDTO;
 import org.openhab.binding.irobot.internal.dto.LastCommand;
 import org.openhab.binding.irobot.internal.dto.MQTTProtocol;
 import org.openhab.binding.irobot.internal.dto.MapUpload;
+import org.openhab.binding.irobot.internal.dto.Name;
 import org.openhab.binding.irobot.internal.dto.Pose;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Root;
 import org.openhab.binding.irobot.internal.dto.Signal;
+import org.openhab.binding.irobot.internal.dto.Timezone;
 import org.openhab.binding.irobot.internal.utils.LoginRequester;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.DecimalType;
@@ -87,6 +90,8 @@ public class IRobotCommonHandler extends BaseThingHandler {
 
     private final Gson gson = new Gson();
 
+    private IRobotChannelContentProvider channelContentProvider;
+
     private Set<String> filledProperties = new HashSet<>();
     private Hashtable<ChannelUID, IRobotDTO> lastState = new Hashtable<>();
     private boolean isPaused = false;
@@ -105,7 +110,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 if (reported != null) {
                     IRobotCommonHandler.this.receive(reported);
                     final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thing.getUID(), STATE_GROUP_ID);
-                    updateState(new ChannelUID(stateGroupUID, CHANNEL_JSON), StringType.valueOf(json));
+                    updateState(new ChannelUID(stateGroupUID, CHANNEL_JSON), json);
                 }
             }
         }
@@ -122,8 +127,9 @@ public class IRobotCommonHandler extends BaseThingHandler {
         }
     };
 
-    public IRobotCommonHandler(Thing thing) {
+    public IRobotCommonHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
         super(thing);
+        this.channelContentProvider = channelContentProvider;
     }
 
     @Override
@@ -166,7 +172,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
             if (cache instanceof BatteryLoad) {
                 final BatteryLoad batteryLoad = (BatteryLoad) cache;
                 if (CHANNEL_STATE_CHARGE.equals(channelId)) {
-                    final BigDecimal load = batteryLoad.getBatPct();
+                    final BigInteger load = batteryLoad.getBatPct();
                     updateState(channelUID, load != null ? new DecimalType(load.longValue()) : UnDefType.UNDEF);
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for bin pause values.", channelUID);
@@ -181,38 +187,36 @@ public class IRobotCommonHandler extends BaseThingHandler {
                     final String phase = missionStatus.getPhase();
                     if ("none".equalsIgnoreCase(cycle)) {
                         isPaused = Boolean.FALSE;
-                        updateState(channelUID, StringType.valueOf(COMMAND_STOP));
+                        updateState(channelUID, COMMAND_STOP);
                     } else {
                         switch (phase) {
                             case "pause": // Never observed in Roomba 930
                             case "stop":
                             case "stuck": { // CHECKME: could also be equivalent to "stop" command
                                 isPaused = Boolean.TRUE;
-                                updateState(channelUID, StringType.valueOf(COMMAND_PAUSE));
+                                updateState(channelUID, COMMAND_PAUSE);
                                 break;
                             }
                             case "dock": // Never observed in Roomba 930
                             case "hmUsrDock": {
                                 isPaused = Boolean.FALSE;
-                                updateState(channelUID, StringType.valueOf(COMMAND_DOCK));
+                                updateState(channelUID, COMMAND_DOCK);
                                 break;
                             }
                             default: {
                                 isPaused = Boolean.FALSE;
-                                updateState(channelUID, cycle != null ? StringType.valueOf(cycle) : UnDefType.UNDEF);
+                                updateState(channelUID, cycle);
                                 break;
                             }
                         }
                     }
                 } else if (CHANNEL_MISSION_CYCLE.equals(channelId)) {
-                    final String cycle = missionStatus.getCycle();
-                    updateState(channelUID, cycle != null ? StringType.valueOf(cycle) : UnDefType.UNDEF);
+                    updateState(channelUID, missionStatus.getCycle());
                 } else if (CHANNEL_MISSION_ERROR.equals(channelId)) {
                     final BigInteger error = missionStatus.getError();
                     updateState(channelUID, error != null ? StringType.valueOf(error.toString()) : UnDefType.UNDEF);
                 } else if (CHANNEL_MISSION_PHASE.equals(channelId)) {
-                    final String phase = missionStatus.getPhase();
-                    updateState(channelUID, phase != null ? StringType.valueOf(phase) : UnDefType.UNDEF);
+                    updateState(channelUID, missionStatus.getPhase());
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for clean passes values.", channelUID);
                 }
@@ -222,12 +226,12 @@ public class IRobotCommonHandler extends BaseThingHandler {
                     // To make the life more interesting, paired values may not appear together in the same message.
                     if (Boolean.FALSE.equals(passes.getNoAutoPasses())) {
                         // When set to false, overrides twoPass
-                        updateState(channelUID, StringType.valueOf(PASSES_AUTO));
+                        updateState(channelUID, PASSES_AUTO);
                     } else {
                         if (Boolean.FALSE.equals(passes.getTwoPass())) {
-                            updateState(channelUID, StringType.valueOf(PASSES_1));
+                            updateState(channelUID, PASSES_1);
                         } else if (Boolean.TRUE.equals(passes.getTwoPass())) {
-                            updateState(channelUID, StringType.valueOf(PASSES_2));
+                            updateState(channelUID, PASSES_2);
                         } else {
                             boolean isNoAutoPassesSet = (passes.getNoAutoPasses() != null);
                             updateState(channelUID, isNoAutoPassesSet ? StringType.valueOf(PASSES_1) : UnDefType.UNDEF);
@@ -241,6 +245,13 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
                     final Boolean upload = mapUpload.getMapUploadAllowed();
                     updateState(channelUID, upload != null ? OnOffType.from(upload) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for map upload values.", channelUID);
+                }
+            } else if (cache instanceof Name) {
+                final Name name = (Name) cache;
+                if (CHANNEL_COMMON_NAME.equals(channelId)) {
+                    updateState(channelUID, name.getName());
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for map upload values.", channelUID);
                 }
@@ -269,6 +280,13 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for signal values.", channelUID);
                 }
+            } else if (cache instanceof Timezone) {
+                final Timezone timezone = (Timezone) cache;
+                if (CHANNEL_COMMON_TIMEZONE.equals(channelId)) {
+                    updateState(channelUID, timezone.getTimezone());
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for map upload values.", channelUID);
+                }
             } else {
                 updateState(channelUID, UnDefType.UNDEF);
             }
@@ -281,6 +299,8 @@ public class IRobotCommonHandler extends BaseThingHandler {
         } else if (command instanceof StringType) {
             if (CHANNEL_CONTROL_CLEAN_PASSES.equals(channelId)) {
                 sendSetting(new CleanPasses(!command.equals(PASSES_AUTO), command.equals(PASSES_2)));
+            } else if (CHANNEL_COMMON_NAME.equals(channelId)) {
+                sendSetting(new Name(command.toString()));
             } else if (logger.isTraceEnabled()) {
                 logger.trace("Received {} for channel {}.", command, channelId);
             }
@@ -344,6 +364,10 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 }
             }
         }
+    }
+
+    protected void updateState(ChannelUID channelUID, @Nullable String value) {
+        updateState(channelUID, value != null ? StringType.valueOf(value.trim()) : UnDefType.UNDEF);
     }
 
     @Override
@@ -436,7 +460,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
     protected void receive(final Reported reported) {
         final ThingUID thingUID = thing.getUID();
 
-        final BigDecimal batLoad = reported.getBatPct();
+        final BigInteger batLoad = reported.getBatPct();
         if (batLoad != null) {
             final BatteryLoad load = new BatteryLoad(batLoad);
             final ChannelGroupUID stateGroupUID = new ChannelGroupUID(thingUID, STATE_GROUP_ID);
@@ -468,6 +492,13 @@ public class IRobotCommonHandler extends BaseThingHandler {
             setCacheEntry(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_MAP_UPLOAD), uploadAllowed);
         }
 
+        final String name = reported.getName();
+        if (name != null) {
+            final Name robotName = new Name(name);
+            final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            setCacheEntry(new ChannelUID(controlGroupUID, CHANNEL_COMMON_NAME), robotName);
+        }
+
         final Pose pose = reported.getPose();
         if (pose != null) {
             final ChannelGroupUID positionGroupUID = new ChannelGroupUID(thingUID, POSITION_GROUP_ID);
@@ -481,6 +512,16 @@ public class IRobotCommonHandler extends BaseThingHandler {
             final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
             setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_RSSI), signal);
             setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SNR), signal);
+        }
+
+        final String timezone = reported.getTimezone();
+        if (timezone != null) {
+            final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            final ChannelUID timeZoneChannelUID = new ChannelUID(commonGroupUID, CHANNEL_COMMON_TIMEZONE);
+            if (!channelContentProvider.isChannelPopulated(timeZoneChannelUID)) {
+                channelContentProvider.setTimeZones(timeZoneChannelUID);
+            }
+            setCacheEntry(timeZoneChannelUID, new Timezone(timezone));
         }
 
         final Boolean twoPass = reported.getTwoPass();

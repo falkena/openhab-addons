@@ -6,11 +6,11 @@
   "properties": {
     "noAutoPasses": {
       "description": "Write properly help",
-      "type": "boolean"
+      "type": [ "boolean", "null" ]
     },
     "twoPass": {
       "description": "Write properly help",
-      "type": "boolean"
+      "type": [ "boolean", "null" ]
     }
   },
   "required": [ "noAutoPasses", "twoPass" ],

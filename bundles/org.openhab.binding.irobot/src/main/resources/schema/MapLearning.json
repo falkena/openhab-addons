@@ -6,7 +6,7 @@
   "properties": {
     "pmapLearningAllowed": {
       "description": "Allow map learning",
-      "type": "boolean"
+      "type": [ "boolean", "null" ]
     }
   },
   "required": [ "pmapLearningAllowed" ],

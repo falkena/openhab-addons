@@ -35,7 +35,7 @@
           <includeRequiredPropertiesConstructor>true</includeRequiredPropertiesConstructor>
           <includeGeneratedAnnotation>true</includeGeneratedAnnotation>
           <includeTypeInfo>true</includeTypeInfo>
-          <serializable>true</serializable>
+          <serializable>false</serializable>
           <useBigDecimals>true</useBigDecimals>
           <useBigIntegers>true</useBigIntegers>
         </configuration>

@@ -28,7 +28,9 @@ import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The {@link IRobotHandlerFactory} is responsible for creating things and thing handlers.
@@ -49,6 +51,13 @@ public class IRobotHandlerFactory extends BaseThingHandlerFactory {
     );
     // @formatter:on
 
+    private IRobotChannelContentProvider channelContentProvider;
+
+    @Activate
+    public IRobotHandlerFactory(@Reference IRobotChannelContentProvider channelContentProvider) {
+        this.channelContentProvider = channelContentProvider;
+    }
+
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
         return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
@@ -59,11 +68,11 @@ public class IRobotHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (thingTypeUID.equals(THING_TYPE_BRAAVA_M)) {
-            return new BraavaMModelsHandler(thing);
+            return new BraavaMModelsHandler(thing, channelContentProvider);
         } else if (thingTypeUID.equals(THING_TYPE_ROOMBA_9)) {
-            return new Roomba9ModelsHandler(thing);
+            return new Roomba9ModelsHandler(thing, channelContentProvider);
         } else if (thingTypeUID.equals(THING_TYPE_ROOMBA_I)) {
-            return new RoombaIModelsHandler(thing);
+            return new RoombaIModelsHandler(thing, channelContentProvider);
         }
 
         return null;

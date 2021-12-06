@@ -38,12 +38,12 @@ All parameters will be autodiscovered. If using textual configuration, then `add
 
 | Group    | Channel           | Type     | Read-only | Description                                                   |
 | -------- | :---------------: | :------: | :-------: | ------------------------------------------------------------- |
-| common   | name              | String   | Yes       |                                                               |
+| common   | name              | String   | No        | Robot name                                                    |
 |          | area              |          | Yes       |                                                               |
 |          | mission_count     |          | Yes       |                                                               |
 |          | battery_type      |          | Yes       |                                                               |
 |          | timezone          |          |           |                                                               |
-| network  | address           |          | Yes       |                                                               |
+| network  | address           | String   | Yes       |                                                               |
 |          | dhcp              | Number   | Yes       |                                                               |
 |          | mac               | Number   | Yes       |                                                               |
 |          | mask              | Number   | Yes       |                                                               |
@@ -56,9 +56,10 @@ All parameters will be autodiscovered. If using textual configuration, then `add
 |          | noise             | Number   | Yes       |                                                               |
 |          | rssi              | Number   | Yes       | Wi-Fi Received Signal Strength indicator in db                |
 |          | snr               | Number   | Yes       | Wi-Fi Signal to noise ratio                                   |
-| position | x                 | Number   | Yes       |                                                               |
-|          | y                 | Number   | Yes       |                                                               |
-|          | theta             | Number   | Yes       |                                                               |
+| position | x                 | Number   | Yes       | Current robot position along X-axis                           |
+|          | y                 | Number   | Yes       | Current robot position along Y-axis                           |
+|          | theta             | Number   | Yes       | Current robot orientation                                     |
+
 | schedule | monday_enabled    | Switch   | No        | Scheduled clean enabled for Monday                            |
 |          | monday_time       | DateTime | No        |                                                               |
 |          | tuesday_enabled   | Switch   | No        | Scheduled clean enabled for Tuesday                           |
@@ -80,7 +81,7 @@ All parameters will be autodiscovered. If using textual configuration, then `add
 | control  | command           | String   | No        | Command to execute: clean, spot, dock, pause, stop            |
 |          | find              | Switch   | No        |                                                               |
 |          | always_finish     | Switch   | No        | Whether to keep cleaning if the bin becomes full              |
-|          | language          | Switch   | No        |                                                               |
+|          | language          | Switch   | No        | Current robot language                                        |
 |          | clean_passes      | String   | No        | Number of cleaning passes: "auto", "1", "2"                   |
 |          | upload_map        | Switch   | No        | Enable or disable uploading Clean Map(tm) to cloud            |
 |          | edge_clean        | Switch   | No        | Seek out and clean along walls and furniture legs             |
