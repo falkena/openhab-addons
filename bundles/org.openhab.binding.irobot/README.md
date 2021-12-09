@@ -41,6 +41,7 @@ All parameters will be autodiscovered. If using textual configuration, then `add
 | common   | name              | String   | No        | Robot name                                                    |
 |          | area              |          | Yes       |                                                               |
 |          | mission_count     |          | Yes       |                                                               |
+|          | scrubs_count      |          | Yes       | Lifetime scrubs count                                         |
 |          | battery_type      |          | Yes       |                                                               |
 |          | timezone          |          |           |                                                               |
 | network  | address           | String   | Yes       |                                                               |

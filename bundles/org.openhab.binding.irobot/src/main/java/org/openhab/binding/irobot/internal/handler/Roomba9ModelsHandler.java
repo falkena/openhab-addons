@@ -19,6 +19,11 @@ import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BOOST_P
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_EDGE_CLEAN;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_LANGUAGE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_POWER_BOOST;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_ADDRESS;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS1;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS2;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_GATEWAY;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_MASK;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL_GROUP_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.DAY_OF_WEEK;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.SCHEDULE_GROUP_ID;
@@ -33,10 +38,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.dto.CleanSchedule;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
 import org.openhab.binding.irobot.internal.dto.Languages1;
+import org.openhab.binding.irobot.internal.dto.NetInfo;
 import org.openhab.binding.irobot.internal.dto.OpenOnly;
 import org.openhab.binding.irobot.internal.dto.PowerBoost;
 import org.openhab.binding.irobot.internal.dto.Reported;
@@ -134,6 +141,21 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
                     }
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for edge clean values.", channelUID);
+                }
+            } else if (cache instanceof NetInfo) {
+                final NetInfo netInfo = (NetInfo) cache;
+                if (CHANNEL_NETWORK_ADDRESS.equals(channelId)) {
+                    updateState(channelUID, convertNumber2IP(netInfo.getAddr()));
+                } else if (CHANNEL_NETWORK_DNS1.equals(channelId)) {
+                    updateState(channelUID, convertNumber2IP(netInfo.getDns1()));
+                } else if (CHANNEL_NETWORK_DNS2.equals(channelId)) {
+                    updateState(channelUID, convertNumber2IP(netInfo.getDns2()));
+                } else if (CHANNEL_NETWORK_GATEWAY.equals(channelId)) {
+                    updateState(channelUID, convertNumber2IP(netInfo.getGw()));
+                } else if (CHANNEL_NETWORK_MASK.equals(channelId)) {
+                    updateState(channelUID, convertNumber2IP(netInfo.getMask()));
+                } else {
+                    super.handleCommand(channelUID, command);
                 }
             } else if (cache instanceof OpenOnly) {
                 final OpenOnly openOnly = (OpenOnly) cache;
@@ -280,5 +302,19 @@ public class Roomba9ModelsHandler extends RoombaCommonHandler {
         updateProperty("wifiSwVer", reported.getWifiSwVer());
 
         super.receive(reported);
+    }
+
+    private @Nullable String convertNumber2IP(@Nullable String number) {
+        String result = null;
+        if ((number != null) && !number.equalsIgnoreCase("0")) {
+            result = new String();
+            long value = Long.parseLong(number, 10);
+            while (value > 0) {
+                result = value % 256 + "." + result;
+                value = value / 256;
+            }
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 }

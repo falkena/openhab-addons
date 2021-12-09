@@ -42,19 +42,22 @@ public class IRobotBindingConstants {
     public static final String UNKNOWN = "UNKNOWN";
 
     // Common channel IDs
-    public static final String CHANNEL_AREA = "area";
+    private static final String CHANNEL_AREA = "area";
+    private static final String CHANNEL_DURATION = "duration";
     public static final String CHANNEL_JSON = "json";
 
     /**
      * Common robot information group ID and channels within
      */
     public static final String COMMON_GROUP_ID = "common";
+    public static final String CHANNEL_COMMON_AREA = CHANNEL_AREA;
     public static final String CHANNEL_COMMON_BATTERY_TYPE = "battery_type";
-    public static final String CHANNEL_COMMON_DURATION = "duration";
+    public static final String CHANNEL_COMMON_DURATION = CHANNEL_DURATION;
     public static final String CHANNEL_COMMON_MISSION_COUNT = "mission_count";
     public static final String CHANNEL_COMMON_NAME = "name";
-    public static final String CHANNEL_COMMON_SCRUBS = "scrubs";
+    public static final String CHANNEL_COMMON_SCRUBS_COUNT = "scrubs_count";
     public static final String CHANNEL_COMMON_TIMEZONE = "timezone";
+    public static final String CHANNEL_COMMON_UPTIME = "uptime";
 
     /**
      * Network group ID and channels within
@@ -130,7 +133,7 @@ public class IRobotBindingConstants {
 
     public static final String CHANNEL_CONTROL_COMMAND = "command";
     public static final String COMMAND_CLEAN = "clean";
-    public static final String COMMAND_CLEAN_REGIONS = "cleanRegions";
+    public static final String COMMAND_CLEAN_REGIONS = "regions";
     public static final String COMMAND_DOCK = "dock";
     public static final String COMMAND_FIND = CHANNEL_CONTROL_FIND;
     public static final String COMMAND_SPOT = "spot";
@@ -144,8 +147,9 @@ public class IRobotBindingConstants {
      * Clean mission group ID, channels within and possible commands
      */
     public static final String MISSION_GROUP_ID = "mission";
+    public static final String CHANNEL_MISSION_AREA = CHANNEL_AREA;
     public static final String CHANNEL_MISSION_CYCLE = "cycle";
-    public static final String CHANNEL_MISSION_DURATION = "duration";
+    public static final String CHANNEL_MISSION_DURATION = CHANNEL_DURATION;
     public static final String CHANNEL_MISSION_ERROR = "error";
     public static final String CHANNEL_MISSION_MAP = "map";
     public static final String CHANNEL_MISSION_NUMBER = "number";

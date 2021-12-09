@@ -16,14 +16,16 @@ package org.openhab.binding.irobot.internal.handler;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.BINDING_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_LANGUAGE;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_CONTROL_MAP_LEARN;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_ADDRESS;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS1;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_DNS2;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_GATEWAY;
+import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_MASK;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_NOISE;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_RSSI;
-import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_NETWORK_SNR;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CHANNEL_TYPE_NUMBER;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.CONTROL_GROUP_ID;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.NETWORK_GROUP_ID;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,9 +35,9 @@ import org.openhab.binding.irobot.internal.dto.IRobotDTO;
 import org.openhab.binding.irobot.internal.dto.Langs2;
 import org.openhab.binding.irobot.internal.dto.Languages2;
 import org.openhab.binding.irobot.internal.dto.MapLearning;
+import org.openhab.binding.irobot.internal.dto.NetInfo;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Signal;
-import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelGroupUID;
@@ -116,20 +118,31 @@ public class RoombaIModelsHandler extends RoombaCommonHandler {
             } else if (cache instanceof MapLearning) {
                 final MapLearning mapLearning = (MapLearning) cache;
                 if (CHANNEL_CONTROL_MAP_LEARN.equals(channelId)) {
-                    final Boolean learn = mapLearning.getPmapLearningAllowed();
-                    updateState(channelUID, learn != null ? OnOffType.from(learn) : UnDefType.UNDEF);
+                    updateState(channelUID, mapLearning.getPmapLearningAllowed());
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for map upload values.", channelUID);
+                }
+            } else if (cache instanceof NetInfo) {
+                final NetInfo netInfo = (NetInfo) cache;
+                if (CHANNEL_NETWORK_ADDRESS.equals(channelId)) {
+                    updateState(channelUID, netInfo.getAddr());
+                } else if (CHANNEL_NETWORK_DNS1.equals(channelId)) {
+                    updateState(channelUID, netInfo.getDns1());
+                } else if (CHANNEL_NETWORK_DNS2.equals(channelId)) {
+                    updateState(channelUID, netInfo.getDns2());
+                } else if (CHANNEL_NETWORK_GATEWAY.equals(channelId)) {
+                    updateState(channelUID, netInfo.getGw());
+                } else if (CHANNEL_NETWORK_MASK.equals(channelId)) {
+                    updateState(channelUID, netInfo.getMask());
+                } else {
+                    super.handleCommand(channelUID, command);
                 }
             } else if (cache instanceof Signal) {
                 final Signal signal = (Signal) cache;
                 if (CHANNEL_NETWORK_NOISE.equals(channelId)) {
-                    final BigInteger noise = signal.getNoise();
-                    updateState(channelUID, noise != null ? new DecimalType(noise.longValue()) : UnDefType.UNDEF);
-                } else if (CHANNEL_NETWORK_RSSI.equals(channelId) || (CHANNEL_NETWORK_SNR.equals(channelId))) {
+                    updateState(channelUID, signal.getNoise());
+                } else {
                     super.handleCommand(channelUID, command);
-                } else if (logger.isTraceEnabled()) {
-                    logger.trace("Received unknown channel {} for signal values.", channelUID);
                 }
             } else {
                 super.handleCommand(channelUID, command);

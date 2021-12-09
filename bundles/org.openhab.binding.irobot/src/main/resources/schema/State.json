@@ -31,8 +31,34 @@
           "readOnly": true,
           "type": "string"
         },
+        "bbmssn": {
+          "$ref": "BBMssn.json"
+        },
         "bbrun": {
-          "$ref": "BBrun.json"
+          "$ref": "BBRun.json"
+        },
+        "bbsys": {
+          "description": "Robot system uptime",
+          "readOnly": true,
+          "type": [ "object", "null" ],
+          "properties": {
+            "hr": {
+              "description": "Write properly help",
+              "readOnly": true,
+              "type": [ "integer", "null" ]
+            },
+            "min": {
+              "description": "Write properly help",
+              "readOnly": true,
+              "type": [ "integer", "null" ]
+            }
+          },
+          "required": [ "hr", "min" ],
+          "javaType" : "BBSys",
+          "extends" : {
+            "type" : "object",
+            "javaType" : "IRobotDTO"
+          }
         },
         "bin": {
           "$ref": "BinStatus.json"
@@ -59,6 +85,9 @@
         "name": {
           "$ref": "Name.json#/properties/name"
         },
+        "netinfo": {
+          "$ref": "NetInfo.json"
+        },
         "pose": {
           "$ref": "Pose.json"
         },
@@ -77,6 +106,9 @@
         },
         "timezone": {
           "$ref": "Timezone.json#/properties/timezone"
+        },
+        "wlcfg": {
+          "$ref": "WlanConfig.json"
         },
         "$comment": "Roomba 980 fields",
         "bootloaderVer": {

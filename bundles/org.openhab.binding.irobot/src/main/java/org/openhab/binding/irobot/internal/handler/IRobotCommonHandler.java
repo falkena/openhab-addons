@@ -15,6 +15,7 @@ package org.openhab.binding.irobot.internal.handler;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.*;
 import static org.openhab.binding.irobot.internal.IRobotBindingConstants.UNKNOWN;
 import static org.openhab.core.library.unit.ImperialUnits.SQUARE_FOOT;
+import static org.openhab.core.library.unit.Units.MINUTE;
 import static org.openhab.core.thing.Thing.PROPERTY_FIRMWARE_VERSION;
 import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 import static org.openhab.core.thing.ThingStatus.INITIALIZING;
@@ -39,6 +40,9 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.irobot.internal.IRobotChannelContentProvider;
 import org.openhab.binding.irobot.internal.config.IRobotConfiguration;
+import org.openhab.binding.irobot.internal.dto.BBMssn;
+import org.openhab.binding.irobot.internal.dto.BBRun;
+import org.openhab.binding.irobot.internal.dto.BBSys;
 import org.openhab.binding.irobot.internal.dto.BatteryLoad;
 import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
 import org.openhab.binding.irobot.internal.dto.CleanPasses;
@@ -47,11 +51,13 @@ import org.openhab.binding.irobot.internal.dto.LastCommand;
 import org.openhab.binding.irobot.internal.dto.MQTTProtocol;
 import org.openhab.binding.irobot.internal.dto.MapUpload;
 import org.openhab.binding.irobot.internal.dto.Name;
+import org.openhab.binding.irobot.internal.dto.NetInfo;
 import org.openhab.binding.irobot.internal.dto.Pose;
 import org.openhab.binding.irobot.internal.dto.Reported;
 import org.openhab.binding.irobot.internal.dto.Root;
 import org.openhab.binding.irobot.internal.dto.Signal;
 import org.openhab.binding.irobot.internal.dto.Timezone;
+import org.openhab.binding.irobot.internal.dto.WlanConfig;
 import org.openhab.binding.irobot.internal.utils.LoginRequester;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.DecimalType;
@@ -172,16 +178,56 @@ public class IRobotCommonHandler extends BaseThingHandler {
             if (cache instanceof BatteryLoad) {
                 final BatteryLoad batteryLoad = (BatteryLoad) cache;
                 if (CHANNEL_STATE_CHARGE.equals(channelId)) {
-                    final BigInteger load = batteryLoad.getBatPct();
-                    updateState(channelUID, load != null ? new DecimalType(load.longValue()) : UnDefType.UNDEF);
+                    updateState(channelUID, batteryLoad.getBatPct());
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for bin pause values.", channelUID);
                 }
+            } else if (cache instanceof BBMssn) {
+                final BBMssn bbMssn = (BBMssn) cache;
+                if (CHANNEL_COMMON_MISSION_COUNT.equals(channelId)) {
+                    updateState(channelUID, bbMssn.getnMssn());
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for clean passes values.", channelUID);
+                }
+            } else if (cache instanceof BBRun) {
+                final BBRun bbRun = (BBRun) cache;
+                if (CHANNEL_COMMON_AREA.equals(channelId)) {
+                    final BigInteger area = bbRun.getSqft();
+                    updateState(channelUID, area != null ? new QuantityType<>(area, SQUARE_FOOT) : UnDefType.UNDEF);
+                } else if (CHANNEL_COMMON_DURATION.equals(channelId)) {
+                    BigInteger duration = null;
+                    final BigInteger hours = bbRun.getHr();
+                    final BigInteger minutes = bbRun.getMin();
+                    if ((hours != null) && (minutes != null)) {
+                        duration = BigInteger.valueOf(60 * hours.longValueExact() + minutes.longValueExact());
+                    }
+                    updateState(channelUID, duration != null ? new QuantityType<>(duration, MINUTE) : UnDefType.UNDEF);
+                } else if (CHANNEL_COMMON_SCRUBS_COUNT.equals(channelId)) {
+                    updateState(channelUID, bbRun.getnScrubs());
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for clean passes values.", channelUID);
+                }
+            } else if (cache instanceof BBSys) {
+                final BBSys bbSys = (BBSys) cache;
+                if (CHANNEL_COMMON_AREA.equals(channelId)) {
+                    BigInteger uptime = null;
+                    final BigInteger hours = bbSys.getHr();
+                    final BigInteger minutes = bbSys.getMin();
+                    if ((hours != null) && (minutes != null)) {
+                        uptime = BigInteger.valueOf(60 * hours.longValueExact() + minutes.longValueExact());
+                    }
+                    updateState(channelUID, uptime != null ? new QuantityType<>(uptime, MINUTE) : UnDefType.UNDEF);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for clean passes values.", channelUID);
+                }
             } else if (cache instanceof CleanMissionStatus) {
                 final CleanMissionStatus missionStatus = (CleanMissionStatus) cache;
-                if (CHANNEL_AREA.equals(channelId)) {
+                if (CHANNEL_MISSION_AREA.equals(channelId)) {
                     final BigDecimal area = missionStatus.getSqft();
                     updateState(channelUID, area != null ? new QuantityType<>(area, SQUARE_FOOT) : UnDefType.UNDEF);
+                } else if (CHANNEL_MISSION_DURATION.equals(channelId)) {
+                    final BigInteger runtime = missionStatus.getMssnM();
+                    updateState(channelUID, runtime != null ? new QuantityType<>(runtime, MINUTE) : UnDefType.UNDEF);
                 } else if (CHANNEL_CONTROL_COMMAND.equals(channelId)) {
                     final String cycle = missionStatus.getCycle();
                     final String phase = missionStatus.getPhase();
@@ -215,6 +261,8 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 } else if (CHANNEL_MISSION_ERROR.equals(channelId)) {
                     final BigInteger error = missionStatus.getError();
                     updateState(channelUID, error != null ? StringType.valueOf(error.toString()) : UnDefType.UNDEF);
+                } else if (CHANNEL_MISSION_NUMBER.equals(channelId)) {
+                    updateState(channelUID, missionStatus.getnMssn());
                 } else if (CHANNEL_MISSION_PHASE.equals(channelId)) {
                     updateState(channelUID, missionStatus.getPhase());
                 } else if (logger.isTraceEnabled()) {
@@ -243,8 +291,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
             } else if (cache instanceof MapUpload) {
                 final MapUpload mapUpload = (MapUpload) cache;
                 if (CHANNEL_CONTROL_MAP_UPLOAD.equals(channelId)) {
-                    final Boolean upload = mapUpload.getMapUploadAllowed();
-                    updateState(channelUID, upload != null ? OnOffType.from(upload) : UnDefType.UNDEF);
+                    updateState(channelUID, mapUpload.getMapUploadAllowed());
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for map upload values.", channelUID);
                 }
@@ -255,28 +302,35 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for map upload values.", channelUID);
                 }
+            } else if (cache instanceof NetInfo) {
+                final NetInfo netInfo = (NetInfo) cache;
+                if (CHANNEL_NETWORK_BSSID.equals(channelId)) {
+                    final String bssid = netInfo.getBssid();
+                    updateState(channelUID, bssid.toUpperCase());
+                } else if (CHANNEL_NETWORK_DHCP.equals(channelId)) {
+                    updateState(channelUID, netInfo.getDhcp());
+                } else if (CHANNEL_NETWORK_SECURITY.equals(channelId)) {
+                    updateState(channelUID, new BigDecimal(netInfo.getSec()));
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for map upload values.", channelUID);
+                }
             } else if (cache instanceof Pose) {
                 final Pose pose = (Pose) cache;
                 if (CHANNEL_POSITION_THETA.equals(channelId)) {
-                    final BigDecimal theta = pose.getTheta();
-                    updateState(channelUID, theta != null ? new DecimalType(theta.longValue()) : UnDefType.UNDEF);
+                    updateState(channelUID, pose.getTheta());
                 } else if (CHANNEL_POSITION_X.equals(channelId)) {
-                    final BigDecimal x = pose.getPoint().getX();
-                    updateState(channelUID, x != null ? new DecimalType(x.longValue()) : UnDefType.UNDEF);
+                    updateState(channelUID, pose.getPoint().getX());
                 } else if (CHANNEL_POSITION_Y.equals(channelId)) {
-                    final BigDecimal y = pose.getPoint().getY();
-                    updateState(channelUID, y != null ? new DecimalType(y.longValue()) : UnDefType.UNDEF);
+                    updateState(channelUID, pose.getPoint().getY());
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for pose values.", channelUID);
                 }
             } else if (cache instanceof Signal) {
                 final Signal signal = (Signal) cache;
                 if (CHANNEL_NETWORK_RSSI.equals(channelId)) {
-                    final BigInteger rssi = signal.getRssi();
-                    updateState(channelUID, rssi != null ? new DecimalType(rssi.longValue()) : UnDefType.UNDEF);
+                    updateState(channelUID, signal.getRssi());
                 } else if (CHANNEL_NETWORK_SNR.equals(channelId)) {
-                    final BigInteger snr = signal.getSnr();
-                    updateState(channelUID, snr != null ? new DecimalType(snr.longValue()) : UnDefType.UNDEF);
+                    updateState(channelUID, signal.getSnr());
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for signal values.", channelUID);
                 }
@@ -287,6 +341,26 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 } else if (logger.isTraceEnabled()) {
                     logger.trace("Received unknown channel {} for map upload values.", channelUID);
                 }
+            } else if (cache instanceof WlanConfig) {
+                final WlanConfig wlanConfig = (WlanConfig) cache;
+                if (CHANNEL_NETWORK_SECURITY.equals(channelId)) {
+                    updateState(channelUID, wlanConfig.getSec());
+                } else if (CHANNEL_NETWORK_SSID.equals(channelId)) {
+                    String ssid = wlanConfig.getSsid();
+                    if (ssid != null) {
+                        String buffer = new String();
+                        for (int i = 0; i < ssid.length() / 2; i++) {
+                            int hi = Character.digit(ssid.charAt(2 * i + 0), 16);
+                            int lo = Character.digit(ssid.charAt(2 * i + 1), 16);
+                            buffer = buffer + Character.toString(16 * hi + lo);
+                        }
+                        ssid = buffer;
+                    }
+                    updateState(channelUID, ssid);
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Received unknown channel {} for map upload values.", channelUID);
+                }
+
             } else {
                 updateState(channelUID, UnDefType.UNDEF);
             }
@@ -364,6 +438,18 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 }
             }
         }
+    }
+
+    protected void updateState(ChannelUID channelUID, @Nullable BigDecimal value) {
+        updateState(channelUID, value != null ? new DecimalType(value.longValue()) : UnDefType.UNDEF);
+    }
+
+    protected void updateState(ChannelUID channelUID, @Nullable BigInteger value) {
+        updateState(channelUID, value != null ? new DecimalType(value.longValue()) : UnDefType.UNDEF);
+    }
+
+    protected void updateState(ChannelUID channelUID, @Nullable Boolean value) {
+        updateState(channelUID, value != null ? OnOffType.from(value) : UnDefType.UNDEF);
     }
 
     protected void updateState(ChannelUID channelUID, @Nullable String value) {
@@ -467,13 +553,34 @@ public class IRobotCommonHandler extends BaseThingHandler {
             setCacheEntry(new ChannelUID(stateGroupUID, CHANNEL_STATE_CHARGE), load);
         }
 
+        final BBMssn bbMssn = reported.getBbmssn();
+        if (bbMssn != null) {
+            final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            setCacheEntry(new ChannelUID(commonGroupUID, CHANNEL_COMMON_MISSION_COUNT), bbMssn);
+        }
+
+        final BBRun bbRun = reported.getBbrun();
+        if (bbRun != null) {
+            final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            setCacheEntry(new ChannelUID(commonGroupUID, CHANNEL_COMMON_AREA), bbRun);
+            setCacheEntry(new ChannelUID(commonGroupUID, CHANNEL_COMMON_DURATION), bbRun);
+            setCacheEntry(new ChannelUID(commonGroupUID, CHANNEL_COMMON_SCRUBS_COUNT), bbRun);
+        }
+
+        final BBSys bbSys = reported.getBbsys();
+        if (bbSys != null) {
+            final ChannelGroupUID commonGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
+            setCacheEntry(new ChannelUID(commonGroupUID, CHANNEL_COMMON_UPTIME), bbSys);
+        }
+
         final CleanMissionStatus missionStatus = reported.getCleanMissionStatus();
         if (missionStatus != null) {
             final ChannelGroupUID missionGroupUID = new ChannelGroupUID(thingUID, MISSION_GROUP_ID);
-            setCacheEntry(new ChannelUID(missionGroupUID, CHANNEL_AREA), missionStatus);
+            setCacheEntry(new ChannelUID(missionGroupUID, CHANNEL_MISSION_AREA), missionStatus);
             setCacheEntry(new ChannelUID(missionGroupUID, CHANNEL_MISSION_CYCLE), missionStatus);
             setCacheEntry(new ChannelUID(missionGroupUID, CHANNEL_MISSION_ERROR), missionStatus);
             setCacheEntry(new ChannelUID(missionGroupUID, CHANNEL_MISSION_PHASE), missionStatus);
+            setCacheEntry(new ChannelUID(missionGroupUID, CHANNEL_MISSION_DURATION), missionStatus);
 
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, CONTROL_GROUP_ID);
             setCacheEntry(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_COMMAND), missionStatus);
@@ -497,6 +604,21 @@ public class IRobotCommonHandler extends BaseThingHandler {
             final Name robotName = new Name(name);
             final ChannelGroupUID controlGroupUID = new ChannelGroupUID(thingUID, COMMON_GROUP_ID);
             setCacheEntry(new ChannelUID(controlGroupUID, CHANNEL_COMMON_NAME), robotName);
+        }
+
+        final NetInfo netinfo = reported.getNetinfo();
+        if (netinfo != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_ADDRESS), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_BSSID), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DHCP), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DNS1), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_DNS2), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_GATEWAY), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_MAC), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_MASK), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_NOISE), netinfo);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), netinfo);
         }
 
         final Pose pose = reported.getPose();
@@ -538,6 +660,12 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 passes.setTwoPass(twoPass);
             }
             setCacheEntry(new ChannelUID(controlGroupUID, CHANNEL_CONTROL_CLEAN_PASSES), passes);
+        }
+
+        final WlanConfig wlanConfig = reported.getWlcfg();
+        if (wlanConfig != null) {
+            final ChannelGroupUID networkGroupUID = new ChannelGroupUID(thingUID, NETWORK_GROUP_ID);
+            setCacheEntry(new ChannelUID(networkGroupUID, CHANNEL_NETWORK_SECURITY), wlanConfig);
         }
 
         // Properties

@@ -1,0 +1,53 @@
+{
+  "$id": "#NetInfo",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot net information package",
+  "type": "object",
+  "properties": {
+    "addr": {
+      "description": "Robot IP Address",
+      "readOnly": true,
+      "type": "string"
+    },
+    "bssid": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "dhcp": {
+      "description": "Robot use DHCP",
+      "readOnly": true,
+      "type": "boolean"
+    },
+    "dns1": {
+      "description": "Robot primary DNS",
+      "readOnly": true,
+      "type": "string"
+    },
+    "dns2": {
+      "description": "Robot secondary DNS",
+      "readOnly": true,
+      "type": "string"
+    },
+    "gw": {
+      "description": "Robot gateway",
+      "readOnly": true,
+      "type": "string"
+    },
+    "mask": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "sec": {
+      "description": "Robot security",
+      "readOnly": true,
+      "type": "integer"
+    }
+  },
+  "required": [ "addr", "bssid", "dhcp", "dns1", "dns2", "gw", "mask", "sec" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}

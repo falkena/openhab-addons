@@ -1,0 +1,23 @@
+{
+  "$id": "#WlanConfig",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot wlan configuration package",
+  "type": "object",
+  "properties": {
+    "sec": {
+      "description": "Robot security",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "ssid": {
+      "description": "WLAN SSID",
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "required": [ "sec", "ssid" ],
+  "extends" : {
+    "type" : "object",
+    "javaType" : "IRobotDTO"
+  }
+}
