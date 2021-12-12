@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -45,14 +46,18 @@ public class NativeLibraryLoader {
             return;
         }
 
-        loadedLibraries.add(fileName);
-
         // path = /lib/{platform}/{filename}
-        String platform = "armv7l";
-        String path = "/lib/" + platform + "/" + fileName;
+        String path = "/lib/";
+        String arch = System.getProperty("os.arch").toLowerCase(Locale.ENGLISH);
+        if (arch.contains("arm")) {
+            path = path + "armhf/";
+        } else if (arch.contains("aarch64")) {
+            path = path + "arm64/";
+        }
         logger.debug("Attempting to load [{}] using path: [{}].", fileName, path);
         try {
-            loadLibraryFromClasspath(path);
+            loadLibraryFromClasspath(path + fileName);
+            loadedLibraries.add(fileName);
             logger.debug("Library [{}] loaded successfully using embedded resource file: [{}].", fileName, path);
         } catch (Exception | UnsatisfiedLinkError exception) {
             logger.error("Unable to load [{}] using path [{}]: {}.", fileName, path, exception);
