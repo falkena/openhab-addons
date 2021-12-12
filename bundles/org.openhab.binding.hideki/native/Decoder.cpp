@@ -9,14 +9,13 @@
 Decoder::Decoder(const Receiver* receiver)
   :mReceiver(const_cast<Receiver*>(receiver)),
    mFetchNewDataLock(PTHREAD_RWLOCK_INITIALIZER),
+   mReceivedNewData(false),
    mStartCondition(PTHREAD_COND_INITIALIZER),
    mStartMutex(PTHREAD_MUTEX_INITIALIZER),
-   mReceivedNewData(false),
    mStopDecoderThread(false),
    mDecoderThreadIsAlive(false)
 {
 }
-
 
 Decoder::~Decoder()
 {
