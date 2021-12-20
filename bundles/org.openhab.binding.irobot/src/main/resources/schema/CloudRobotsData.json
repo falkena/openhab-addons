@@ -1,0 +1,72 @@
+{
+  "$id": "#CloudRobotsData",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Write properly help",
+  "properties": {
+    "credentials": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "AccessKeyId": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "CognitoId": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "Expiration": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string",
+          "format": "date-time"
+        },
+        "SecretKey": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "SessionToken": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        }
+      },
+      "required": [ "AccessKeyId", "CognitoId", "Expiration", "SecretKey", "SessionToken" ]
+    },
+    "iot_authorizer_name": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "iot_clientid": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "iot_signature": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "iot_token": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "robots": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "$ref": "CloudRobotData.json"
+      },
+      "existingJavaType" : "java.util.Map<String,CloudRobotData>"
+    }
+  },
+  "required": [ "credentials", "iot_authorizer_name", "iot_clientid", "iot_signature", "iot_token", "robots"]
+}

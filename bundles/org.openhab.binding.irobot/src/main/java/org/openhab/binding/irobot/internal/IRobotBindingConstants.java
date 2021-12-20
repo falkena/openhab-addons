@@ -31,6 +31,7 @@ public class IRobotBindingConstants {
     public static final String BINDING_ID = "irobot";
 
     // List of all type UIDs
+    public static final ThingTypeUID BRIDGE_TYPE_CLOUD = new ThingTypeUID(BINDING_ID, "cloud");
     public static final ThingTypeUID THING_TYPE_BRAAVA_M = new ThingTypeUID(BINDING_ID, "braavaM");
     public static final ThingTypeUID THING_TYPE_ROOMBA_9 = new ThingTypeUID(BINDING_ID, "roomba9");
     public static final ThingTypeUID THING_TYPE_ROOMBA_I = new ThingTypeUID(BINDING_ID, "roombaI");

@@ -1,0 +1,209 @@
+{
+  "$id": "#CloudAccount",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot cloud account",
+  "properties": {
+    "callId": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "errorCode": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "apiVersion": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "statusCode": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "statusReason": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "time": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "registeredTimestamp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "UID": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "UIDSignature": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "signatureTimestamp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "created": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdTimestamp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "isActive": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "boolean"
+    },
+    "isRegistered": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "boolean"
+    },
+    "isVerified": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "boolean"
+    },
+    "lastLogin": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "lastLoginTimestamp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "lastUpdated": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "lastUpdatedTimestamp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "loginProvider": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "oldestDataUpdated": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "oldestDataUpdatedTimestamp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "profile": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "lastName": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "country": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "email": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "required": [ "firstName", "lastName", "country", "email" ]
+    },
+    "registered": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "socialProviders": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "verified": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "verifiedTimestamp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "newUser": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "boolean"
+    },
+    "sessionInfo": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "sessionToken": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "sessionSecret": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "expires_in": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        }
+      },
+      "required": [ "sessionToken", "sessionSecret", "expires_in" ]
+    }
+  },
+  "required": [
+    "callId", "errorCode", "apiVersion", "statusCode", "statusReason", "time",
+    "registeredTimestamp", "newUser", "UID", "UIDSignature", "signatureTimestamp",
+    "created", "createdTimestamp", "loginProvider", "socialProviders", "isActive",
+    "isRegistered", "isVerified", "lastLogin", "lastLoginTimestamp", "lastUpdated",
+    "lastUpdatedTimestamp", "oldestDataUpdated", "oldestDataUpdatedTimestamp",
+    "profile", "registered", "verified", "verifiedTimestamp", "sessionInfo"
+  ]
+}

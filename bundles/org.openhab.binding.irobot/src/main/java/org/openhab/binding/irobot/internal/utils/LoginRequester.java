@@ -77,16 +77,18 @@ public class LoginRequester {
             // May be properly logging shall be add here.
         }
 
-        @Nullable
-        String blid = identification != null ? identification.getRobotid() : null;
-        final @Nullable String hostname = identification != null ? identification.getHostname() : null;
-        if (((blid == null) || blid.isEmpty()) && ((hostname != null) && !hostname.isEmpty())) {
+        return identification != null ? getBlid(identification) : null;
+    }
+
+    public static @Nullable String getBlid(final Identification identification) {
+        String blid = identification.getRobotid();
+        final String hostname = identification.getHostname();
+        if (((blid == null) || blid.isBlank()) && ((hostname != null) && !hostname.isBlank())) {
             final String[] parts = hostname.split("-");
             if (parts.length == 2) {
                 blid = parts[1];
             }
         }
-
         return blid;
     }
 

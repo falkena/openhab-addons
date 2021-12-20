@@ -46,6 +46,7 @@ import org.openhab.binding.irobot.internal.dto.BBSys;
 import org.openhab.binding.irobot.internal.dto.BatteryLoad;
 import org.openhab.binding.irobot.internal.dto.CleanMissionStatus;
 import org.openhab.binding.irobot.internal.dto.CleanPasses;
+import org.openhab.binding.irobot.internal.dto.CloudRobotData;
 import org.openhab.binding.irobot.internal.dto.IRobotDTO;
 import org.openhab.binding.irobot.internal.dto.LastCommand;
 import org.openhab.binding.irobot.internal.dto.MQTTProtocol;
@@ -59,11 +60,13 @@ import org.openhab.binding.irobot.internal.dto.Signal;
 import org.openhab.binding.irobot.internal.dto.Timezone;
 import org.openhab.binding.irobot.internal.dto.WlanConfig;
 import org.openhab.binding.irobot.internal.utils.LoginRequester;
+import org.openhab.core.config.core.Configuration;
 import org.openhab.core.io.transport.mqtt.MqttConnectionState;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
+import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelGroupUID;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -71,6 +74,7 @@ import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.BridgeHandler;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.UnDefType;
@@ -97,6 +101,7 @@ public class IRobotCommonHandler extends BaseThingHandler {
     private final Gson gson = new Gson();
 
     private IRobotChannelContentProvider channelContentProvider;
+    private volatile @NonNullByDefault({}) IRobotConfiguration config;
 
     private Set<String> filledProperties = new HashSet<>();
     private Hashtable<ChannelUID, IRobotDTO> lastState = new Hashtable<>();
@@ -135,12 +140,13 @@ public class IRobotCommonHandler extends BaseThingHandler {
 
     public IRobotCommonHandler(Thing thing, IRobotChannelContentProvider channelContentProvider) {
         super(thing);
+        config = getConfigAs(IRobotConfiguration.class);
         this.channelContentProvider = channelContentProvider;
     }
 
     @Override
     public void initialize() {
-        IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
+        config = getConfigAs(IRobotConfiguration.class);
 
         try {
             InetAddress.getByName(config.getAddress());
@@ -150,10 +156,10 @@ public class IRobotCommonHandler extends BaseThingHandler {
             return;
         }
 
-        if (UNKNOWN.equals(config.getPassword()) || UNKNOWN.equals(config.getBlid())) {
-            final String message = "Robot authentication is required";
-            updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, message);
-            scheduler.execute(this::getCredentials);
+        if (UNKNOWN.equals(config.getBlid())) {
+            scheduler.execute(this::getRobotBlId);
+        } else if (UNKNOWN.equals(config.getPassword())) {
+            scheduler.execute(this::getRobotPassword);
         } else {
             scheduler.execute(this::connect);
         }
@@ -457,6 +463,12 @@ public class IRobotCommonHandler extends BaseThingHandler {
     }
 
     @Override
+    protected void updateConfiguration(Configuration configuration) {
+        super.updateConfiguration(configuration);
+        config = getConfigAs(IRobotConfiguration.class);
+    }
+
+    @Override
     protected void updateProperty(String name, @Nullable String value) {
         if (value != null) {
             super.updateProperty(name, value);
@@ -475,12 +487,10 @@ public class IRobotCommonHandler extends BaseThingHandler {
         return lastState.get(channelUID);
     }
 
-    private synchronized void getCredentials() {
+    private synchronized void getRobotBlId() {
         ThingStatus status = thing.getStatusInfo().getStatus();
-        IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
         if (UNINITIALIZED.equals(status) || INITIALIZING.equals(status) || OFFLINE.equals(status)) {
             if (UNKNOWN.equals(config.getBlid())) {
-                @Nullable
                 String blid = null;
                 try {
                     blid = LoginRequester.getBlid(config.getAddress());
@@ -489,26 +499,50 @@ public class IRobotCommonHandler extends BaseThingHandler {
                 }
 
                 if (blid != null) {
-                    org.openhab.core.config.core.Configuration configuration = editConfiguration();
+                    Configuration configuration = editConfiguration();
                     configuration.put(ROBOT_BLID, blid);
                     updateConfiguration(configuration);
                 }
             }
+        }
 
+        credentialRequester = null;
+        if (UNKNOWN.equals(config.getBlid())) {
+            updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Unable to fetch BlId");
+            credentialRequester = scheduler.schedule(this::getRobotBlId, 10, TimeUnit.SECONDS);
+        } else {
+            scheduler.execute(this::getRobotPassword);
+        }
+    }
+
+    private synchronized void getRobotPassword() {
+        ThingStatus status = thing.getStatusInfo().getStatus();
+        if (UNINITIALIZED.equals(status) || INITIALIZING.equals(status) || OFFLINE.equals(status)) {
             if (UNKNOWN.equals(config.getPassword())) {
-                @Nullable
                 String password = null;
-                try {
-                    password = LoginRequester.getPassword(config.getAddress());
-                } catch (KeyManagementException | NoSuchAlgorithmException exception) {
-                    updateStatus(OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, exception.toString());
-                    return; // This is internal system error, no retry
-                } catch (IOException exception) {
-                    updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, exception.toString());
+
+                final Bridge bridge = getBridge();
+                if (bridge != null) {
+                    BridgeHandler handler = bridge.getHandler();
+                    if (handler instanceof IRobotCloudHandler) {
+                        IRobotCloudHandler cloudHandler = (IRobotCloudHandler) handler;
+                        CloudRobotData robot = cloudHandler.getRobots().get(config.getBlid());
+                        password = robot != null ? robot.getPassword() : null;
+                    }
+                }
+
+                if (password == null) {
+                    try {
+                        password = LoginRequester.getPassword(config.getAddress());
+                    } catch (KeyManagementException | NoSuchAlgorithmException exception) {
+                        updateStatus(OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, exception.toString());
+                    } catch (IOException exception) {
+                        updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, exception.toString());
+                    }
                 }
 
                 if (password != null) {
-                    org.openhab.core.config.core.Configuration configuration = editConfiguration();
+                    Configuration configuration = editConfiguration();
                     configuration.put(ROBOT_PASSWORD, password.trim());
                     updateConfiguration(configuration);
                 }
@@ -516,8 +550,9 @@ public class IRobotCommonHandler extends BaseThingHandler {
         }
 
         credentialRequester = null;
-        if (UNKNOWN.equals(config.getBlid()) || UNKNOWN.equals(config.getPassword())) {
-            credentialRequester = scheduler.schedule(this::getCredentials, 10000, TimeUnit.MILLISECONDS);
+        if (UNKNOWN.equals(config.getPassword())) {
+            updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Unable to fetch password");
+            credentialRequester = scheduler.schedule(this::getRobotPassword, 10, TimeUnit.SECONDS);
         } else {
             scheduler.execute(this::connect);
         }
@@ -526,16 +561,15 @@ public class IRobotCommonHandler extends BaseThingHandler {
     // In order not to mess up our connection state we need to make sure that connect()
     // and disconnect() are never running concurrently, so they are synchronized
     private synchronized void connect() {
-        IRobotConfiguration config = getConfigAs(IRobotConfiguration.class);
         final String address = config.getAddress();
         logger.debug("Connecting to {}", address);
 
         final String blid = config.getBlid();
         final String password = config.getPassword();
-        if (UNKNOWN.equals(blid) || UNKNOWN.equals(password)) {
-            final String message = "Robot authentication is required";
-            updateStatus(OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, message);
-            scheduler.execute(this::getCredentials);
+        if (UNKNOWN.equals(blid)) {
+            scheduler.execute(this::getRobotBlId);
+        } else if (UNKNOWN.equals(password)) {
+            scheduler.execute(this::getRobotPassword);
         } else {
             final String message = "Robot authentication is successful";
             updateStatus(ThingStatus.ONLINE, ThingStatusDetail.CONFIGURATION_PENDING, message);

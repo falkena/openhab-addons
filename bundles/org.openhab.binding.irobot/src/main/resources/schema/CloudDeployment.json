@@ -1,0 +1,79 @@
+{
+  "$id": "#CloudDeployment",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot cloud deployment",
+  "properties": {
+    "awsRegion": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "discoveryTTL": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "integer"
+    },
+    "httpBase": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "uri",
+      "qt-uri-protocols": [ "https" ]
+    },
+    "httpBaseAuth": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "uri",
+      "qt-uri-protocols": [ "https" ]
+    },
+    "httpProdSecBaseAuth": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "uri",
+      "qt-uri-protocols": [ "https" ]
+    },
+    "iotTopics": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "irbtTopics": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "mqtt": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "mqttApp": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "svcDeplId": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "userServicesBase": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "vStream": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string",
+      "format": "uri",
+      "qt-uri-protocols": [ "https" ]
+    }
+  },
+  "required": [
+    "awsRegion", "discoveryTTL", "httpBase", "httpBaseAuth", "httpProdSecBaseAuth",
+    "iotTopics", "irbtTopics", "mqtt", "mqttApp", "svcDeplId", "userServicesBase", "vStream"
+  ]
+}

@@ -15,8 +15,8 @@
 			<description>ID of the robot</description>
 		</parameter>
 		<parameter name="password" type="text">
-			<context>password</context>
 			<label>Password</label>
+			<context>password</context>
 			<description>Password of the robot</description>
 		</parameter>
 	</config-description>

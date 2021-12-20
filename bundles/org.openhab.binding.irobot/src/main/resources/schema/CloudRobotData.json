@@ -1,0 +1,31 @@
+{
+  "$id": "#CloudRobotData",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot cloud deployments",
+  "properties": {
+    "cap": {
+      "$ref": "Identification.json#/properties/cap"
+    },
+    "name": {
+      "description": "Robot name.",
+      "readOnly": true,
+      "type": "string"
+    },
+    "password": {
+      "description": "Robot password.",
+      "readOnly": true,
+      "type": "string"
+    },
+    "sku": {
+      "description": "Robot <SKU>: Stock Keeping Unit.",
+      "readOnly": true,
+      "type": "string"
+    },
+    "softwareVer": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "required": [ "cap", "name", "password", "sku", "softwareVer"]
+}

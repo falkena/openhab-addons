@@ -89,6 +89,9 @@ public class RoombaHandlerTest {
     private @Mock Thing thing = new ThingImpl(new ThingTypeUID("AA:BB"), "");
     private @NonNullByDefault({}) IRobotCommonHandlerMock handler;
 
+    RoombaHandlerTest() {
+    }
+
     @BeforeEach
     void setUp() throws Exception {
         Logger logger = LoggerFactory.getLogger(IRobotCommonHandler.class);

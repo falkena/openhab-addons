@@ -1,0 +1,41 @@
+{
+  "$id": "#CloudEndpoints",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "iRobot cloud deployments",
+  "properties": {
+    "deployments": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "$ref": "CloudDeployment.json"
+      },
+      "existingJavaType" : "java.util.Map<String,CloudDeployment>"
+    },
+    "current_deployment": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "string"
+    },
+    "gigya": {
+      "description": "Write properly help",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "api_key": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        },
+        "datacenter_domain": {
+          "description": "Write properly help",
+          "readOnly": true,
+          "type": "string"
+        }
+      },
+      "required": [ "api_key", "datacenter_domain" ]
+    }
+  },
+  "required": [ "deployments", "current_deployment", "gigya" ]
+}

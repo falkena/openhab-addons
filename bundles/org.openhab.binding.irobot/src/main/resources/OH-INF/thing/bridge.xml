@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="irobot"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<bridge-type id="cloud">
+		<label>iRobot cloud account</label>
+		<description>The iRobot cloud account</description>
+
+		<properties>
+			<property name="vendor">iRobot</property>
+		</properties>
+
+		<representation-property>email</representation-property>
+		<config-description-ref uri="thing-type:irobot:bridge"/>
+	</bridge-type>
+</thing:thing-descriptions>

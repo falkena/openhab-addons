@@ -6,41 +6,51 @@
   "properties": {
     "hostname": {
       "description": "Robot hostname. Normally Roomba-<BLID>.",
+      "readOnly": true,
       "type": "string"
     },
     "ip": {
       "description": "Robot <IP>: Internet Protocol Address.",
+      "readOnly": true,
       "type": "string"
     },
     "mac": {
       "description": "Robot <MAC>: Media Access Control.",
+      "readOnly": true,
       "type": "string"
     },
     "nc": {
+      "readOnly": true,
       "type": "integer"
     },
     "proto": {
       "description": "Robot communication protocol.",
+      "readOnly": true,
       "type": "string"
     },
     "robotid": {
       "description": "Robot <BLID>: Basic Calling Line ID. Not available on 9XX models.",
+      "readOnly": true,
       "type": "string"
     },
     "robotname": {
       "description": "Robot name.",
+      "readOnly": true,
       "type": "string"
     },
     "sku": {
       "description": "Robot <SKU>: Stock Keeping Unit.",
+      "readOnly": true,
       "type": "string"
     },
     "sw": {
       "description": "Robot software version. Reported string is model dependend.",
+      "readOnly": true,
       "type": "string"
     },
     "ver": {
       "description": "API(?) version.",
+      "readOnly": true,
       "type": "integer"
     },
     "cap": {
@@ -48,92 +58,142 @@
       "properties": {
         "5ghz": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "area": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "binFullDetect": {
-          "type": "integer"
+          "description": "Unknown. Not available on Braava models.",
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "bleDevLoc": {
-          "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "description": "Unknown. Not available on 9XX and Braava models.",
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "carpetBoost": {
           "description": "Unknown. Available on 9XX models only?",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "dockComm": {
-          "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "description": "Unknown. Not available on 9XX and Braava models.",
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "eco": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
         "edge": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
+        },
+        "hm": {
+          "description": "Unknown. Not available on 9XX and Braava models.",
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "lang": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "langOta": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
         "log": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "maps": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
         "multiPass": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
+        "oMode": {
+          "description": "Unknown. Not available on 9XX and I models.",
+          "readOnly": true,
+          "type": [ "integer", "null" ]
+        },
         "ota": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
         "pmaps": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "pose": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
         "pp": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
         "prov": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "sched": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "svcConf": {
+          "description": "Unknown.",
+          "readOnly": true,
           "type": "integer"
         },
         "team": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "tileScan": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
+        },
+        "tHold":{
+          "description": "Unknown. Not available on 9XX and I models.",
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "tLine": {
           "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         },
         "wDevLoc": {
-          "description": "Unknown. Not available on 9XX models.",
-          "type": "integer"
+          "description": "Unknown. Not available on 9XX and Braava models.",
+          "readOnly": true,
+          "type": [ "integer", "null" ]
         }
       },
-      "required": [ "pose", "ota", "multiPass", "pp", "binFullDetect", "langOta", "maps", "edge", "eco", "svcConf" ],
+      "required": [ "eco", "edge", "langOta", "maps", "multiPass", "ota", "pose", "pp", "svcConf" ],
+      "javaType" : "Cap",
       "extends" : {
         "type" : "object",
         "javaType" : "IRobotDTO"
