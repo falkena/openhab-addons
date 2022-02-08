@@ -4,6 +4,7 @@
 #include <linux/gpio.h>
 #include <sys/ioctl.h>
 #include <cmath>
+#include <cstdio>
 
 Receiver::Receiver(const int& pin)
   :mPin(pin),
@@ -112,7 +113,7 @@ void* Receiver::receive(void* parameter)
     int result = 0;
     do {
       result = gpiod_line_event_wait(line, receiver->mTimeout.load() < 0 ? nullptr : &timeout);
-    } while (result <=0);
+    } while (result <= 0);
     
     struct gpiod_line_event event;
     result = gpiod_line_event_read(line, &event);
