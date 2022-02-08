@@ -46,3 +46,4 @@ class Decoder
     std::atomic<bool> mStopDecoderThread;
     std::atomic<bool> mDecoderThreadIsAlive;
 };
+

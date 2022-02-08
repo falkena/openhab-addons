@@ -1,14 +1,13 @@
 TARGET=libhideki.so
 
-DEBUG      = -O3 -fwhole-program -std=c++11
 CC         = gcc
 INCLUDE	   = -I./queue \
-             -I/$(JAVA_HOME)/include -I/$(JAVA_HOME)/include/linux \
-             -I/usr/lib/jvm/java-1.11.0-openjdk-armhf/include          \
-             -I/usr/lib/jvm/java-1.11.0-openjdk-armhf/include/linux    \
+             -I/$(JAVA_HOME)/include -I/$(JAVA_HOME)/include/linux  \
+             -I/usr/lib/jvm/java-1.11.0-openjdk-arm64/include       \
+             -I/usr/lib/jvm/java-1.11.0-openjdk-arm64/include/linux \
              -I/usr/local/include -I/usr/local/include/linux
 
-CFLAGS      := $(DEBUG) -pedantic -Wall $(INCLUDE) -Winline -pipe $(CARGS) -Wl,--add-stdcall-alias -fPIC
+CFLAGS      := -O3 -std=c++14 -fPIC -pedantic -Wall -Winline -pipe -flto $(CARGS) 
 LIBS         = -lgpiod -lm -lpthread -lstdc++
 
 CLASS_PATH = ../target
@@ -21,11 +20,11 @@ SRC	=   CC1101.cpp Decoder.cpp Receiver.cpp RXB.cpp HidekiJniWrapper.cpp
 OBJ =	$(SRC:.c=.o)
 
 all:	$(OBJ)
-	@$(CC) $(OBJ) -shared -o $(TARGET) $(INCLUDE) $(LIBS)
+	@$(CC) $(OBJ) $(CFLAGS) -shared -o $(TARGET) $(INCLUDE) $(LIBS)
 
 .cpp.o:
 	@echo [COMPILE] $<
-	@$(CC) -c $(CFLAGS) $< -o $@
+	@$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean:
 	rm -f $(OBJ) $(TARGET) *~ core tags Makefile.bak
@@ -41,7 +40,7 @@ install:	$(TARGET)
 	@echo [install]
 	install -m 0755 -d /usr/local/lib
 	install -m 0755 -d /usr/local/include
-	install -m 0644 $(TARGET)	/usr/local/lib
+	install -m 0644 $(TARGET) /usr/local/lib
 
 uninstall:
 	@echo [uninstall]
