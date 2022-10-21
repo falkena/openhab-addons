@@ -9,6 +9,7 @@
 		<description>@text/channel-group-type.shelly.deviceStatus.description</description>
 		<channels>
 			<channel id="alarm" typeId="alarmTrigger"/>
+			<channel id="rssi" typeId="rssi"/>
 			<channel id="wifiSignal" typeId="system.signal-strength"/>
 		</channels>
 	</channel-group-type>
@@ -127,6 +128,17 @@
 		</tags>
 		<state readOnly="true" pattern="%.0f %unit%">
 		</state>
+	</channel-type>
+	<channel-type id="rssi">
+		<item-type>Number:Power</item-type>
+		<label>RSSI</label>
+		<description>Wi-Fi signal strength indicator</description>
+		<category>QualityOfService</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Level</tag>
+		</tags>
+		<state readOnly="true" pattern="%d %unit%"></state>
 	</channel-type>
 	<channel-type id="supplyVoltage" advanced="true">
 		<item-type>Number:ElectricPotential</item-type>
