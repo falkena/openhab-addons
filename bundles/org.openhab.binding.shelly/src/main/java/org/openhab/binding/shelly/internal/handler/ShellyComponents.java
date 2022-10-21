@@ -39,6 +39,7 @@ import org.openhab.binding.shelly.internal.api1.Shelly1ApiJsonDTO.ShellyStatusSe
 import org.openhab.binding.shelly.internal.api1.Shelly1ApiJsonDTO.ShellyThermnostat;
 import org.openhab.binding.shelly.internal.provider.ShellyChannelDefinitions;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.ImperialUnits;
 import org.openhab.core.library.unit.SIUnits;
@@ -82,7 +83,9 @@ public class ShellyComponents {
         }
 
         Integer rssi = getInteger(status.wifiSta.rssi);
-        thingHandler.updateChannel(CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_RSSI, mapSignalStrength(rssi));
+        thingHandler.updateChannel(CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_RSSI,
+                new QuantityType<>(rssi, Units.DECIBEL_MILLIWATTS));
+        thingHandler.updateChannel(CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_SIGNAL, mapSignalStrength(rssi));
         if (status.tmp != null && getBool(status.tmp.isValid) && !thingHandler.getProfile().isSensor
                 && status.tmp.tC != SHELLY_API_INVTEMP) {
             thingHandler.updateChannel(CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_ITEMP,

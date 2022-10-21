@@ -239,7 +239,7 @@ public class ShellyManagerPage {
             properties.put("password", bindingConfig.defaultPassword);
         }
 
-        addAttribute(properties, th, CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_RSSI);
+        addAttribute(properties, th, CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_SIGNAL);
         addAttribute(properties, th, CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_UPTIME);
         addAttribute(properties, th, CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_HEARTBEAT);
         addAttribute(properties, th, CHANNEL_GROUP_DEV_STATUS, CHANNEL_DEVST_ITEMP);
@@ -276,7 +276,7 @@ public class ShellyManagerPage {
             properties.put(CHANNEL_SENSOR_BAT_LEVEL, "USB");
         }
 
-        String wiFiSignal = getString(properties.get(CHANNEL_DEVST_RSSI));
+        String wiFiSignal = getString(properties.get(CHANNEL_DEVST_SIGNAL));
         if (!wiFiSignal.isEmpty()) {
             properties.put("wifiSignalRssi", wiFiSignal + " / " + stats.wifiRssi + " dBm");
             properties.put("imgWiFi", "imgWiFi" + wiFiSignal);
