@@ -187,7 +187,8 @@ public class ShellyBindingConstants {
     public static final String CHANNEL_DEVST_GATEWAY = "gatewayDevice";
     public static final String CHANNEL_DEVST_UPTIME = "uptime";
     public static final String CHANNEL_DEVST_HEARTBEAT = "heartBeat";
-    public static final String CHANNEL_DEVST_RSSI = "wifiSignal";
+    public static final String CHANNEL_DEVST_SIGNAL = "wifiSignal";
+    public static final String CHANNEL_DEVST_RSSI = "rssi";
     public static final String CHANNEL_DEVST_ITEMP = "internalTemp";
     public static final String CHANNEL_DEVST_WAKEUP = "wakeupReason";
     public static final String CHANNEL_DEVST_ALARM = "alarm";
