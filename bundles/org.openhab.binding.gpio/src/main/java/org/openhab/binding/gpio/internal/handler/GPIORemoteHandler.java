@@ -14,6 +14,7 @@ package org.openhab.binding.gpio.internal.handler;
 
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.CHANNEL_TYPE_DIGITAL_INPUT;
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.CHANNEL_TYPE_DIGITAL_OUTPUT;
+import static org.openhab.binding.gpio.internal.handler.CommunicationHandler.ResistorPullMode;
 import static org.openhab.core.thing.Thing.PROPERTY_FIRMWARE_VERSION;
 import static org.openhab.core.thing.Thing.PROPERTY_HARDWARE_VERSION;
 import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
@@ -23,6 +24,8 @@ import static org.openhab.core.thing.ThingStatusDetail.CONFIGURATION_ERROR;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,6 +35,7 @@ import org.openhab.binding.gpio.internal.configuration.GPIOConfiguration;
 import org.openhab.binding.gpio.internal.configuration.GPIOInputConfiguration;
 import org.openhab.binding.gpio.internal.configuration.GPIOOutputConfiguration;
 import org.openhab.binding.gpio.internal.configuration.GPIORemoteConfiguration;
+import org.openhab.binding.gpio.internal.discovery.I2CBusDiscoveryService;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.thing.Bridge;
@@ -40,6 +44,7 @@ import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
+import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
@@ -49,7 +54,6 @@ import org.slf4j.LoggerFactory;
 
 import eu.xeli.jpigpio.GPIOListener;
 import eu.xeli.jpigpio.JPigpio;
-import eu.xeli.jpigpio.PiGpioSocketI2C;
 import eu.xeli.jpigpio.PigpioException;
 
 /**
@@ -65,125 +69,127 @@ public class GPIORemoteHandler extends BaseBridgeHandler {
 
     private final Logger logger = LoggerFactory.getLogger(GPIORemoteHandler.class);
 
-    private class InterruptCallback extends GPIOListener {
+    private class InterruptListener extends GPIOListener {
         final Boolean isActiveHigh;
-        final ChannelUID channelUID;
+        final Channel channel;
 
-        public InterruptCallback(int gpio, int edge, ChannelUID channelUID, Boolean isActiveHigh) {
-            super(gpio, edge);
-            this.isActiveHigh = isActiveHigh;
-            this.channelUID = channelUID;
+        public InterruptListener(final GPIOConfiguration config, final Channel channel) {
+            super(config.getPin(), JPigpio.PI_EITHER_EDGE); // PI_RISING_EDGE, PI_FALLING_EDGE, PI_EITHER_EDGE
+            this.isActiveHigh = config.isActiveOnHigh();
+            this.channel = channel;
         }
 
         @Override
         public void alert(int gpio, int level, long tick) {
-            final Channel channel = thing.getChannel(channelUID);
-            if (channel != null) {
-                final ChannelTypeUID type = channel.getChannelTypeUID();
-                if (CHANNEL_TYPE_DIGITAL_INPUT.equals(type)) {
-                    updateState(channelUID, switch (level) {
-                        case JPigpio.PI_ON -> isActiveHigh ? OpenClosedType.CLOSED : OpenClosedType.OPEN;
-                        case JPigpio.PI_OFF -> isActiveHigh ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
-                        default -> UnDefType.UNDEF;
-                    });
-                } else if (CHANNEL_TYPE_DIGITAL_OUTPUT.equals(type)) {
-                    updateState(channelUID, switch (level) {
-                        case JPigpio.PI_ON -> isActiveHigh ? OnOffType.ON : OnOffType.OFF;
-                        case JPigpio.PI_OFF -> isActiveHigh ? OnOffType.OFF : OnOffType.ON;
-                        default -> UnDefType.UNDEF;
-                    });
-                } else {
-                    updateState(channelUID, UnDefType.UNDEF);
-                }
+            final ChannelTypeUID type = channel.getChannelTypeUID();
+            if (CHANNEL_TYPE_DIGITAL_INPUT.equals(type)) {
+                updateState(channel.getUID(), switch (level) {
+                    case JPigpio.PI_ON -> isActiveHigh ? OpenClosedType.CLOSED : OpenClosedType.OPEN;
+                    case JPigpio.PI_OFF -> isActiveHigh ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
+                    default -> UnDefType.UNDEF;
+                });
+            } else if (CHANNEL_TYPE_DIGITAL_OUTPUT.equals(type)) {
+                updateState(channel.getUID(), switch (level) {
+                    case JPigpio.PI_ON -> isActiveHigh ? OnOffType.ON : OnOffType.OFF;
+                    case JPigpio.PI_OFF -> isActiveHigh ? OnOffType.OFF : OnOffType.ON;
+                    default -> UnDefType.UNDEF;
+                });
             } else {
-                final String host = getConfiguration().getHost();
-                logger.debug("Invalid channel {} on host {} found.", channelUID, host);
+                updateState(channel.getUID(), UnDefType.UNDEF);
             }
         }
     }
 
-    private final Set<InterruptCallback> callbacks = ConcurrentHashMap.newKeySet();
+    private final Set<InterruptListener> listeners = ConcurrentHashMap.newKeySet();
 
-    private @Nullable PiGpioSocketI2C gpio = null;
+    private final CommunicationHandler gpioHandler;
 
     /**
-     * Instantiates a new pigpio remote bridge handler.
+     * Instantiates a new GPIO bridge handler.
      *
      * @param bridge the thing
      */
-    public GPIORemoteHandler(Bridge bridge) {
+    public GPIORemoteHandler(final Bridge bridge, final CommunicationHandler gpioHandler) {
         super(bridge);
+        this.gpioHandler = gpioHandler;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return List.of(I2CBusDiscoveryService.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (ThingStatus.ONLINE != thing.getStatus()) {
             return;
         }
 
-        final PiGpioSocketI2C gpio = this.gpio;
         final Channel channel = thing.getChannel(channelUID);
-        if ((channel != null) && (gpio != null)) {
+        if (channel != null) {
             final ChannelTypeUID type = channel.getChannelTypeUID();
             final GPIOConfiguration config = channel.getConfiguration().as(GPIOConfiguration.class);
             if (command instanceof OpenClosedType) {
-                final String host = getConfiguration().getHost();
-                logger.debug("Received invalid command for channel {} on host {}.", channelUID, host);
+                logger.debug("Received invalid command for channel {} on host {}.", channelUID, gpioHandler.getHost());
             } else if (command instanceof OnOffType) {
                 if (CHANNEL_TYPE_DIGITAL_OUTPUT.equals(type)) {
                     try {
                         if (config.isActiveOnHigh()) {
-                            gpio.gpioWrite(config.getPin(), OnOffType.ON.equals(command));
+                            gpioHandler.write(config.getPin(), OnOffType.ON.equals(command));
                         } else {
-                            gpio.gpioWrite(config.getPin(), OnOffType.OFF.equals(command));
+                            gpioHandler.write(config.getPin(), OnOffType.OFF.equals(command));
                         }
                     } catch (PigpioException exception) {
                         updateState(channelUID, UnDefType.UNDEF);
-                        final String host = getConfiguration().getHost();
-                        logger.warn("Unable to write gpio state for channel {} on host {}.", channelUID, host);
+                        logger.warn("Unable to write gpio state for channel {} on host {}.", channelUID,
+                                gpioHandler.getHost());
                     }
                 } else {
-                    final String host = getConfiguration().getHost();
-                    logger.debug("Received invalid command for channel {} on host {}.", channelUID, host);
+                    logger.debug("Received invalid command for channel {} on host {}.", channelUID,
+                            gpioHandler.getHost());
                 }
             } else if (command instanceof RefreshType) {
                 if (CHANNEL_TYPE_DIGITAL_INPUT.equals(type)) {
                     try {
                         final Boolean isActiveHigh = config.isActiveOnHigh();
-                        if (gpio.gpioRead(config.getPin())) {
+                        if (gpioHandler.read(config.getPin())) {
                             updateState(channelUID, isActiveHigh ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
                         } else {
                             updateState(channelUID, isActiveHigh ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
                         }
                     } catch (PigpioException exception) {
                         updateState(channelUID, UnDefType.UNDEF);
-                        final String host = getConfiguration().getHost();
-                        logger.warn("Unable to read gpio state for channel {} on host {}.", channelUID, host);
+                        logger.warn("Unable to read gpio state for channel {} on host {}.", channelUID,
+                                gpioHandler.getHost());
                     }
                 } else if (CHANNEL_TYPE_DIGITAL_OUTPUT.equals(type)) {
                     try {
                         final Boolean isActiveHigh = config.isActiveOnHigh();
-                        if (gpio.gpioRead(config.getPin())) {
+                        if (gpioHandler.read(config.getPin())) {
                             updateState(channelUID, isActiveHigh ? OnOffType.ON : OnOffType.OFF);
                         } else {
                             updateState(channelUID, isActiveHigh ? OnOffType.OFF : OnOffType.ON);
                         }
                     } catch (PigpioException exception) {
                         updateState(channelUID, UnDefType.UNDEF);
-                        final String host = getConfiguration().getHost();
-                        logger.warn("Unable to read gpio state for channel {} on host {}.", channelUID, host);
+                        logger.warn("Unable to read gpio state for channel {} on host {}.", channelUID,
+                                gpioHandler.getHost());
                     }
                 } else {
-                    final String host = getConfiguration().getHost();
-                    logger.debug("Received invalid command for channel {} on host {}.", channelUID, host);
+                    logger.debug("Received invalid command for channel {} on host {}.", channelUID,
+                            gpioHandler.getHost());
                 }
             } else {
-                final String host = getConfiguration().getHost();
-                logger.debug("Not supported channel {} on host {} found.", channelUID, host);
+                logger.debug("Not supported channel {} on host {} found.", channelUID, gpioHandler.getHost());
             }
         } else {
-            final String host = getConfiguration().getHost();
-            logger.debug("Invalid channel {} on host {} found.", channelUID, host);
+            logger.debug("Invalid channel {} on host {} found.", channelUID, gpioHandler.getHost());
         }
     }
 
@@ -193,22 +199,7 @@ public class GPIORemoteHandler extends BaseBridgeHandler {
     @Override
     public synchronized void initialize() {
         final GPIORemoteConfiguration configuration = getConfiguration();
-        if (gpio == null) {
-            try {
-                gpio = new PiGpioSocketI2C(configuration.getHost(), configuration.getPort());
-            } catch (PigpioException exception) {
-                try (Socket ignored = new Socket(configuration.getHost(), configuration.getPort())) {
-                    updateStatus(ThingStatus.OFFLINE, COMMUNICATION_ERROR, exception.getLocalizedMessage());
-                } catch (IllegalArgumentException | UnknownHostException reason) {
-                    updateStatus(ThingStatus.OFFLINE, CONFIGURATION_ERROR, reason.getLocalizedMessage());
-                } catch (IOException reason) {
-                    updateStatus(ThingStatus.OFFLINE, COMMUNICATION_ERROR, reason.getLocalizedMessage());
-                }
-            }
-        }
-
-        final PiGpioSocketI2C gpio = this.gpio;
-        if ((gpio != null) && gpio.connect(configuration.getHost(), configuration.getPort())) {
+        if (gpioHandler.connect(configuration.getHost(), configuration.getPort())) {
             updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE, "GPIO remote is initialized.");
         } else {
             try (Socket ignored = new Socket(configuration.getHost(), configuration.getPort())) {
@@ -220,9 +211,9 @@ public class GPIORemoteHandler extends BaseBridgeHandler {
             }
         }
 
-        if ((gpio != null) && (ThingStatus.ONLINE == getThing().getStatus())) {
+        if (ThingStatus.ONLINE == getThing().getStatus()) {
             try {
-                final int revision = gpio.getHardwareRevision();
+                final int revision = gpioHandler.getHardwareRevision();
                 final RasPiHardwareVersion.Hardware hardware = RasPiHardwareVersion.getHardwareVersion(revision);
                 thing.setProperty(PROPERTY_MODEL_ID, hardware.model());
                 thing.setProperty(PROPERTY_HARDWARE_VERSION, hardware.revision());
@@ -231,7 +222,7 @@ public class GPIORemoteHandler extends BaseBridgeHandler {
                 thing.setProperty(PROPERTY_HARDWARE_VERSION, RasPiHardwareVersion.UNKNOWN.revision());
             }
             try {
-                final int version = gpio.gpioGetLibraryVersion();
+                final int version = gpioHandler.getLibraryVersion();
                 thing.setProperty(PROPERTY_FIRMWARE_VERSION, String.valueOf(version));
             } catch (PigpioException exception) {
                 thing.setProperty(PROPERTY_FIRMWARE_VERSION, "Unknown");
@@ -242,28 +233,26 @@ public class GPIORemoteHandler extends BaseBridgeHandler {
                 if (CHANNEL_TYPE_DIGITAL_INPUT.equals(type)) {
                     final GPIOInputConfiguration config = channel.getConfiguration().as(GPIOInputConfiguration.class);
                     try {
-                        gpio.gpioSetMode(config.getPin(), JPigpio.PI_INPUT);
+                        gpioHandler.setPinMode(config.getPin(), CommunicationHandler.PinMode.INPUT);
                         try {
-                            final Integer pullupdown = switch (config.getPullUpDownConfig()) {
-                                case DOWN -> JPigpio.PI_PUD_DOWN;
-                                case OFF -> JPigpio.PI_PUD_OFF;
-                                case UP -> JPigpio.PI_PUD_UP;
+                            final ResistorPullMode pullupdown = switch (config.getPullUpDownConfig()) {
+                                case DOWN -> ResistorPullMode.PULL_DOWN;
+                                case UP -> ResistorPullMode.PULL_UP;
+                                case OFF -> ResistorPullMode.OFF;
                             };
-                            gpio.gpioSetPullUpDown(config.getPin(), pullupdown);
+                            gpioHandler.setResistorMode(config.getPin(), pullupdown);
                         } catch (PigpioException exception) {
                             logger.warn("Unable to setup resistor mode on channel {}.", channelUID);
                         }
                         try {
-                            gpio.gpioGlitchFilter(config.getPin(), 1000 * config.debounce);
+                            gpioHandler.debounce(config.getPin(), config.debounce);
                         } catch (PigpioException exception) {
                             logger.warn("Unable to setup debounce time on channel {}.", channelUID);
                         }
                         try {
-                            // PI_RISING_EDGE, PI_FALLING_EDGE, PI_EITHER_EDGE
-                            final InterruptCallback callback = new InterruptCallback(config.getPin(),
-                                    JPigpio.PI_EITHER_EDGE, channelUID, config.isActiveOnHigh());
-                            gpio.addCallback(callback);
-                            callbacks.add(callback);
+                            final InterruptListener listener = new InterruptListener(config, channel);
+                            gpioHandler.addListener(listener);
+                            listeners.add(listener);
                         } catch (PigpioException exception) {
                             logger.warn("Unable to register callback on channel {}.", channelUID);
                         }
@@ -275,13 +264,11 @@ public class GPIORemoteHandler extends BaseBridgeHandler {
                 } else if (CHANNEL_TYPE_DIGITAL_OUTPUT.equals(type)) {
                     final GPIOOutputConfiguration config = channel.getConfiguration().as(GPIOOutputConfiguration.class);
                     try {
-                        gpio.gpioSetMode(config.getPin(), JPigpio.PI_OUTPUT);
+                        gpioHandler.setPinMode(config.getPin(), CommunicationHandler.PinMode.OUTPUT);
                         try {
-                            // PI_RISING_EDGE, PI_FALLING_EDGE, PI_EITHER_EDGE
-                            final InterruptCallback callback = new InterruptCallback(config.getPin(),
-                                    JPigpio.PI_EITHER_EDGE, channelUID, config.isActiveOnHigh());
-                            gpio.addCallback(callback);
-                            callbacks.add(callback);
+                            final InterruptListener listener = new InterruptListener(config, channel);
+                            gpioHandler.addListener(listener);
+                            listeners.add(listener);
                         } catch (PigpioException exception) {
                             logger.warn("Unable to register callback on channel {}.", channelUID);
                         }
@@ -300,18 +287,15 @@ public class GPIORemoteHandler extends BaseBridgeHandler {
      */
     @Override
     public synchronized void dispose() {
-        final PiGpioSocketI2C gpio = this.gpio;
-        if (gpio != null) {
-            callbacks.forEach((callback) -> {
-                try {
-                    gpio.removeCallback(callback);
-                } catch (PigpioException exception) {
-                    logger.warn("Unable to unregister callback.");
-                }
-            });
-            gpio.disconect();
-        }
-        callbacks.clear();
+        listeners.forEach((listener) -> {
+            try {
+                gpioHandler.removeListener(listener);
+            } catch (PigpioException exception) {
+                logger.warn("Unable to unregister callback.");
+            }
+        });
+        listeners.clear();
+        gpioHandler.disconnect();
         super.dispose();
     }
 

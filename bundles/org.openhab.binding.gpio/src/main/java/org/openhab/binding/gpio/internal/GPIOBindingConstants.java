@@ -29,6 +29,7 @@ public class GPIOBindingConstants {
     private static final String BINDING_ID = "gpio";
 
     public static final ThingTypeUID THING_TYPE_REMOTE = new ThingTypeUID(BINDING_ID, "remote");
+    public final static ThingTypeUID THING_TYPE_I2C_BUS = new ThingTypeUID(BINDING_ID, "i2c-bus");
 
     // List of all Thing Type UIDs
     public static final ChannelTypeUID CHANNEL_TYPE_DIGITAL_INPUT = new ChannelTypeUID(BINDING_ID, "digital-input");
@@ -43,4 +44,7 @@ public class GPIOBindingConstants {
 
     // GPIO config properties
     public static final String GPIO_ID = "gpioId";
+
+    // I2C bus config properties
+    public static final String I2C_BUS_ID = "id";
 }

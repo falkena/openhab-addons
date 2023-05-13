@@ -9,6 +9,10 @@ It requires the pigpio (<http://abyz.me.uk/rpi/pigpio/>) to be running on the pi
 
 This bridge represents a remote pigpio instance running as daemon on a raspberry pi.
 
+### i2c-bus
+
+This bridge represents a I2C bus instance on a raspberry pi.
+
 ## Thing Configuration
 
 ### Pigpio Remote  (`remote`)
@@ -50,6 +54,11 @@ In openHAB, set `host` to the address of the pi and the `port` to the port of pi
 
 Note: If you are running Pigpio on same host as openHAB, then set host to **::1**.
 
+### I2C - Bus  (`i2c-bus`)
+
+Provides configuration and state for I2C bus instance with `id`. Raspberry provides two
+busses with IDs `1` and `2`. Normally bus `1` is used.
+
 ## Channels
 
 ### Pigpio Remote
@@ -66,9 +75,20 @@ If you want to invert the value, set `activehigh` to true.
 To prevent incorrect change events, you can adjust the `debounce`.
 Using `pullupdown` you can enable pull up or pull down resistor (OFF = Off, DOWN = Pull Down, UP = Pull Up).
 
-### GPIO digital output channel
+### GPIO digital output channel-
 
 Set the number of the pin in `gpioId`.
+If you want to invert the value, set `activehigh` to true.
+
+### I2C bus
+
+| channel | type    | description               |
+|---------|---------|---------------------------|
+| reset   | Switch  | Controls bus reset signal |
+
+### Bus reset channel-
+
+Set the number of the pin in `reset`.
 If you want to invert the value, set `activehigh` to true.
 
 ## Full Example

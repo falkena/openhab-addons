@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="gpio"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- I2C bus bridge -->
+	<bridge-type id="i2c-bus">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="remote"/>
+		</supported-bridge-type-refs>
+
+		<label>I2C bus</label>
+		<description>I2C bus</description>
+
+		<properties>
+			<property name="vendor">Raspberry Pi Foundation</property>
+		</properties>
+		<representation-property>id</representation-property>
+
+		<config-description>
+			<parameter name="id" type="integer" required="true">
+				<label>Bus id</label>
+				<description>I2C bus id</description>
+			</parameter>
+		</config-description>
+	</bridge-type>
+</thing:thing-descriptions>

@@ -4,46 +4,46 @@ import java.io.IOException;
 
 public class PiGpioSocketI2C extends PigpioSocket {
 
-    private Boolean isConnected = Boolean.FALSE;
+    private boolean isConnected;
     private final int CMD_HWVER = 17; // 17 0 0 0 -
     private final int CMD_PIGPV = 26; // 26 0 0 0 -
 
     public PiGpioSocketI2C(String host, int port) throws PigpioException {
         super(host, port);
-        isConnected = Boolean.TRUE;
+        isConnected = true;
     }
 
-    public Boolean connect(String host, int port) {
+    public boolean connect(String host, int port) {
         if (!isConnected) {
             try {
                 this.host = host;
                 this.port = port;
                 this.gpioInitialize();
-                isConnected = Boolean.TRUE;
+                isConnected = true;
             } catch (PigpioException exception) {
-                isConnected = Boolean.FALSE;
+                isConnected = false;
             }
         }
         return isConnected;
     }
 
-    public Boolean disconect() {
+    public boolean disconect() {
         if (isConnected) {
             try {
                 this.gpioTerminate();
             } catch (PigpioException ignored) {
             } finally {
-                isConnected = Boolean.FALSE;
+                isConnected = false;
             }
         }
         return isConnected;
     }
 
-    public Boolean isConnected() {
+    public boolean isConnected() {
         return isConnected;
     }
 
-    public int getHardwareRevision() throws PigpioException {
+    public int gpioGetHardwareRevision() throws PigpioException {
         try {
             int rc = slCmd.sendCmd(CMD_HWVER, 0, 0);
             if (rc < 0) {
@@ -51,7 +51,7 @@ public class PiGpioSocketI2C extends PigpioSocket {
             }
             return rc;
         } catch (IOException e) {
-            throw new PigpioException("getHardwareRevision", e);
+            throw new PigpioException("gpioGetHardwareRevision", e);
         }
     } // End of getHardwareRevision
 
