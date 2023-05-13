@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.gpio.internal.handler;
 
+import static eu.xeli.jpigpio.PigpioException.PI_I2C_WRITE_FAILED;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -232,6 +234,28 @@ public class CommunicationHandler {
         }
     }
 
+    public byte[] i2cReadI2CBlockData(int handle, int register, int count) throws PigpioException {
+        final PiGpioSocketI2C remote = this.remote;
+        if (remote != null) {
+            return remote.i2cReadI2CBlockData(handle, register, count);
+        } else {
+            throw new PigpioException("No remote available");
+        }
+    }
+
+    public void i2cWriteI2CBlockData(int handle, int register, final byte[] data, int count) throws PigpioException {
+        final PiGpioSocketI2C remote = this.remote;
+        if (remote != null) {
+            int rc = remote.i2cWriteI2CBlockData(handle, register, data, count);
+            if (rc != 0) {
+                final PigpioException exception = new PigpioException(PI_I2C_WRITE_FAILED);
+                throw new PigpioException(exception.getMessage());
+            }
+        } else {
+            throw new PigpioException("No remote available");
+        }
+    }
+
     public boolean i2cIsBusAvailable(int bus) {
         boolean result = false;
         final PiGpioSocketI2C remote = this.remote;
@@ -239,6 +263,36 @@ public class CommunicationHandler {
             try {
                 i2cClose(i2cOpen(bus, 0x00));
                 result = true;
+            } catch (PigpioException ignored) {
+            }
+        }
+        return result;
+    }
+
+    // See https://sources.debian.org/src/i2c-tools/4.3-2/tools/i2cdetect.c/
+    public boolean i2cIsDeviceAvailable(int bus, int address) {
+        boolean result = false;
+        final PiGpioSocketI2C remote = this.remote;
+        if (remote != null) {
+            try {
+                final int handle = i2cOpen(bus, address);
+                if (((0x30 <= address) && (address <= 0x37)) || ((0x50 <= address) && (address <= 0x5F))) {
+                    try {
+                        // This is known to lock SMBus on various write-only chips (mainly clock chips)
+                        result = (remote.i2cReadByte(handle) >= 0);
+                    } catch (PigpioException ignored) {
+                    }
+                } else {
+                    try {
+                        // This is known to corrupt the Atmel AT24RF08 EEPROM
+                        result = (remote.i2cWriteByte(handle, (byte) 0) >= 0);
+                    } catch (PigpioException ignored) {
+                    }
+                }
+                try {
+                    i2cClose(handle);
+                } catch (PigpioException ignored) {
+                }
             } catch (PigpioException ignored) {
             }
         }

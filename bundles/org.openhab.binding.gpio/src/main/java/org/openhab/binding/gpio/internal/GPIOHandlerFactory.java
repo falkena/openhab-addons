@@ -13,6 +13,7 @@
 package org.openhab.binding.gpio.internal;
 
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_I2C_BUS;
+import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_I2C_DEVICE;
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_REMOTE;
 
 import java.util.Set;
@@ -22,6 +23,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.gpio.internal.handler.CommunicationHandler;
 import org.openhab.binding.gpio.internal.handler.GPIORemoteHandler;
 import org.openhab.binding.gpio.internal.handler.I2CBusHandler;
+import org.openhab.binding.gpio.internal.handler.I2CDeviceHandler;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -36,12 +38,14 @@ import org.osgi.service.component.annotations.Component;
  *
  * @author Nils Bauer - Initial contribution
  * @author Alexander Falkenstern - Add I2C bus support
+ * @author Alexander Falkenstern - Add abstract I2C device support
  */
 @NonNullByDefault
 @Component(configurationPid = "binding.gpio", service = ThingHandlerFactory.class)
 public class GPIOHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_REMOTE, THING_TYPE_I2C_BUS);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_REMOTE, THING_TYPE_I2C_BUS,
+            THING_TYPE_I2C_DEVICE);
     private final CommunicationHandler remote = new CommunicationHandler();
 
     @Override
@@ -56,6 +60,8 @@ public class GPIOHandlerFactory extends BaseThingHandlerFactory {
             return new GPIORemoteHandler((Bridge) thing, remote);
         } else if (THING_TYPE_I2C_BUS.equals(thingTypeUID) && (thing instanceof Bridge)) {
             return new I2CBusHandler((Bridge) thing, remote);
+        } else if (THING_TYPE_I2C_DEVICE.equals(thingTypeUID)) {
+            return new I2CDeviceHandler(thing, remote);
         }
 
         return null;

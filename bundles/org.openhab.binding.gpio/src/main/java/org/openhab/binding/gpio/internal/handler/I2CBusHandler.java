@@ -22,15 +22,21 @@ import static eu.xeli.jpigpio.PigpioException.PI_BAD_I2C_BUS;
 import static eu.xeli.jpigpio.PigpioException.PI_I2C_OPEN_FAILED;
 import static eu.xeli.jpigpio.PigpioException.PI_NO_HANDLE;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.gpio.internal.configuration.I2CBusConfiguration;
+import org.openhab.binding.gpio.internal.discovery.I2CDeviceDiscoveryService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
+import org.openhab.core.thing.binding.BridgeHandler;
+import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +44,7 @@ import org.slf4j.LoggerFactory;
 import eu.xeli.jpigpio.PigpioException;
 
 /**
- * Class for the handling of i2c busses.
+ * Class for the handling of i2c buses.
  *
  * @author Alexander Falkenstern - Initial contribution
  */
@@ -56,6 +62,14 @@ public class I2CBusHandler extends BaseBridgeHandler {
     public I2CBusHandler(final Bridge bridge, final CommunicationHandler gpioHandler) {
         super(bridge);
         this.gpioHandler = gpioHandler;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return List.of(I2CDeviceDiscoveryService.class);
     }
 
     /**
@@ -99,5 +113,20 @@ public class I2CBusHandler extends BaseBridgeHandler {
     @Override
     public synchronized void dispose() {
         super.dispose();
+    }
+
+    public I2CBusConfiguration getConfiguration() {
+        return getConfigAs(I2CBusConfiguration.class);
+    }
+
+    public @Nullable GPIORemoteHandler getRemoteHandler() {
+        final Bridge bridge = getBridge();
+        if (bridge != null) {
+            final BridgeHandler handler = bridge.getHandler();
+            if (handler instanceof GPIORemoteHandler) {
+                return (GPIORemoteHandler) handler;
+            }
+        }
+        return null;
     }
 }
