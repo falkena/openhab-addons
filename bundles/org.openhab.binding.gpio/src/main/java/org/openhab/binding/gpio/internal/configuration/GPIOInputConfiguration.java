@@ -25,11 +25,36 @@ public class GPIOInputConfiguration extends GPIOConfiguration {
     /**
      * Time in ms to double check if value hasn't changed
      */
-    public int debouncingTime = 10;
+    public Integer debounce = 10;
 
     /**
      * Setup a pullup resistor on the GPIO pin
      * OFF = PI_PUD_OFF, DOWN = PI_PUD_DOWN, UP = PI_PUD_UP
      */
-    public String pullupdown = "OFF";
+    private String pullupdown = "OFF";
+
+    // Pull Up/Down modes
+    public enum PullUpDownConfig {
+        OFF("OFF"),
+        DOWN("DOWN"),
+        UP("UP");
+
+        private final String value;
+
+        PullUpDownConfig(String value) {
+            this.value = value;
+        }
+
+        String getValue() {
+            return value;
+        }
+    }
+
+    public PullUpDownConfig getPullUpDownConfig() {
+        return PullUpDownConfig.valueOf(pullupdown.toUpperCase());
+    }
+
+    public void setPullUpDownConfig(final PullUpDownConfig interrupt) {
+        this.pullupdown = interrupt.toString();
+    }
 }

@@ -13,23 +13,30 @@
 package org.openhab.binding.gpio.internal.configuration;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * The {@link PigpioConfiguration} class contains fields mapping thing configuration parameters.
+ * The {@link GPIORemoteConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Nils Bauer - Initial contribution
  */
 @NonNullByDefault
-public class PigpioConfiguration {
+public class GPIORemoteConfiguration {
 
     /**
      * Network address of the raspberry pi
      */
-    public @Nullable String host;
+    private String host = "127.0.0.1";
 
     /**
      * Port of pigpio on the remote raspberry pi
      */
-    public int port = 8888;
+    private Integer port = 8888;
+
+    public String getHost() {
+        return host;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
 }

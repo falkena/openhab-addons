@@ -5,13 +5,13 @@ It requires the pigpio (<http://abyz.me.uk/rpi/pigpio/>) to be running on the pi
 
 ## Supported Things
 
-### pigpio-remote
+### remote
 
-This thing represents a remote pigpio instance running as daemon on a raspberry pi.
+This bridge represents a remote pigpio instance running as daemon on a raspberry pi.
 
 ## Thing Configuration
 
-### Pigpio Remote  (`pigpio-remote`)
+### Pigpio Remote  (`remote`)
 
 On a raspberry (or a compatible device) you have to install pigpio:
 
@@ -54,48 +54,48 @@ Note: If you are running Pigpio on same host as openHAB, then set host to **::1*
 
 ### Pigpio Remote
 
-| channel               | type   | description                     |
-|-----------------------|--------|---------------------------------|
-| pigpio-digital-input  | Switch | Read-only value of the gpio pin |
-| pigpio-digital-output | Switch | Controls the gpio pin           |
+| channel        | type    | description                     |
+|----------------|---------|---------------------------------|
+| digital-input  | Contact | Read-only value of the gpio pin |
+| digital-output | Switch  | Controls the gpio pin           |
 
 ### GPIO digital input channel
 
 Set the number of the pin in `gpioId`.
-If you want to invert the value, set `invert` to true.
-To prevent incorrect change events, you can adjust the `debouncingTime`.
+If you want to invert the value, set `activehigh` to true.
+To prevent incorrect change events, you can adjust the `debounce`.
 Using `pullupdown` you can enable pull up or pull down resistor (OFF = Off, DOWN = Pull Down, UP = Pull Up).
 
 ### GPIO digital output channel
 
 Set the number of the pin in `gpioId`.
-If you want to invert the value, set `invert` to true.
+If you want to invert the value, set `activehigh` to true.
 
 ## Full Example
 
 demo.things:
 
 ```java
-Thing gpio:pigpio-remote:sample-pi-1 "Sample-Pi 1" [host="192.168.2.36", port=8888] {
+Thing gpio:remote:sample-pi-1 "Sample-Pi 1" [host="192.168.2.36", port=8888] {
     Channels:
-        Type pigpio-digital-input : sample-input-1 [ gpioId=10]
-        Type pigpio-digital-input : sample-input-2 [ gpioId=14, invert=true]
-        Type pigpio-digital-output : sample-output-1 [ gpioId=3]
+        Type digital-input : sample-input-1 [ gpioId=10]
+        Type digital-input : sample-input-2 [ gpioId=14, activehigh=false]
+        Type digital-output : sample-output-1 [ gpioId=3]
 }
 
-Thing gpio:pigpio-remote:sample-pi-2 "Sample-Pi 2" [host="192.168.2.37", port=8888] {
+Thing gpio:remote:sample-pi-2 "Sample-Pi 2" [host="192.168.2.37", port=8888] {
     Channels:
-        Type pigpio-digital-input : sample-input-3 [ gpioId=16, debouncingTime=20]
-        Type pigpio-digital-input : sample-input-4 [ gpioId=17, invert=true, debouncingTime=5, pullupdown="UP"]
-        Type pigpio-digital-output : sample-output-2 [ gpioId=4, invert=true]
+        Type digital-input : sample-input-3 [ gpioId=16, debounce=20]
+        Type digital-input : sample-input-4 [ gpioId=17, activehigh=false, debounce=5, pullupdown="UP"]
+        Type digital-output : sample-output-2 [ gpioId=4, activehigh=false]
 }
 ```
 
 demo.items:
 
 ```java
-Switch SampleInput1 {channel="gpio:pigpio-remote:sample-pi-1:sample-input-1"}
-Switch SampleOutput1 {channel="gpio:pigpio-remote:sample-pi-1:sample-output-1"}
+Switch SampleInput1 {channel="gpio:remote:sample-pi-1:sample-input-1"}
+Switch SampleOutput1 {channel="gpio:remote:sample-pi-1:sample-output-1"}
 ```
 
 demo.sitemap:

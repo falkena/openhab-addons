@@ -13,7 +13,6 @@
 package org.openhab.binding.gpio.internal.configuration;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * The {@link GPIOConfiguration} class contains fields mapping thing configuration parameters.
@@ -23,13 +22,35 @@ import org.eclipse.jdt.annotation.Nullable;
 @NonNullByDefault
 public class GPIOConfiguration {
 
+    static public Integer INVALID_GPIO_ID = -1;
+
     /**
      * The id of the gpio pin.
      */
-    public @Nullable Integer gpioId;
+    private Integer gpioId = INVALID_GPIO_ID;
 
     /**
      * Should the input/output be inverted?
      */
-    public boolean invert = false;
+    private Boolean activehigh = Boolean.TRUE;
+
+    public Integer getPin() {
+        return gpioId;
+    }
+
+    public void setPin(final Integer gpioId) {
+        this.gpioId = gpioId;
+    }
+
+    public boolean isPinValid() {
+        return !INVALID_GPIO_ID.equals(gpioId);
+    }
+
+    public Boolean isActiveOnHigh() {
+        return activehigh;
+    }
+
+    public void setActiveOnHigh(final Boolean activehigh) {
+        this.activehigh = activehigh;
+    }
 }

@@ -12,13 +12,14 @@
  */
 package org.openhab.binding.gpio.internal;
 
-import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_PIGPIO_REMOTE_THING;
+import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_REMOTE;
 
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.gpio.internal.handler.PigpioRemoteHandler;
+import org.openhab.binding.gpio.internal.handler.GPIORemoteHandler;
+import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
@@ -27,7 +28,7 @@ import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * The {@link gpioHandlerFactory} is responsible for creating things and thing
+ * The {@link GPIOHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
  * @author Nils Bauer - Initial contribution
@@ -36,7 +37,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(configurationPid = "binding.gpio", service = ThingHandlerFactory.class)
 public class GPIOHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_PIGPIO_REMOTE_THING);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_REMOTE);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -45,10 +46,9 @@ public class GPIOHandlerFactory extends BaseThingHandlerFactory {
 
     @Override
     protected @Nullable ThingHandler createHandler(Thing thing) {
-        ThingTypeUID thingTypeUID = thing.getThingTypeUID();
-
-        if (thingTypeUID.equals(THING_TYPE_PIGPIO_REMOTE_THING)) {
-            return new PigpioRemoteHandler(thing);
+        final ThingTypeUID thingTypeUID = thing.getThingTypeUID();
+        if (thingTypeUID.equals(THING_TYPE_REMOTE) && (thing instanceof Bridge)) {
+            return new GPIORemoteHandler((Bridge) thing);
         }
 
         return null;
