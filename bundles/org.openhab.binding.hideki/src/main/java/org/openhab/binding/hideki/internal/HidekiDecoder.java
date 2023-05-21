@@ -23,7 +23,7 @@ public class HidekiDecoder {
 
     public HidekiDecoder(final HidekiReceiver receiver) {
         this.receiver = receiver;
-        create(this.receiver.getId());
+        create(receiver.getId());
     }
 
     public int getId() {

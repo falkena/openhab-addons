@@ -47,8 +47,14 @@ public class NativeLibraryLoader {
         }
 
         // path = /lib/{platform}/{filename}
+        String arch = System.getProperty("os.arch");
+        if (loadedLibraries.contains(fileName)) {
+            logger.warn("Unable to get operating system architecture.");
+            return;
+        }
+
         String path = "/lib/";
-        String arch = System.getProperty("os.arch").toLowerCase(Locale.ENGLISH);
+        arch = arch.toLowerCase(Locale.ENGLISH);
         if (arch.contains("arm")) {
             path = path + "armhf/";
         } else if (arch.contains("aarch64")) {
