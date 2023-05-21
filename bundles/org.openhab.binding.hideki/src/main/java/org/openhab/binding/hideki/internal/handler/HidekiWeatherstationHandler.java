@@ -8,7 +8,25 @@
  */
 package org.openhab.binding.hideki.internal.handler;
 
-import static org.openhab.binding.hideki.internal.HidekiBindingConstants.*;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.ANEMOMETER_TYPE_ID;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.BATTERY;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.CHILL;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.DIRECTION;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.GUST;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.HUMIDITY;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.MED;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.MESSAGE_NUMBER;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.RAIN_LEVEL;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.RECEIVED_UPDATE;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.RSSI_VALUE;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.SENSOR_CHANNEL;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.SENSOR_GROUPS;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.SENSOR_ID;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.SPEED;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.TEMPERATURE;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.THERMOMETER_TYPE_ID;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.UVMETER_TYPE_ID;
+import static org.openhab.binding.hideki.internal.HidekiBindingConstants.UV_INDEX;
 
 import java.time.ZonedDateTime;
 import java.util.Map;
@@ -65,6 +83,7 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
 
         @Override
         public void run() {
+            final HidekiDecoder decoder = HidekiWeatherstationHandler.this.decoder;
             if ((decoder != null) && (ThingStatus.ONLINE == thing.getStatus())) {
                 final int @Nullable [] buffer = decoder.getDecodedData();
                 if ((buffer != null) && (buffer[0] == 0x9F)) {
@@ -102,23 +121,23 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
     private static final char[] HEX_LUT = "0123456789ABCDEF".toCharArray();
 
     private static String toHexString(final int[] data) {
-        String result = "[";
+        StringBuilder result = new StringBuilder("[");
         for (int i = 0; i < data.length - 1; i++) {
             if (data[i] == (data[i] & 0xFF)) {
-                result += String.format("0x%c%c", HEX_LUT[data[i] >>> 4], HEX_LUT[data[i] & 0x0F]);
+                result.append(String.format("0x%c%c", HEX_LUT[data[i] >>> 4], HEX_LUT[data[i] & 0x0F]));
             } else {
-                result += String.format("%d", data[i]);
+                result.append(String.format("%d", data[i]));
             }
-            result += ", ";
+            result.append(", ");
         }
         if (data.length > 1) {
-            result += String.format("%d, ", data[data.length - 1]);
+            result.append(String.format("%d, ", data[data.length - 1]));
         }
         if (result.length() > 2) {
-            result = result.substring(0, result.length() - 2);
+            result = new StringBuilder(result.substring(0, result.length() - 2));
         }
-        result += "]";
-        return result;
+        result.append("]");
+        return result.toString();
     }
 
     public HidekiWeatherstationHandler(Thing thing) {
@@ -143,7 +162,7 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
         if ((command instanceof RefreshType) && (buffer != null) && (buffer.length > 1)) {
             final String channelId = channelUID.getIdWithoutGroup();
             if (SENSOR_ID.equals(channelId)) {
-                int id = buffer.length < 2 ? -1 : buffer[1];
+                int id = buffer[1];
                 updateState(channelUID, new DecimalType(id));
             } else if (MESSAGE_NUMBER.equals(channelId)) {
                 int message = buffer.length < 4 ? -1 : buffer[3] >> 6;
@@ -155,13 +174,13 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
                 boolean state = (buffer[2] >> 6) == 3;
                 updateState(channelUID, state ? OnOffType.ON : OnOffType.OFF);
             } else if (TEMPERATURE.equals(channelId)) {
-                if ((type == ANEMOMETER_TYPE_ID) || (type == THERMOMETER_TYPE_ID)) {
+                if (ANEMOMETER_TYPE_ID.equals(type) || THERMOMETER_TYPE_ID.equals(type)) {
                     double temperature = (buffer[5] & 0x0F) * 10.0 + (buffer[4] >> 4) + (buffer[4] & 0x0F) * 0.1;
                     if ((buffer[5] >> 4) != 0x0C) {
                         temperature = (buffer[5] >> 4) == 0x04 ? -temperature : Double.MAX_VALUE;
                     }
                     updateState(channelUID, new QuantityType<>(temperature, SIUnits.CELSIUS));
-                } else if (type == UVMETER_TYPE_ID) {
+                } else if (UVMETER_TYPE_ID.equals(type)) {
                     double temperature = (buffer[4] >> 4) + (buffer[4] & 0x0F) / 10.0 + (buffer[5] & 0x0F) * 10.0;
                     updateState(channelUID, new QuantityType<>(temperature, SIUnits.CELSIUS));
                 } else {
@@ -186,7 +205,7 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
                 segment = segment ^ (segment & 2) >> 1;
                 updateState(channelUID, new QuantityType<>(22.5 * (-segment & 0xF), Units.DEGREE_ANGLE));
             } else if (SENSOR_CHANNEL.equals(channelId)) {
-                int channel = buffer.length < 2 ? -1 : buffer[1] >> 5;
+                int channel = buffer[1] >> 5;
                 if ((channel == 5) || (channel == 6)) {
                     channel = channel - 1;
                 } else if (channel > 3) {
@@ -219,40 +238,36 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
      * {@inheritDoc}
      */
     @Override
-    public void initialize() {
-        synchronized (config) {
-            config = getConfigAs(HidekiReceiverConfiguration.class);
-        }
+    public synchronized void initialize() {
+        config = getConfigAs(HidekiReceiverConfiguration.class);
 
         data.clear();
         SENSOR_GROUPS.forEach((key, value) -> data.put(key, new int[0]));
 
-        scheduler.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (decoder == null) {
-                    final String device = config.getDevice();
-                    final Integer pin = config.getGpioPin();
-                    final Integer interrupt = config.getInterrupt();
-                    HidekiReceiver receiver = new HidekiReceiver(HidekiReceiver.Kind.CC1101, pin, device, interrupt);
-                    receiver.setTimeOut(config.getTimeout().intValue());
-                    decoder = new HidekiDecoder(receiver);
-                    if (decoder.start()) {
-                        if (readerJob == null) {
-                            final Integer interval = config.getRefreshRate();
-                            logger.info("Creating new reader job on pin {} with interval {} sec.", pin, interval);
-                            readerJob = scheduler.scheduleWithFixedDelay(dataReader, 1, interval, TimeUnit.SECONDS);
-                        }
-                        updateStatus(ThingStatus.ONLINE);
-                    } else {
-                        final String message = "Can not start decoder on pin: " + pin.toString() + ".";
-                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, message);
-                        decoder = null;
+        scheduler.execute(() -> {
+            if (decoder == null) {
+                final String device = config.getDevice();
+                final Integer pin = config.getGpioPin();
+                final Integer interrupt = config.getInterrupt();
+                HidekiReceiver receiver = new HidekiReceiver(HidekiReceiver.Kind.CC1101, pin, device, interrupt);
+                receiver.setTimeOut(config.getTimeout());
+                final HidekiDecoder decoder = new HidekiDecoder(receiver);
+                if (decoder.start()) {
+                    if (readerJob == null) {
+                        final Integer interval = config.getRefreshRate();
+                        logger.info("Creating new reader job on pin {} with interval {} sec.", pin, interval);
+                        readerJob = scheduler.scheduleWithFixedDelay(dataReader, 1, interval, TimeUnit.SECONDS);
                     }
+                    updateStatus(ThingStatus.ONLINE);
+                    this.decoder = decoder;
                 } else {
-                    final String message = "Can not initialize decoder. Please, check parameter.";
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, message);
+                    final String message = "Can not start decoder on pin: " + pin + ".";
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, message);
+                    this.decoder = null;
                 }
+            } else {
+                final String message = "Can not initialize decoder. Please, check parameter.";
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, message);
             }
         });
     }
@@ -264,16 +279,18 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
     public void dispose() {
         super.dispose();
 
+        final ScheduledFuture<?> readerJob = this.readerJob;
         if (readerJob != null) {
             readerJob.cancel(false);
             logger.info("Destroy hideki reader job.");
         }
-        readerJob = null;
+        this.readerJob = null;
 
+        final HidekiDecoder decoder = this.decoder;
         if (decoder != null) {
             decoder.stop();
         }
-        decoder = null;
+        this.decoder = null;
 
         data.clear();
     }
@@ -282,11 +299,9 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
      * {@inheritDoc}
      */
     @Override
-    protected void updateConfiguration(Configuration configuration) {
+    protected synchronized void updateConfiguration(Configuration configuration) {
         super.updateConfiguration(configuration);
-        synchronized (config) {
-            config = getConfigAs(HidekiReceiverConfiguration.class);
-        }
+        config = getConfigAs(HidekiReceiverConfiguration.class);
     }
 
     /**
@@ -295,7 +310,7 @@ public class HidekiWeatherstationHandler extends BaseThingHandler {
      * @return Decoded sensor type
      */
     private @Nullable Integer getDecodedType(final int @Nullable [] data) {
-        return (data == null) || (data.length < 4) ? null : Integer.valueOf(data[3] & 0x1F);
+        return (data == null) || (data.length < 4) ? null : data[3] & 0x1F;
     }
 
     /**
