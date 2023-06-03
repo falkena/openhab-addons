@@ -14,6 +14,7 @@ package org.openhab.binding.gpio.internal;
 
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_I2C_BUS;
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_I2C_DEVICE;
+import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_MCP23017;
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_REMOTE;
 
 import java.util.Set;
@@ -24,6 +25,7 @@ import org.openhab.binding.gpio.internal.handler.CommunicationHandler;
 import org.openhab.binding.gpio.internal.handler.GPIORemoteHandler;
 import org.openhab.binding.gpio.internal.handler.I2CBusHandler;
 import org.openhab.binding.gpio.internal.handler.I2CDeviceHandler;
+import org.openhab.binding.gpio.internal.handler.microchip.MCP23017Handler;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -43,9 +45,9 @@ import org.osgi.service.component.annotations.Component;
 @NonNullByDefault
 @Component(configurationPid = "binding.gpio", service = ThingHandlerFactory.class)
 public class GPIOHandlerFactory extends BaseThingHandlerFactory {
-
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_REMOTE, THING_TYPE_I2C_BUS,
-            THING_TYPE_I2C_DEVICE);
+            THING_TYPE_I2C_DEVICE, THING_TYPE_MCP23017);
+
     private final CommunicationHandler remote = new CommunicationHandler();
 
     @Override
@@ -56,10 +58,12 @@ public class GPIOHandlerFactory extends BaseThingHandlerFactory {
     @Override
     protected @Nullable ThingHandler createHandler(Thing thing) {
         final ThingTypeUID thingTypeUID = thing.getThingTypeUID();
-        if (thingTypeUID.equals(THING_TYPE_REMOTE) && (thing instanceof Bridge)) {
+        if (THING_TYPE_REMOTE.equals(thingTypeUID) && (thing instanceof Bridge)) {
             return new GPIORemoteHandler((Bridge) thing, remote);
         } else if (THING_TYPE_I2C_BUS.equals(thingTypeUID) && (thing instanceof Bridge)) {
             return new I2CBusHandler((Bridge) thing, remote);
+        } else if (THING_TYPE_MCP23017.equals(thingTypeUID)) {
+            return new MCP23017Handler(thing, remote);
         } else if (THING_TYPE_I2C_DEVICE.equals(thingTypeUID)) {
             return new I2CDeviceHandler(thing, remote);
         }

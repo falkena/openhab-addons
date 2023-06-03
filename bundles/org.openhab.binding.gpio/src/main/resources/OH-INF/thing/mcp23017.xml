@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="gpio"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="i2c-mcp23017" extensible="mcp23017-input,mcp23017-output">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="i2c-bus"/>
+		</supported-bridge-type-refs>
+
+		<label>MCP23017 Expander</label>
+		<description>Digital Input/Output expander</description>
+
+		<channels>
+			<channel id="interrupt" typeId="interrupt"/>
+			<channel id="reset" typeId="reset"/>
+		</channels>
+
+		<representation-property>address</representation-property>
+
+		<config-description>
+			<parameter name="address" type="text" pattern="0x2[0-7]" required="true">
+				<label>Device Address</label>
+				<description>I2C device address</description>
+			</parameter>
+			<parameter name="refresh" type="integer" min="1" step="1">
+				<label>Refresh Interval</label>
+				<description>Milliseconds between reread data from I2C device.</description>
+				<default>2</default>
+			</parameter>
+			<parameter name="mirror" type="boolean">
+				<label>Interrupt Mirror</label>
+				<description>Interrupt pins mode</description>
+				<default>true</default>
+			</parameter>
+			<parameter name="mode" type="text">
+				<label>Interrupt Mode</label>
+				<description>Interrupt pins configuration</description>
+				<options>
+					<option value="HIGH">Active-high</option>
+					<option value="LOW">Active-low</option>
+					<option value="OPEN_DRAIN">Open-drain</option>
+				</options>
+				<default>OPEN_DRAIN</default>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<channel-type id="mcp23017-input">
+		<item-type>Contact</item-type>
+		<label>Digital Input</label>
+		<description>Digital state of a input pin</description>
+		<config-description>
+			<parameter name="pin" type="text" required="true">
+				<label>Pin</label>
+				<description>GPIO pin</description>
+			</parameter>
+			<parameter name="activehigh" type="boolean">
+				<label>Active High</label>
+				<description>Activate on high (default) or low level</description>
+				<default>true</default>
+			</parameter>
+			<parameter name="interrupt" type="text">
+				<label>Interrupt</label>
+				<description>Control interrupt-on-change feature</description>
+				<options>
+					<option value="OFF">Off</option>
+					<option value="LOW">Against low</option>
+					<option value="HIGH">Against high</option>
+					<option value="PREVIOUS">Against previous</option>
+				</options>
+				<default>OFF</default>
+			</parameter>
+			<parameter name="pullup" type="boolean">
+				<label>Pull Up Resistor</label>
+				<description>Control the weak pull-up resistor</description>
+				<default>false</default>
+			</parameter>
+		</config-description>
+	</channel-type>
+
+	<channel-type id="mcp23017-output">
+		<item-type>Switch</item-type>
+		<label>Digital Output</label>
+		<description>Digital state of a output pin</description>
+		<config-description>
+			<parameter name="pin" type="text" required="true">
+				<label>Pin</label>
+				<description>GPIO pin</description>
+			</parameter>
+			<parameter name="defval" type="text" required="true">
+				<label>Default State</label>
+				<description>Default state of output pin</description>
+				<options>
+					<option value="OFF">Off</option>
+					<option value="ON">On</option>
+				</options>
+				<default>OFF</default>
+			</parameter>
+		</config-description>
+	</channel-type>
+</thing:thing-descriptions>

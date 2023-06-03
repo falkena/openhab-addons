@@ -17,7 +17,9 @@
 package org.openhab.binding.gpio.internal.discovery;
 
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.I2C_DEVICE_ADDRESS;
+import static org.openhab.binding.gpio.internal.GPIOBindingConstants.MCP23017_ADDRESSES;
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_I2C_DEVICE;
+import static org.openhab.binding.gpio.internal.GPIOBindingConstants.THING_TYPE_MCP23017;
 
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -130,15 +132,19 @@ public class I2CDeviceDiscoveryService extends AbstractDiscoveryService implemen
 
                 final String id = String.format("0x%s", Integer.toHexString(address).toUpperCase());
                 try {
-                    DiscoveryResultBuilder builder = null;
-                    builder = DiscoveryResultBuilder.create(new ThingUID(THING_TYPE_I2C_DEVICE, bridge.getUID(), id));
-                    builder = builder.withLabel(String.format("I2C device %s", id));
-                    if (builder != null) {
-                        builder = builder.withProperty(I2C_DEVICE_ADDRESS, id);
-                        builder = builder.withRepresentationProperty(I2C_DEVICE_ADDRESS);
-                        builder = builder.withBridge(bridge.getUID());
-                        thingDiscovered(builder.build());
+                    DiscoveryResultBuilder builder;
+                    final ThingUID bridgeUID = bridge.getUID();
+                    if (MCP23017_ADDRESSES.contains(address)) {
+                        builder = DiscoveryResultBuilder.create(new ThingUID(THING_TYPE_MCP23017, bridgeUID, id));
+                        builder = builder.withLabel(String.format("MCP23017_%s", id));
+                    } else {
+                        builder = DiscoveryResultBuilder.create(new ThingUID(THING_TYPE_I2C_DEVICE, bridgeUID, id));
+                        builder = builder.withLabel(String.format("I2C device %s", id));
                     }
+                    builder = builder.withProperty(I2C_DEVICE_ADDRESS, id);
+                    builder = builder.withRepresentationProperty(I2C_DEVICE_ADDRESS);
+                    builder = builder.withBridge(bridge.getUID());
+                    thingDiscovered(builder.build());
                 } catch (NumberFormatException exception) {
                     logger.warn("Found invalid device {}.", id);
                 }
