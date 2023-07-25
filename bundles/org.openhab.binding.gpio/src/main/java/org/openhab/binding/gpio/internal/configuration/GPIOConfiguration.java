@@ -42,7 +42,7 @@ public class GPIOConfiguration {
         this.gpioId = gpioId;
     }
 
-    public boolean isPinValid() {
+    public static boolean isPinValid(final Integer gpioId) {
         return !INVALID_GPIO_ID.equals(gpioId);
     }
 

@@ -12,11 +12,6 @@
 		<label>MCP23017 Expander</label>
 		<description>Digital Input/Output expander</description>
 
-		<channels>
-			<channel id="interrupt" typeId="interrupt"/>
-			<channel id="reset" typeId="reset"/>
-		</channels>
-
 		<representation-property>address</representation-property>
 
 		<config-description>
@@ -29,6 +24,19 @@
 				<description>Milliseconds between reread data from I2C device.</description>
 				<default>2</default>
 			</parameter>
+			<parameter name="interrupt" type="integer" min="2" max="27">
+				<label>Interrupt Pin</label>
+				<description>GPIO pin to monitor interrupts</description>
+			</parameter>
+			<parameter name="reset" type="integer" min="2" max="27">
+				<label>Reset Pin</label>
+				<description>Send device reset signal</description>
+			</parameter>
+			<parameter name="resethigh" type="boolean">
+				<label>Reset Active High</label>
+				<description>Reset is active on high (default) or low level</description>
+				<default>true</default>
+			</parameter>
 			<parameter name="mirror" type="boolean">
 				<label>Interrupt Mirror</label>
 				<description>Interrupt pins mode</description>
@@ -40,9 +48,9 @@
 				<options>
 					<option value="HIGH">Active-high</option>
 					<option value="LOW">Active-low</option>
-					<option value="OPEN_DRAIN">Open-drain</option>
+					<option value="OPEN-DRAIN">Open-drain</option>
 				</options>
-				<default>OPEN_DRAIN</default>
+				<default>OPEN-DRAIN</default>
 			</parameter>
 		</config-description>
 	</thing-type>

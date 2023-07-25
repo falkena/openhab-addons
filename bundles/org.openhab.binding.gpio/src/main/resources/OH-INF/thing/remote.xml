@@ -35,7 +35,7 @@
 		<description>Get digital state of a GPIO Pin</description>
 		<state readOnly="true"/>
 		<config-description>
-			<parameter name="gpioId" type="integer" required="true">
+			<parameter name="gpioId" type="integer" required="true" min="2" max="27">
 				<label>GPIO Pin</label>
 				<description>GPIO pin to use as input</description>
 			</parameter>
@@ -70,14 +70,14 @@
 		<label>GPIO Digital Output</label>
 		<description>Set digital state of a GPIO Pin</description>
 		<config-description>
-			<parameter name="gpioId" type="integer" required="true">
+			<parameter name="gpioId" type="integer" required="true" min="2" max="27">
 				<label>GPIO Pin</label>
 				<description>GPIO pin to use as output</description>
 			</parameter>
 			<parameter name="activehigh" type="boolean">
-				<default>true</default>
 				<label>Active High</label>
 				<description>Active on high (default) or low level</description>
+				<default>true</default>
 			</parameter>
 		</config-description>
 	</channel-type>

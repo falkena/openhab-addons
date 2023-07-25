@@ -156,13 +156,13 @@ public class I2CDeviceHandler extends BaseThingHandler {
         return null;
     }
 
-    protected <T> T getChannelConfigAs(final Channel channel, Class<T> configurationClass) {
+    protected <T> T getConfigAs(final Channel channel, Class<T> configurationClass) {
         return channel.getConfiguration().as(configurationClass);
     }
 
-    protected <T> @Nullable T getChannelConfigAs(final ChannelUID channelUID, Class<T> configurationClass) {
+    protected <T> @Nullable T getConfigAs(final ChannelUID channelUID, Class<T> configurationClass) {
         final Channel channel = getThing().getChannel(channelUID);
-        return channel != null ? getChannelConfigAs(channel, configurationClass) : null;
+        return channel != null ? getConfigAs(channel, configurationClass) : null;
     }
 
     protected boolean configure(final int handle) {

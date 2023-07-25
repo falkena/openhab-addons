@@ -42,8 +42,6 @@ public class GPIOBindingConstants {
     // List of all Thing Type UIDs
     public static final ChannelTypeUID CHANNEL_TYPE_DIGITAL_INPUT = new ChannelTypeUID(BINDING_ID, "digital-input");
     public static final ChannelTypeUID CHANNEL_TYPE_DIGITAL_OUTPUT = new ChannelTypeUID(BINDING_ID, "digital-output");
-    public static final ChannelTypeUID CHANNEL_TYPE_INTERRUPT = new ChannelTypeUID(BINDING_ID, "interrupt");
-    public static final ChannelTypeUID CHANNEL_TYPE_RESET = new ChannelTypeUID(BINDING_ID, "reset");
 
     // PiGpio config properties
     public static final String HOST = "host";

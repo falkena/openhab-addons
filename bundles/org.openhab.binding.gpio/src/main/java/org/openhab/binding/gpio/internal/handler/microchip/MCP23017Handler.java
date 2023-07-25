@@ -16,12 +16,11 @@ import static eu.xeli.jpigpio.JPigpio.PI_EITHER_EDGE;
 import static eu.xeli.jpigpio.JPigpio.PI_OFF;
 import static eu.xeli.jpigpio.JPigpio.PI_ON;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.openhab.binding.gpio.internal.GPIOBindingConstants.CHANNEL_TYPE_INTERRUPT;
-import static org.openhab.binding.gpio.internal.GPIOBindingConstants.CHANNEL_TYPE_RESET;
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.MCP23017_CHANNEL_TYPE_INPUT;
 import static org.openhab.binding.gpio.internal.GPIOBindingConstants.MCP23017_CHANNEL_TYPE_OUTPUT;
 import static org.openhab.binding.gpio.internal.GPIOUtilities.getBit;
 import static org.openhab.binding.gpio.internal.GPIOUtilities.setBit;
+import static org.openhab.binding.gpio.internal.configuration.GPIOConfiguration.isPinValid;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,8 +31,6 @@ import java.util.concurrent.ScheduledFuture;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.gpio.internal.configuration.InterruptPinConfiguration;
-import org.openhab.binding.gpio.internal.configuration.ResetPinConfiguration;
 import org.openhab.binding.gpio.internal.configuration.microchip.MCP23017Configuration;
 import org.openhab.binding.gpio.internal.configuration.microchip.MCP23017Configuration.InterruptMode;
 import org.openhab.binding.gpio.internal.configuration.microchip.MCP23017InputPinConfiguration;
@@ -84,7 +81,7 @@ public final class MCP23017Handler extends I2CDeviceHandler {
         if (read(Registers.GPIO.getValue(), gpio)) {
             for (final Channel channel : getThing().getChannels()) {
                 if (MCP23017_CHANNEL_TYPE_INPUT.equals(channel.getChannelTypeUID())) {
-                    final MCP23017PinConfiguration config = getChannelConfigAs(channel, MCP23017PinConfiguration.class);
+                    final MCP23017PinConfiguration config = getConfigAs(channel, MCP23017PinConfiguration.class);
                     boolean value = getBit(gpio[config.getBank()], config.getPinAddress());
                     updateState(channel.getUID(), value ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
                 }
@@ -102,7 +99,7 @@ public final class MCP23017Handler extends I2CDeviceHandler {
         if (read(Registers.OLAT.getValue(), olat)) {
             for (final Channel channel : getThing().getChannels()) {
                 if (MCP23017_CHANNEL_TYPE_OUTPUT.equals(channel.getChannelTypeUID())) {
-                    final MCP23017PinConfiguration config = getChannelConfigAs(channel, MCP23017PinConfiguration.class);
+                    final MCP23017PinConfiguration config = getConfigAs(channel, MCP23017PinConfiguration.class);
                     boolean value = getBit(olat[config.getBank()], config.getPinAddress());
                     updateState(channel.getUID(), value ? OnOffType.ON : OnOffType.OFF);
                 }
@@ -112,8 +109,8 @@ public final class MCP23017Handler extends I2CDeviceHandler {
 
     private class InterruptListener extends GPIOListener {
 
-        public InterruptListener(final InterruptPinConfiguration config) {
-            super(config.getPin(), PI_EITHER_EDGE);
+        public InterruptListener(final Integer pin) {
+            super(pin, PI_EITHER_EDGE);
         }
 
         @Override
@@ -123,28 +120,36 @@ public final class MCP23017Handler extends I2CDeviceHandler {
             if (read(Registers.INTF.getValue(), flags) && read(Registers.INTCAP.getValue(), captured)) {
                 for (final Channel channel : getThing().getChannels()) {
                     if (MCP23017_CHANNEL_TYPE_INPUT.equals(channel.getChannelTypeUID())) {
-                        final MCP23017InputPinConfiguration config = getChannelConfigAs(channel,
+                        final MCP23017InputPinConfiguration config = getConfigAs(channel,
                                 MCP23017InputPinConfiguration.class);
-                        final boolean flag = getBit(flags[config.getBank()], config.getPinAddress());
+                        if (!getBit(flags[config.getBank()], config.getPinAddress())) {
+                            continue;
+                        }
+
+                        State state = UnDefType.UNDEF;
                         final boolean value = getBit(captured[config.getBank()], config.getPinAddress());
                         switch (config.getInterruptConfig()) {
                             case HIGH -> {
-                                if (flag && value) { // LOW-HIGH interrupt
-                                    triggerChannel(channel.getUID(), OpenClosedType.CLOSED.toString());
+                                if (value) { // LOW-HIGH interrupt
+                                    state = OpenClosedType.CLOSED;
+                                    triggerChannel(channel.getUID(), state.toString());
                                 }
                             }
                             case LOW -> {
-                                if (flag && !value) { // HIGH-LOW interrupt
-                                    triggerChannel(channel.getUID(), OpenClosedType.OPEN.toString());
+                                if (!value) { // HIGH-LOW interrupt
+                                    state = OpenClosedType.OPEN;
+                                    triggerChannel(channel.getUID(), state.toString());
                                 }
                             }
                             case PREVIOUS -> { // LOW-HIGH/HIGH-LOW change
-                                final State state = flag && value ? OpenClosedType.CLOSED : OpenClosedType.OPEN;
+                                state = value ? OpenClosedType.CLOSED : OpenClosedType.OPEN;
                                 triggerChannel(channel.getUID(), state.toString());
                             }
                             default -> {
+                                triggerChannel(channel.getUID(), UnDefType.UNDEF.toString());
                             }
                         }
+                        updateState(channel.getUID(), state);
                     }
                 }
             }
@@ -154,12 +159,10 @@ public final class MCP23017Handler extends I2CDeviceHandler {
     private class ResetListener extends GPIOListener {
 
         final Boolean isActiveHigh;
-        final ChannelUID channelUID;
 
-        public ResetListener(final ResetPinConfiguration config, final ChannelUID channelUID) {
-            super(config.getPin(), PI_EITHER_EDGE);
-            this.isActiveHigh = config.isActiveOnHigh();
-            this.channelUID = channelUID;
+        public ResetListener(final Integer pin, final Boolean isActiveHigh) {
+            super(pin, PI_EITHER_EDGE);
+            this.isActiveHigh = isActiveHigh;
         }
 
         @Override
@@ -172,7 +175,7 @@ public final class MCP23017Handler extends I2CDeviceHandler {
                 MCP23017Handler.super.initialize(); // Reset device only
                 startReaderJobs();
             } else {
-                logger.debug("Received wrong gpio state for channel {}.", channelUID);
+                logger.debug("Received wrong gpio state for pin {}.", gpio);
             }
         }
     }
@@ -218,41 +221,20 @@ public final class MCP23017Handler extends I2CDeviceHandler {
      */
     @Override
     public void handleCommand(@NonNull ChannelUID channelUID, @NonNull Command command) {
-        final Channel channel = getThing().getChannel(channelUID);
-        if ((channel != null) && (command instanceof OnOffType)) {
-            if (CHANNEL_TYPE_RESET.equals(channel.getChannelTypeUID())) {
-                final ResetPinConfiguration config = getChannelConfigAs(channel, ResetPinConfiguration.class);
-                if (config.isPinValid()) {
-                    try {
-                        gpioHandler.write(config.getPin(), config.isActiveOnHigh() == OnOffType.ON.equals(command));
-                    } catch (PigpioException exception) {
-                        updateState(channelUID, UnDefType.UNDEF);
-                        final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
-                        logger.warn("Failed to set channel {} for device {}.", channelUID, address);
-                    }
-                }
-            }
-        }
-
         if (ThingStatus.ONLINE != getThing().getStatus()) {
             return;
         }
 
-        final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
+        final Channel channel = getThing().getChannel(channelUID);
         if (channel != null) {
             final ChannelTypeUID type = channel.getChannelTypeUID();
+            final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
             if (command instanceof OpenClosedType) {
-                if (CHANNEL_TYPE_INTERRUPT.equals(type)) {
-                    logger.debug("Invalid command on input channel {} for device {} received.", channelUID, address);
-                } else if (MCP23017_CHANNEL_TYPE_INPUT.equals(type)) {
-                    logger.debug("Invalid command on input channel {} for device {} received.", channelUID, address);
-                } else {
-                    logger.debug("Invalid channel {} for device {} found.", channelUID, address);
-                }
+                logger.debug("Invalid channel {} for device {} found.", channelUID, address);
             } else if (command instanceof OnOffType) {
                 if (MCP23017_CHANNEL_TYPE_OUTPUT.equals(type)) {
                     final byte[] data = { 0x00 };
-                    final MCP23017PinConfiguration config = getChannelConfigAs(channel, MCP23017PinConfiguration.class);
+                    final MCP23017PinConfiguration config = getConfigAs(channel, MCP23017PinConfiguration.class);
                     if (read(Registers.GPIO.getValue() + config.getBank(), data)) {
                         data[0] = setBit(data[0], config.getPinAddress(), OnOffType.ON.equals(command));
                         if (!write(Registers.GPIO.getValue() + config.getBank(), data)) {
@@ -263,51 +245,16 @@ public final class MCP23017Handler extends I2CDeviceHandler {
                     logger.debug("Invalid channel {} for device {} found.", channelUID, address);
                 }
             } else if (command instanceof RefreshType) {
-                if (CHANNEL_TYPE_INTERRUPT.equals(type)) {
-                    State state = UnDefType.UNDEF;
-                    final InterruptPinConfiguration config = getChannelConfigAs(channel,
-                            InterruptPinConfiguration.class);
-                    if (config.isPinValid()) {
-                        try {
-                            if (gpioHandler.read(config.getPin())) {
-                                state = (config.isActiveOnHigh() ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
-                            } else {
-                                state = (config.isActiveOnHigh() ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
-                            }
-                        } catch (PigpioException exception) {
-                            updateState(channelUID, UnDefType.UNDEF);
-                            logger.warn("Unable to read gpio state for channel {} on host {}.", channelUID,
-                                    gpioHandler.getHost());
-                        }
-                    }
-                    updateState(channelUID, state);
-                } else if (CHANNEL_TYPE_RESET.equals(type)) {
-                    State state = UnDefType.UNDEF;
-                    final ResetPinConfiguration config = getChannelConfigAs(channel, ResetPinConfiguration.class);
-                    if (config.isPinValid()) {
-                        try {
-                            if (gpioHandler.read(config.getPin())) {
-                                state = (config.isActiveOnHigh() ? OnOffType.ON : OnOffType.OFF);
-                            } else {
-                                state = (config.isActiveOnHigh() ? OnOffType.OFF : OnOffType.ON);
-                            }
-                        } catch (PigpioException exception) {
-                            updateState(channelUID, UnDefType.UNDEF);
-                            logger.warn("Unable to read gpio state for channel {} on host {}.", channelUID,
-                                    gpioHandler.getHost());
-                        }
-                    }
-                    updateState(channelUID, state);
-                } else if (MCP23017_CHANNEL_TYPE_INPUT.equals(type)) {
+                if (MCP23017_CHANNEL_TYPE_INPUT.equals(type)) {
                     final byte[] data = { 0x00 };
-                    final MCP23017PinConfiguration config = getChannelConfigAs(channel, MCP23017PinConfiguration.class);
+                    final MCP23017PinConfiguration config = getConfigAs(channel, MCP23017PinConfiguration.class);
                     if (read(Registers.GPIO.getValue() + config.getBank(), data)) {
                         boolean value = getBit(data[0], config.getPinAddress());
                         updateState(channelUID, value ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
                     }
                 } else if (MCP23017_CHANNEL_TYPE_OUTPUT.equals(type)) {
                     final byte[] data = { 0x00 };
-                    final MCP23017PinConfiguration config = getChannelConfigAs(channel, MCP23017PinConfiguration.class);
+                    final MCP23017PinConfiguration config = getConfigAs(channel, MCP23017PinConfiguration.class);
                     if (read(Registers.OLAT.getValue() + config.getBank(), data)) {
                         boolean value = getBit(data[0], config.getPinAddress());
                         updateState(channelUID, value ? OnOffType.ON : OnOffType.OFF);
@@ -319,6 +266,7 @@ public final class MCP23017Handler extends I2CDeviceHandler {
                 logger.debug("Invalid command on channel {} for device {} received.", channelUID, address);
             }
         } else {
+            final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
             logger.debug("Invalid channel {} for device {} found.", channelUID, address);
         }
     }
@@ -330,49 +278,27 @@ public final class MCP23017Handler extends I2CDeviceHandler {
     public void initialize() {
         super.initialize();
         if (ThingStatus.ONLINE == getThing().getStatus()) {
-            final ChannelUID interruptChannelUID = new ChannelUID(getThing().getUID(), CHANNEL_TYPE_INTERRUPT.getId());
-            final InterruptPinConfiguration interruptPinConfig = getChannelConfigAs(interruptChannelUID,
-                    InterruptPinConfiguration.class);
-            if ((interruptPinConfig != null) && interruptPinConfig.isPinValid()) {
+            final MCP23017Configuration config = getConfigAs(MCP23017Configuration.class);
+            if (isPinValid(config.getInterruptPin())) {
                 try {
-                    gpioHandler.setPinMode(interruptPinConfig.getPin(), CommunicationHandler.PinMode.INPUT);
-                    try {
-                        gpioHandler.debounce(interruptPinConfig.getPin(), interruptPinConfig.debounce);
-                    } catch (PigpioException ignored) {
-                        final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
-                        logger.warn("Unable to set debouncing for device {}.", address);
-                    }
-                    try {
-                        final InterruptListener listener = new InterruptListener(interruptPinConfig);
-                        gpioHandler.addListener(listener);
-                        listeners.add(listener);
-                    } catch (PigpioException exception) {
-                        final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
-                        logger.warn("Unable to register interrupt callback for device {}.", address);
-                    }
+                    final InterruptListener listener = new InterruptListener(config.getInterruptPin());
+                    gpioHandler.addListener(listener);
+                    listeners.add(listener);
                 } catch (PigpioException exception) {
                     final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
-                    logger.warn("Unable to configure channel {} for device {}.", interruptChannelUID, address);
+                    logger.warn("Unable to register interrupt callback for device {}.", address);
                 }
             }
 
-            final ChannelUID resetChannelUID = new ChannelUID(getThing().getUID(), CHANNEL_TYPE_RESET.getId());
-            final ResetPinConfiguration resetPinConfig = getChannelConfigAs(resetChannelUID,
-                    ResetPinConfiguration.class);
-            if ((resetPinConfig != null) && resetPinConfig.isPinValid()) {
+            if (isPinValid(config.getResetPin())) {
                 try {
-                    gpioHandler.setPinMode(resetPinConfig.getPin(), CommunicationHandler.PinMode.OUTPUT);
-                    try {
-                        final ResetListener listener = new ResetListener(resetPinConfig, resetChannelUID);
-                        gpioHandler.addListener(listener);
-                        listeners.add(listener);
-                    } catch (PigpioException exception) {
-                        final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
-                        logger.warn("Unable to register reset callback for {}.", address);
-                    }
+                    final ResetListener listener = new ResetListener(config.getResetPin(),
+                            config.isResetActiveOnHigh());
+                    gpioHandler.addListener(listener);
+                    listeners.add(listener);
                 } catch (PigpioException exception) {
                     final String address = getConfigAs(MCP23017Configuration.class).getAddressAsHex();
-                    logger.warn("Unable to configure channel {} for device {}.", resetChannelUID, address);
+                    logger.warn("Unable to register reset callback for {}.", address);
                 }
             }
 
@@ -445,8 +371,7 @@ public final class MCP23017Handler extends I2CDeviceHandler {
             for (Channel channel : getThing().getChannels()) {
                 final ChannelTypeUID type = channel.getChannelTypeUID();
                 if (MCP23017_CHANNEL_TYPE_INPUT.equals(type)) {
-                    final MCP23017InputPinConfiguration pin = getChannelConfigAs(channel,
-                            MCP23017InputPinConfiguration.class);
+                    final MCP23017InputPinConfiguration pin = getConfigAs(channel, MCP23017InputPinConfiguration.class);
 
                     if (success && read(handle, Registers.IODIR.getValue() + pin.getBank(), data, 0, 1)) {
                         data[0] = setBit(data[0], pin.getPinAddress(), true); // Input: true, Output: false
@@ -481,7 +406,7 @@ public final class MCP23017Handler extends I2CDeviceHandler {
                         logger.warn("Unable to configure channel {} for device {}.", channel.getUID(), address);
                     }
                 } else if (MCP23017_CHANNEL_TYPE_OUTPUT.equals(type)) {
-                    final MCP23017OutputPinConfiguration pin = getChannelConfigAs(channel,
+                    final MCP23017OutputPinConfiguration pin = getConfigAs(channel,
                             MCP23017OutputPinConfiguration.class);
 
                     if (success && read(handle, Registers.IODIR.getValue() + pin.getBank(), data, 0, 1)) {
@@ -510,9 +435,7 @@ public final class MCP23017Handler extends I2CDeviceHandler {
         final Integer interval = config.getRefreshInterval();
 
         final ScheduledFuture<?> inputJob = inputReaderJob;
-        final ChannelUID interruptChannelUID = new ChannelUID(getThing().getUID(), CHANNEL_TYPE_INTERRUPT.getId());
-        final InterruptPinConfiguration pin = getChannelConfigAs(interruptChannelUID, InterruptPinConfiguration.class);
-        if (((inputJob == null) || inputJob.isCancelled()) && ((pin == null) || !pin.isPinValid())) {
+        if (((inputJob == null) || inputJob.isCancelled()) && !isPinValid(config.getInterruptPin())) {
             logger.info("Creating new input reader job for {} with interval {} ms.", config.getAddressAsHex(),
                     interval);
             inputReaderJob = scheduler.scheduleWithFixedDelay(inputReader, 1, interval, MILLISECONDS);
