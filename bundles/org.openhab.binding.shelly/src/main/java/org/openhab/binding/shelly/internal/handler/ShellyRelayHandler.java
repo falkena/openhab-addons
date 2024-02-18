@@ -128,11 +128,11 @@ public class ShellyRelayHandler extends ShellyBaseHandler {
 
             case CHANNEL_TIMER_AUTOON:
                 logger.debug("{}: Set Auto-ON timer to {}", thingName, command);
-                api.setAutoTimer(rIndex, SHELLY_TIMER_AUTOON, getNumber(command).doubleValue());
+                api.setAutoTimer(rIndex, SHELLY_TIMER_AUTOON, getNumber(command));
                 break;
             case CHANNEL_TIMER_AUTOOFF:
                 logger.debug("{}: Set Auto-OFF timer to {}", thingName, command);
-                api.setAutoTimer(rIndex, SHELLY_TIMER_AUTOOFF, getNumber(command).doubleValue());
+                api.setAutoTimer(rIndex, SHELLY_TIMER_AUTOOFF, getNumber(command));
                 break;
             case CHANNEL_EMETER_RESETTOTAL:
                 String id = substringAfter(groupName, CHANNEL_GROUP_METER);

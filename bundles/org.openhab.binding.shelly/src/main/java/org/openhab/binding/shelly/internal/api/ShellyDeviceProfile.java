@@ -419,15 +419,6 @@ public class ShellyDeviceProfile {
         return thingType.startsWith("shellyblu") && !thingType.startsWith(THING_TYPE_SHELLYBLUGW_STR);
     }
 
-    public boolean coiotEnabled() {
-        if ((settings.coiot != null) && (settings.coiot.enabled != null)) {
-            return settings.coiot.enabled;
-        }
-
-        // If device is not yet intialized or the enabled property is missing we assume that CoIoT is enabled
-        return true;
-    }
-
     public static String buildBluServiceName(String name, String mac) throws IllegalArgumentException {
         String model = name.contains("-") ? substringBefore(name, "-") : name; // e.g. SBBT-02C or just SBDW
         switch (model) {
