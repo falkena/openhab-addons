@@ -15,7 +15,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:blubattery"/>
 	</thing-type>
 
@@ -30,7 +30,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:blubattery"/>
 	</thing-type>
 
@@ -45,7 +45,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:blubattery"/>
 	</thing-type>
 
@@ -75,7 +75,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:blubattery"/>
 	</thing-type>
 
@@ -139,7 +139,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:blugw"/>
 	</thing-type>
 

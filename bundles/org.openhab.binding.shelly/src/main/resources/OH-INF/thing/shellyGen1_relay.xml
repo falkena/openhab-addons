@@ -13,7 +13,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -28,7 +28,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -43,7 +43,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -62,7 +62,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -86,7 +86,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -105,7 +105,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -120,7 +120,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:roller"/>
 	</thing-type>
 
@@ -144,7 +144,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -159,7 +159,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:roller"/>
 	</thing-type>
 
@@ -195,7 +195,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -210,7 +210,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -225,7 +225,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -240,7 +240,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -259,7 +259,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
@@ -273,7 +273,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:dimmer"/>
 	</thing-type>
 
@@ -287,7 +287,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:dimmer"/>
 	</thing-type>
 
@@ -307,7 +307,7 @@
 			<channel-group id="device" typeId="deviceStatus"/>
 		</channel-groups>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description-ref uri="thing-type:shelly:relay"/>
 	</thing-type>
 
