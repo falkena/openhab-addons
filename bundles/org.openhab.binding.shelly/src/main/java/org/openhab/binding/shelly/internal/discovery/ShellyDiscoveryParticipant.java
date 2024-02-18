@@ -14,6 +14,7 @@ package org.openhab.binding.shelly.internal.discovery;
 
 import static org.openhab.binding.shelly.internal.ShellyBindingConstants.*;
 import static org.openhab.binding.shelly.internal.util.ShellyUtils.*;
+import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 
 import java.io.IOException;
 import java.net.Inet4Address;
