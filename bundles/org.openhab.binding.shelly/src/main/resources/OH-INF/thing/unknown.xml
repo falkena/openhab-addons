@@ -8,7 +8,7 @@
 		<label>Shelly Device</label>
 		<description>A password protected or unknown device</description>
 
-		<representation-property>serviceName</representation-property>
+		<representation-property>macAddress</representation-property>
 		<config-description>
 			<parameter name="deviceIp" type="text" required="true">
 				<label>IP Address</label>
