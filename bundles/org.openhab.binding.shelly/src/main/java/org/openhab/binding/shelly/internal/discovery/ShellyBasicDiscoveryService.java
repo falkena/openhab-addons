@@ -88,7 +88,7 @@ public class ShellyBasicDiscoveryService extends AbstractDiscoveryService {
         properties.put(PROPERTY_MAC_ADDRESS, address);
         String thingLabel = "Shelly BLU " + model + " (" + serviceName + ")";
         DiscoveryResult result = DiscoveryResultBuilder.create(uid).withProperties(properties)
-                .withRepresentationProperty(PROPERTY_DEV_NAME).withLabel(thingLabel).build();
+                .withRepresentationProperty(PROPERTY_MAC_ADDRESS).withLabel(thingLabel).build();
         thingDiscovered(result);
     }
 
@@ -177,7 +177,7 @@ public class ShellyBasicDiscoveryService extends AbstractDiscoveryService {
             String thingLabel = deviceName.isEmpty() ? name + " - " + ipAddress
                     : deviceName + " (" + name + "@" + ipAddress + ")";
             return DiscoveryResultBuilder.create(thingUID).withProperties(properties).withLabel(thingLabel)
-                    .withRepresentationProperty(PROPERTY_SERVICE_NAME).build();
+                    .withRepresentationProperty(PROPERTY_MAC_ADDRESS).build();
         }
 
         return null;
