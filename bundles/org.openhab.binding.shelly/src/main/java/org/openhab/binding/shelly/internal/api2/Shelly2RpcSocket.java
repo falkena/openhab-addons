@@ -46,6 +46,9 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 
 /**
+ * {@link Shelly2RpcSocket} wraps the Shelly REST API and provides various low level function to access the device api
+ * (not cloud api).
+ *
  * @author Markus Michels - Initial contribution
  */
 @NonNullByDefault
@@ -123,8 +126,8 @@ public class Shelly2RpcSocket {
             client.setConnectTimeout(5000);
             client.setStopTimeout(0);
             client.connect(this, uri, request);
-        } catch (Exception e) {
-            throw new ShellyApiException("Unable to initialize WebSocket", e);
+        } catch (Exception exception) {
+            throw new ShellyApiException("Unable to initialize WebSocket", exception);
         }
     }
 
@@ -180,7 +183,7 @@ public class Shelly2RpcSocket {
      * @throws ShellyApiException
      */
     public void sendMessage(String str) throws ShellyApiException {
-        Session session = this.session;
+        final Session session = this.session;
         if (session != null) {
             try {
                 connectLatch.await();
@@ -198,7 +201,7 @@ public class Shelly2RpcSocket {
      */
     public void disconnect() {
         try {
-            Session session = this.session;
+            final Session session = this.session;
             if (session != null) {
                 if (session.isOpen()) {
                     logger.debug("{}: Disconnecting WebSocket ({} -> {})", thingName, session.getLocalAddress(),
@@ -258,24 +261,23 @@ public class Shelly2RpcSocket {
                         if (events.params == null || events.params.events == null) {
                             logger.debug("{}: Malformed event data: {}", thingName, receivedMessage);
                         } else {
-                            for (Shelly2NotifyEvent e : events.params.events) {
-                                if (getString(e.event).startsWith(SHELLY2_EVENT_BLUPREFIX)) {
-                                    String address = getString(e.data != null ? e.data.addr : "").replace(":", "");
-                                    ShellyThingTable thingTable = this.thingTable;
-                                    if (thingTable != null && thingTable.findThing(address) != null) {
+                            for (final Shelly2NotifyEvent event : events.params.events) {
+                                if (getString(event.event).startsWith(SHELLY2_EVENT_BLUPREFIX)) {
+                                    final ShellyThingTable thingTable = this.thingTable;
+                                    final String address = getString(event.data.addr).replace(":", "");
+                                    if ((thingTable != null) && (thingTable.findThing(address) != null)) {
                                         // known device
                                         ShellyThingInterface thing = thingTable.getThing(address);
                                         Shelly2ApiRpc api = (Shelly2ApiRpc) thing.getApi();
                                         handler = api.getRpcHandler();
                                         handler.onNotifyEvent(
                                                 fromJson(gson, receivedMessage, Shelly2RpcNotifyEvent.class));
-                                    } else {
-                                        // new device
-                                        if (SHELLY2_EVENT_BLUSCAN.equals(e.event)) {
-                                            ShellyBluSensorHandler.addBluThing(message.src, e, thingTable);
+                                    } else { // new device
+                                        if (SHELLY2_EVENT_BLUSCAN.equals(event.event)) {
+                                            ShellyBluSensorHandler.addBluThing(message.src, event, thingTable);
                                         } else {
                                             logger.debug("{}: NotifyEvent {} for unknown device {}", message.src,
-                                                    e.event, e.data.name);
+                                                    event.event, event.data.name);
                                         }
                                     }
                                 } else {
@@ -297,7 +299,7 @@ public class Shelly2RpcSocket {
     }
 
     public boolean isConnected() {
-        Session session = this.session;
+        final Session session = this.session;
         return session != null && session.isOpen();
     }
 

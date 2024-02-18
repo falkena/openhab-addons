@@ -30,7 +30,7 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
 
     private static final long serialVersionUID = 1L;
 
-    private Map<K, Long> timeMap = new ConcurrentHashMap<>();
+    private final Map<K, Long> timeMap = new ConcurrentHashMap<>();
     private long expiryInMillis = ShellyManagerConstants.CACHE_TIMEOUT_DEF_MIN * 60 * 1000; // Default 1h
 
     public ShellyManagerCache() {
@@ -48,7 +48,7 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
 
     @Override
     public V put(K key, V value) {
-        Date date = new Date();
+        final Date date = new Date();
         timeMap.put(key, date.getTime());
         return super.put(key, value);
     }
@@ -58,10 +58,10 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
         if (m == null) {
             throw new IllegalArgumentException();
         }
-        for (K key : m.keySet()) {
+        for (final K key : m.keySet()) {
             @Nullable
-            V value = m.get(key);
-            if (key != null && value != null) { // don't allow null values
+            final V value = m.get(key);
+            if ((key != null) && (value != null)) { // don't allow null values
                 put(key, value);
             }
         }
@@ -95,9 +95,9 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
 
         private void cleanMap() {
             long currentTime = new Date().getTime();
-            for (K key : timeMap.keySet()) {
+            for (final K key : timeMap.keySet()) {
                 Long timeValue = timeMap.get(key);
-                if (key != null && (timeValue == null || currentTime > (timeValue + expiryInMillis))) {
+                if ((key != null) && (timeValue == null || currentTime > (timeValue + expiryInMillis))) {
                     remove(key);
                     timeMap.remove(key);
                 }

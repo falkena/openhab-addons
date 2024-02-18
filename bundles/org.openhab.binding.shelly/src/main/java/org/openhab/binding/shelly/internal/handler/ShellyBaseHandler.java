@@ -1049,7 +1049,7 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
             return false;
         }
 
-        if (!profile.isGen2 && config.userId.isEmpty() && !bindingConfig.defaultUserId.isEmpty()) {
+        if (profile.isGen2 && config.userId.isEmpty() && !bindingConfig.defaultUserId.isEmpty()) {
             // Gen2 has hard coded user "admin"
             config.userId = bindingConfig.defaultUserId;
             logger.debug("{}: Using default userId {} from binding config", thingName, config.userId);

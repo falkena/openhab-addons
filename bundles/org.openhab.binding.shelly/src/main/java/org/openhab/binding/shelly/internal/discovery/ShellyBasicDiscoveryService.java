@@ -13,8 +13,11 @@
 package org.openhab.binding.shelly.internal.discovery;
 
 import static org.openhab.binding.shelly.internal.ShellyBindingConstants.*;
-import static org.openhab.binding.shelly.internal.util.ShellyUtils.*;
-import static org.openhab.core.thing.Thing.*;
+import static org.openhab.binding.shelly.internal.util.ShellyUtils.getBool;
+import static org.openhab.binding.shelly.internal.util.ShellyUtils.getString;
+import static org.openhab.binding.shelly.internal.util.ShellyUtils.substringBeforeLast;
+import static org.openhab.core.thing.Thing.PROPERTY_MAC_ADDRESS;
+import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 
 import java.io.IOException;
 import java.util.Hashtable;
@@ -113,7 +116,6 @@ public class ShellyBasicDiscoveryService extends AbstractDiscoveryService {
             ShellyBindingConfiguration bindingConfig, HttpClient httpClient, ShellyTranslationProvider messages) {
         Logger logger = LoggerFactory.getLogger(ShellyBasicDiscoveryService.class);
         ThingUID thingUID = null;
-        ShellyDeviceProfile profile;
         ShellySettingsDevice devInfo;
         ShellyApiInterface api = null;
         boolean auth = false;
@@ -141,22 +143,21 @@ public class ShellyBasicDiscoveryService extends AbstractDiscoveryService {
             }
 
             thingType = substringBeforeLast(name, "-");
-            profile = api.getDeviceProfile(thingType, devInfo);
-            api.close();
+            final ShellyDeviceProfile profile = api.getDeviceProfile(thingType, devInfo);
             deviceName = profile.name;
             mode = devInfo.mode;
             properties = ShellyBaseHandler.fillDeviceProperties(profile);
 
             // get thing type from device name
             thingUID = ShellyThingCreator.getThingUID(name, model, mode, false);
-        } catch (ShellyApiException e) {
-            ShellyApiResult result = e.getApiResult();
+        } catch (ShellyApiException exception) {
+            final ShellyApiResult result = exception.getApiResult();
             if (result.isHttpAccessUnauthorized()) {
                 // create shellyunknown thing - will be changed during thing initialization with valid credentials
                 thingUID = ShellyThingCreator.getThingUID(name, model, mode, true);
             }
-        } catch (IllegalArgumentException | IOException e) { // maybe some format description was buggy
-            logger.debug("Discovery: Unable to discover thing", e);
+        } catch (IllegalArgumentException | IOException exception) { // maybe some format description was buggy
+            logger.debug("Discovery: Unable to discover thing", exception);
         } finally {
             if (api != null) {
                 api.close();
