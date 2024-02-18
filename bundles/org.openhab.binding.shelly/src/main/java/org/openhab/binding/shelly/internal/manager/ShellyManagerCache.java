@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
@@ -27,7 +28,7 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
 
     private static final long serialVersionUID = 1L;
 
-    private Map<K, Long> timeMap = new ConcurrentHashMap<>();
+    private final Map<K, Long> timeMap = new ConcurrentHashMap<>();
     private long expiryInMillis = ShellyManagerConstants.CACHE_TIMEOUT_DEF_MIN * 60 * 1000; // Default 1h
 
     public ShellyManagerCache() {
@@ -44,8 +45,8 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
     }
 
     @Override
-    public V put(K key, V value) {
-        Date date = new Date();
+    public V put(@NonNull K key, @NonNull V value) {
+        final Date date = new Date();
         timeMap.put(key, date.getTime());
         return super.put(key, value);
     }
@@ -55,8 +56,8 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
         if (m == null) {
             throw new IllegalArgumentException();
         }
-        for (K key : m.keySet()) {
-            V value = m.get(key);
+        for (final K key : m.keySet()) {
+            final V value = m.get(key);
             if (value != null) { // don't allow null values
                 put(key, value);
             }
@@ -64,7 +65,7 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(@NonNull K key, @NonNull V value) {
         if (!containsKey(key)) {
             return put(key, value);
         } else {
@@ -86,7 +87,7 @@ public class ShellyManagerCache<K, V> extends ConcurrentHashMap<K, V> {
 
         private void cleanMap() {
             long currentTime = new Date().getTime();
-            for (K key : timeMap.keySet()) {
+            for (final K key : timeMap.keySet()) {
                 if (currentTime > (timeMap.get(key) + expiryInMillis)) {
                     remove(key);
                     timeMap.remove(key);

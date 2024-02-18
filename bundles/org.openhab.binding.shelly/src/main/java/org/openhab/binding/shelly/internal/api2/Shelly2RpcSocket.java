@@ -33,7 +33,6 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.shelly.internal.api.ShellyApiException;
-import org.openhab.binding.shelly.internal.api1.Shelly1HttpApi;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2NotifyEvent;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2RpcBaseMessage;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2RpcNotifyEvent;
@@ -47,9 +46,8 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 
 /**
- * {@link Shelly1HttpApi} wraps the Shelly REST API and provides various low level function to access the device api
- * (not
- * cloud api).
+ * {@link Shelly2RpcSocket} wraps the Shelly REST API and provides various low level function to access the device api
+ * (not cloud api).
  *
  * @author Markus Michels - Initial contribution
  */
@@ -128,8 +126,8 @@ public class Shelly2RpcSocket {
             client.setConnectTimeout(5000);
             client.setStopTimeout(0);
             client.connect(this, uri, request);
-        } catch (Exception e) {
-            throw new ShellyApiException("Unable to initialize WebSocket", e);
+        } catch (Exception exception) {
+            throw new ShellyApiException("Unable to initialize WebSocket", exception);
         }
     }
 
@@ -261,23 +259,22 @@ public class Shelly2RpcSocket {
                         if (events.params == null || events.params.events == null) {
                             logger.debug("{}: Malformed event data: {}", thingName, receivedMessage);
                         } else {
-                            for (Shelly2NotifyEvent e : events.params.events) {
-                                if (getString(e.event).startsWith(SHELLY2_EVENT_BLUPREFIX)) {
-                                    String address = getString(e.data.addr).replace(":", "");
+                            for (final Shelly2NotifyEvent event : events.params.events) {
+                                if (getString(event.event).startsWith(SHELLY2_EVENT_BLUPREFIX)) {
+                                    final String address = getString(event.data.addr).replace(":", "");
+                                    final ShellyThingTable thingTable = this.thingTable;
                                     if (thingTable != null && thingTable.findThing(address) != null) {
-                                        if (thingTable != null) { // known device
-                                            ShellyThingInterface thing = thingTable.getThing(address);
-                                            Shelly2ApiRpc api = (Shelly2ApiRpc) thing.getApi();
-                                            handler = api.getRpcHandler();
-                                            handler.onNotifyEvent(
-                                                    fromJson(gson, receivedMessage, Shelly2RpcNotifyEvent.class));
-                                        }
+                                        ShellyThingInterface thing = thingTable.getThing(address);
+                                        Shelly2ApiRpc api = (Shelly2ApiRpc) thing.getApi();
+                                        handler = api.getRpcHandler();
+                                        handler.onNotifyEvent(
+                                                fromJson(gson, receivedMessage, Shelly2RpcNotifyEvent.class));
                                     } else { // new device
-                                        if (e.event.equals(SHELLY2_EVENT_BLUSCAN)) {
-                                            ShellyBluSensorHandler.addBluThing(message.src, e, thingTable);
+                                        if (event.event.equals(SHELLY2_EVENT_BLUSCAN)) {
+                                            ShellyBluSensorHandler.addBluThing(message.src, event, thingTable);
                                         } else {
                                             logger.debug("{}: NotifyEvent {} for unknown device {}", message.src,
-                                                    e.event, e.data.name);
+                                                    event.event, event.data.name);
                                         }
                                     }
                                 } else {
