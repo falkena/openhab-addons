@@ -17,6 +17,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_MEMORY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_SWAP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_COMPUTER;
 
 import java.math.BigDecimal;
 import java.net.UnknownHostException;
@@ -97,7 +100,7 @@ import org.openhab.core.types.UnDefType;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class SystemInfoOSGiTest extends JavaOSGiTest {
-    private static final String DEFAULT_TEST_THING_NAME = "work";
+    private static final ThingUID thingUID = new ThingUID(THING_TYPE_COMPUTER, "work");
     private static final String DEFAULT_TEST_ITEM_NAME = "test";
     private static final String DEFAULT_CHANNEL_TEST_PRIORITY = "High";
     private static final int DEFAULT_CHANNEL_PID = -1;
@@ -222,7 +225,8 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
                 new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
         String priority = DEFAULT_CHANNEL_TEST_PRIORITY;
 
-        initializeThing(thingConfig, channelID, acceptedItemType, priority, pid);
+        ChannelUID channelUID = new ChannelUID(thingUID, channelID);
+        initializeThing(thingConfig, channelUID, acceptedItemType, priority, pid);
     }
 
     private void initializeThingWithChannelAndPriority(String channelID, String acceptedItemType, String priority) {
@@ -231,38 +235,29 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
                 new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
         thingConfig.put(SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
-        int pid = DEFAULT_CHANNEL_PID;
 
-        initializeThing(thingConfig, channelID, acceptedItemType, priority, pid);
+        ChannelUID channelUID = new ChannelUID(thingUID, channelID);
+        initializeThing(thingConfig, channelUID, acceptedItemType, priority, DEFAULT_CHANNEL_PID);
     }
 
     private void initializeThingWithConfiguration(Configuration config) {
-        String priority = DEFAULT_CHANNEL_TEST_PRIORITY;
-        String channelID = DEFAULT_TEST_CHANNEL_ID;
         String acceptedItemType = "String";
-        int pid = DEFAULT_CHANNEL_PID;
 
-        initializeThing(config, channelID, acceptedItemType, priority, pid);
+        ChannelUID channelUID = new ChannelUID(thingUID, DEFAULT_TEST_CHANNEL_ID);
+        initializeThing(config, channelUID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
     }
 
-    private void initializeThingWithChannel(String channelID, String acceptedItemType) {
+    private void initializeThingWithChannel(ChannelUID channelUID, String acceptedItemType) {
         Configuration thingConfig = new Configuration();
         thingConfig.put(SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
         thingConfig.put(SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
-
-        String priority = DEFAULT_CHANNEL_TEST_PRIORITY;
-        int pid = DEFAULT_CHANNEL_PID;
-        initializeThing(thingConfig, channelID, acceptedItemType, priority, pid);
+        initializeThing(thingConfig, channelUID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
     }
 
-    private void initializeThing(Configuration thingConfiguration, String channelID, String acceptedItemType,
+    private void initializeThing(Configuration thingConfiguration, ChannelUID channelUID, String acceptedItemType,
             String priority, int pid) {
-        ThingTypeUID thingTypeUID = SystemInfoBindingConstants.THING_TYPE_COMPUTER;
-        ThingUID thingUID = new ThingUID(thingTypeUID, DEFAULT_TEST_THING_NAME);
-
-        ChannelUID channelUID = new ChannelUID(thingUID, channelID);
         String channelTypeId = channelUID.getIdWithoutGroup();
         if ("load1".equals(channelTypeId) || "load5".equals(channelTypeId) || "load15".equals(channelTypeId)) {
             channelTypeId = "loadAverage";
@@ -274,8 +269,8 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
         Channel channel = ChannelBuilder.create(channelUID, acceptedItemType).withType(channelTypeUID)
                 .withKind(ChannelKind.STATE).withConfiguration(channelConfig).build();
 
-        Thing thing = ThingBuilder.create(thingTypeUID, thingUID).withConfiguration(thingConfiguration)
-                .withChannel(channel).build();
+        Thing thing = ThingBuilder.create(SystemInfoBindingConstants.THING_TYPE_COMPUTER, channelUID.getThingUID())
+                .withConfiguration(thingConfiguration).withChannel(channel).build();
         systeminfoThing = thing;
 
         managedThingProvider.add(thing);
@@ -391,334 +386,338 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
     public void assertStateOfSecondDeviceIsUpdated() {
         // This test assumes that at least 2 network interfaces are present on the test platform
         int deviceIndex = 1;
-        String channnelID = "network" + deviceIndex + "#mac";
         String acceptedItemType = "String";
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, "network" + deviceIndex + "#mac"), acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, UnDefType.UNDEF);
     }
 
     @Test
     public void assertChannelCpuLoadIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
         String acceptedItemType = "Number";
 
         PercentType mockedCpuLoadValue = new PercentType(9);
         when(mockedSystemInfo.getSystemCpuLoad()).thenReturn(mockedCpuLoadValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_LOAD),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoadValue);
     }
 
     @Test
     public void assertChannelCpuLoad1IsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_1;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuLoad1Value = new DecimalType(1.1);
         when(mockedSystemInfo.getCpuLoad1()).thenReturn(mockedCpuLoad1Value);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_LOAD_1),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoad1Value);
     }
 
     @Test
     public void assertChannelCpuLoad5IsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_5;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuLoad5Value = new DecimalType(5.5);
         when(mockedSystemInfo.getCpuLoad5()).thenReturn(mockedCpuLoad5Value);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_LOAD_5),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoad5Value);
     }
 
     @Test
     public void assertChannelCpuLoad15IsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_15;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuLoad15Value = new DecimalType(15.15);
         when(mockedSystemInfo.getCpuLoad15()).thenReturn(mockedCpuLoad15Value);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_LOAD_15),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoad15Value);
     }
 
     @Test
     public void assertChannelCpuThreadsIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_THREADS;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuThreadsValue = new DecimalType(16);
         when(mockedSystemInfo.getCpuThreads()).thenReturn(mockedCpuThreadsValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_THREADS),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuThreadsValue);
     }
 
     @Test
     public void assertChannelCpuUptimeIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_UPTIME;
         String acceptedItemType = "Number:Time";
 
         QuantityType<Time> mockedCpuUptimeValue = new QuantityType<>(100, Units.MINUTE);
         when(mockedSystemInfo.getCpuUptime()).thenReturn(mockedCpuUptimeValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_UPTIME),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuUptimeValue);
     }
 
     @Test
     public void assertChannelCpuDescriptionIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_DESCRIPTION;
         String acceptedItemType = "String";
 
         StringType mockedCpuDescriptionValue = new StringType("Mocked Cpu Descr");
         when(mockedSystemInfo.getCpuDescription()).thenReturn(mockedCpuDescriptionValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_DESCRIPTION),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedCpuDescriptionValue);
     }
 
     @Test
     public void assertChannelCpuNameIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_NAME;
         String acceptedItemType = "String";
 
         StringType mockedCpuNameValue = new StringType("Mocked Cpu Name");
         when(mockedSystemInfo.getCpuName()).thenReturn(mockedCpuNameValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_CPU_NAME),
+                acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuNameValue);
     }
 
     @Test
     public void assertChannelMemoryAvailableIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_AVAILABLE;
         String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_MEMORY,
+                SystemInfoBindingConstants.CHANNEL_AVAILABLE);
 
         QuantityType<DataAmount> mockedMemoryAvailableValue = new QuantityType<>(1000, Units.MEBIBYTE);
         when(mockedSystemInfo.getMemoryAvailable()).thenReturn(mockedMemoryAvailableValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedMemoryAvailableValue);
     }
 
     @Test
-    public void assertChannelMemoryUsedIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_USED;
-        String acceptedItemType = "Number:DataAmount";
-
-        QuantityType<DataAmount> mockedMemoryUsedValue = new QuantityType<>(24, Units.MEBIBYTE);
-        when(mockedSystemInfo.getMemoryUsed()).thenReturn(mockedMemoryUsedValue);
-
-        initializeThingWithChannel(channnelID, acceptedItemType);
-        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedMemoryUsedValue);
-    }
-
-    @Test
-    public void assertChannelMemoryTotalIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_TOTAL;
-        String acceptedItemType = "Number:DataAmount";
-
-        QuantityType<DataAmount> mockedMemoryTotalValue = new QuantityType<>(1024, Units.MEBIBYTE);
-        when(mockedSystemInfo.getMemoryTotal()).thenReturn(mockedMemoryTotalValue);
-
-        initializeThingWithChannel(channnelID, acceptedItemType);
-        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
-                mockedMemoryTotalValue);
-    }
-
-    @Test
     public void assertChannelMemoryAvailablePercentIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_AVAILABLE_PERCENT;
         String acceptedItemType = "Number";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_MEMORY,
+                SystemInfoBindingConstants.CHANNEL_AVAILABLE_PERCENT);
 
         PercentType mockedMemoryAvailablePercentValue = new PercentType(97);
         when(mockedSystemInfo.getMemoryAvailablePercent()).thenReturn(mockedMemoryAvailablePercentValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedMemoryAvailablePercentValue);
     }
 
     @Test
-    public void assertChannelSwapAvailableIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_AVAILABLE;
+    public void assertChannelMemoryTotalIsUpdated() {
         String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_MEMORY,
+                SystemInfoBindingConstants.CHANNEL_TOTAL);
+
+        QuantityType<DataAmount> mockedMemoryTotalValue = new QuantityType<>(1024, Units.MEBIBYTE);
+        when(mockedSystemInfo.getMemoryTotal()).thenReturn(mockedMemoryTotalValue);
+
+        initializeThingWithChannel(channelUID, acceptedItemType);
+        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
+                mockedMemoryTotalValue);
+    }
+
+    @Test
+    public void assertChannelMemoryUsedIsUpdated() {
+        String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_MEMORY, SystemInfoBindingConstants.CHANNEL_USED);
+
+        QuantityType<DataAmount> mockedMemoryUsedValue = new QuantityType<>(24, Units.MEBIBYTE);
+        when(mockedSystemInfo.getMemoryUsed()).thenReturn(mockedMemoryUsedValue);
+
+        initializeThingWithChannel(channelUID, acceptedItemType);
+        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedMemoryUsedValue);
+    }
+
+    @Test
+    public void assertChannelSwapAvailableIsUpdated() {
+        String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_SWAP,
+                SystemInfoBindingConstants.CHANNEL_AVAILABLE);
 
         QuantityType<DataAmount> mockedSwapAvailableValue = new QuantityType<>(482, Units.MEBIBYTE);
         when(mockedSystemInfo.getSwapAvailable()).thenReturn(mockedSwapAvailableValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedSwapAvailableValue);
     }
 
     @Test
-    public void assertChannelSwapUsedIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_USED;
-        String acceptedItemType = "Number:DataAmount";
-
-        QuantityType<DataAmount> mockedSwapUsedValue = new QuantityType<>(30, Units.MEBIBYTE);
-        when(mockedSystemInfo.getSwapUsed()).thenReturn(mockedSwapUsedValue);
-
-        initializeThingWithChannel(channnelID, acceptedItemType);
-        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapUsedValue);
-    }
-
-    @Test
-    public void assertChannelSwapTotalIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_TOTAL;
-        String acceptedItemType = "Number:DataAmount";
-
-        QuantityType<DataAmount> mockedSwapTotalValue = new QuantityType<>(512, Units.MEBIBYTE);
-        when(mockedSystemInfo.getSwapTotal()).thenReturn(mockedSwapTotalValue);
-
-        initializeThingWithChannel(channnelID, acceptedItemType);
-        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapTotalValue);
-    }
-
-    @Test
     public void assertChannelSwapAvailablePercentIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_AVAILABLE_PERCENT;
         String acceptedItemType = "Number";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_SWAP,
+                SystemInfoBindingConstants.CHANNEL_AVAILABLE_PERCENT);
 
         PercentType mockedSwapAvailablePercentValue = new PercentType(94);
         when(mockedSystemInfo.getSwapAvailablePercent()).thenReturn(mockedSwapAvailablePercentValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedSwapAvailablePercentValue);
     }
 
     @Test
+    public void assertChannelSwapTotalIsUpdated() {
+        String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_SWAP, SystemInfoBindingConstants.CHANNEL_TOTAL);
+
+        QuantityType<DataAmount> mockedSwapTotalValue = new QuantityType<>(512, Units.MEBIBYTE);
+        when(mockedSystemInfo.getSwapTotal()).thenReturn(mockedSwapTotalValue);
+
+        initializeThingWithChannel(channelUID, acceptedItemType);
+        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapTotalValue);
+    }
+
+    @Test
+    public void assertChannelSwapUsedIsUpdated() {
+        String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, CHANNEL_GROUP_SWAP, SystemInfoBindingConstants.CHANNEL_USED);
+
+        QuantityType<DataAmount> mockedSwapUsedValue = new QuantityType<>(30, Units.MEBIBYTE);
+        when(mockedSystemInfo.getSwapUsed()).thenReturn(mockedSwapUsedValue);
+
+        initializeThingWithChannel(channelUID, acceptedItemType);
+        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapUsedValue);
+    }
+
+    @Test
     public void assertChannelStorageNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_NAME;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_STORAGE_NAME);
 
         StringType mockedStorageName = new StringType("Mocked Storage Name");
         when(mockedSystemInfo.getStorageName(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageName);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageName);
     }
 
     @Test
     public void assertChannelStorageTypeIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_TYPE;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_STORAGE_TYPE);
 
         StringType mockedStorageType = new StringType("Mocked Storage Type");
         when(mockedSystemInfo.getStorageType(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageType);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageType);
     }
 
     @Test
     public void assertChannelStorageDescriptionIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_DESCRIPTION;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_STORAGE_DESCRIPTION);
 
         StringType mockedStorageDescription = new StringType("Mocked Storage Description");
         when(mockedSystemInfo.getStorageDescription(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageDescription);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedStorageDescription);
     }
 
     @Test
     public void assertChannelStorageAvailableIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE;
         String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE);
 
         QuantityType<DataAmount> mockedStorageAvailableValue = new QuantityType<>(2000, Units.MEBIBYTE);
         when(mockedSystemInfo.getStorageAvailable(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageAvailableValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedStorageAvailableValue);
     }
 
     @Test
-    public void assertChannelStorageUsedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_USED;
-        String acceptedItemType = "Number:DataAmount";
-
-        QuantityType<DataAmount> mockedStorageUsedValue = new QuantityType<>(500, Units.MEBIBYTE);
-        when(mockedSystemInfo.getStorageUsed(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageUsedValue);
-
-        initializeThingWithChannel(channnelID, acceptedItemType);
-        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
-                mockedStorageUsedValue);
-    }
-
-    @Test
-    public void assertChannelStorageTotalIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_TOTAL;
-        String acceptedItemType = "Number:DataAmount";
-
-        QuantityType<DataAmount> mockedStorageTotalValue = new QuantityType<>(2500, Units.MEBIBYTE);
-        when(mockedSystemInfo.getStorageTotal(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageTotalValue);
-
-        initializeThingWithChannel(channnelID, acceptedItemType);
-        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
-                mockedStorageTotalValue);
-    }
-
-    @Test
     public void assertChannelStorageAvailablePercentIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE_PERCENT;
         String acceptedItemType = "Number";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE_PERCENT);
 
         PercentType mockedStorageAvailablePercent = new PercentType(20);
         when(mockedSystemInfo.getStorageAvailablePercent(DEFAULT_DEVICE_INDEX))
                 .thenReturn(mockedStorageAvailablePercent);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedStorageAvailablePercent);
     }
 
     @Test
+    public void assertChannelStorageTotalIsUpdated() throws DeviceNotFoundException {
+        String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_STORAGE_TOTAL);
+
+        QuantityType<DataAmount> mockedStorageTotalValue = new QuantityType<>(2500, Units.MEBIBYTE);
+        when(mockedSystemInfo.getStorageTotal(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageTotalValue);
+
+        initializeThingWithChannel(channelUID, acceptedItemType);
+        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
+                mockedStorageTotalValue);
+    }
+
+    @Test
+    public void assertChannelStorageUsedIsUpdated() throws DeviceNotFoundException {
+        String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_STORAGE_USED);
+
+        QuantityType<DataAmount> mockedStorageUsedValue = new QuantityType<>(500, Units.MEBIBYTE);
+        when(mockedSystemInfo.getStorageUsed(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageUsedValue);
+
+        initializeThingWithChannel(channelUID, acceptedItemType);
+        assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
+                mockedStorageUsedValue);
+    }
+
+    @Test
     public void assertChannelDriveNameIsUpdated() throws DeviceNotFoundException {
-        String channelID = SystemInfoBindingConstants.CHANNEL_DRIVE_NAME;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_DRIVE_NAME);
 
         StringType mockedDriveNameValue = new StringType("Mocked Drive Name");
         when(mockedSystemInfo.getDriveName(DEFAULT_DEVICE_INDEX)).thenReturn(mockedDriveNameValue);
 
-        initializeThingWithChannel(channelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedDriveNameValue);
     }
 
     @Test
     public void assertChannelDriveModelIsUpdated() throws DeviceNotFoundException {
-        String channelID = SystemInfoBindingConstants.CHANNEL_DRIVE_MODEL;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_DRIVE_MODEL);
 
         StringType mockedDriveModelValue = new StringType("Mocked Drive Model");
         when(mockedSystemInfo.getDriveModel(DEFAULT_DEVICE_INDEX)).thenReturn(mockedDriveModelValue);
 
-        initializeThingWithChannel(channelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedDriveModelValue);
     }
 
     @Test
     public void assertChannelDriveSerialIsUpdated() throws DeviceNotFoundException {
-        String channelID = SystemInfoBindingConstants.CHANNEL_DRIVE_SERIAL;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_DRIVE_SERIAL);
 
         StringType mockedDriveSerialNumber = new StringType("Mocked Drive Serial Number");
         when(mockedSystemInfo.getDriveSerialNumber(DEFAULT_DEVICE_INDEX)).thenReturn(mockedDriveSerialNumber);
 
-        initializeThingWithChannel(channelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedDriveSerialNumber);
     }
@@ -727,190 +726,190 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
     // There is a bug opened for this issue - https://github.com/dblock/oshi/issues/185
     @Test
     public void assertChannelSensorsCpuTempIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SENSORS_CPU_TEMPERATURE;
         String acceptedItemType = "Number:Temperature";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_SENSORS_CPU_TEMPERATURE);
 
         QuantityType<Temperature> mockedSensorsCpuTemperatureValue = new QuantityType<>(60, SIUnits.CELSIUS);
         when(mockedSystemInfo.getSensorsCpuTemperature()).thenReturn(mockedSensorsCpuTemperatureValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedSensorsCpuTemperatureValue);
     }
 
     @Test
     public void assertChannelSensorsCpuVoltageIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SENOSRS_CPU_VOLTAGE;
         String acceptedItemType = "Number:ElectricPotential";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_SENOSRS_CPU_VOLTAGE);
 
         QuantityType<ElectricPotential> mockedSensorsCpuVoltageValue = new QuantityType<>(1000, Units.VOLT);
         when(mockedSystemInfo.getSensorsCpuVoltage()).thenReturn(mockedSensorsCpuVoltageValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedSensorsCpuVoltageValue);
     }
 
     @Test
     public void assertChannelSensorsFanSpeedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SENSORS_FAN_SPEED;
         String acceptedItemType = "Number";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_SENSORS_FAN_SPEED);
 
         DecimalType mockedSensorsCpuFanSpeedValue = new DecimalType(180);
         when(mockedSystemInfo.getSensorsFanSpeed(DEFAULT_DEVICE_INDEX)).thenReturn(mockedSensorsCpuFanSpeedValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedSensorsCpuFanSpeedValue);
     }
 
     @Test
     public void assertChannelBatteryNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_NAME;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_BATTERY_NAME);
 
         StringType mockedBatteryName = new StringType("Mocked Battery Name");
         when(mockedSystemInfo.getBatteryName(DEFAULT_DEVICE_INDEX)).thenReturn(mockedBatteryName);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedBatteryName);
     }
 
     @Test
     public void assertChannelBatteryRemainingCapacityIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_CAPACITY;
         String acceptedItemType = "Number";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_CAPACITY);
 
         PercentType mockedBatteryRemainingCapacity = new PercentType(20);
         when(mockedSystemInfo.getBatteryRemainingCapacity(DEFAULT_DEVICE_INDEX))
                 .thenReturn(mockedBatteryRemainingCapacity);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedBatteryRemainingCapacity);
     }
 
     @Test
     public void assertChannelBatteryRemainingTimeIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_TIME;
         String acceptedItemType = "Number:Time";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_TIME);
 
         QuantityType<Time> mockedBatteryRemainingTime = new QuantityType<>(3600, Units.MINUTE);
         when(mockedSystemInfo.getBatteryRemainingTime(DEFAULT_DEVICE_INDEX)).thenReturn(mockedBatteryRemainingTime);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedBatteryRemainingTime);
     }
 
     @Test
     public void assertChannelDisplayInformationIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_DISPLAY_INFORMATION;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_DISPLAY_INFORMATION);
 
         StringType mockedDisplayInfo = new StringType("Mocked Display Information");
         when(mockedSystemInfo.getDisplayInformation(DEFAULT_DEVICE_INDEX)).thenReturn(mockedDisplayInfo);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedDisplayInfo);
     }
 
     @Test
     public void assertChannelNetworkIpIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_IP;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_IP);
 
         StringType mockedNetworkIp = new StringType("192.168.1.0");
         when(mockedSystemInfo.getNetworkIp(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkIp);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedNetworkIp);
     }
 
     @Test
     public void assertChannelNetworkMacIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_MAC;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_MAC);
 
         StringType mockedNetworkMacValue = new StringType("AB-10-11-12-13-14");
         when(mockedSystemInfo.getNetworkMac(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkMacValue);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedNetworkMacValue);
     }
 
     @Test
     public void assertChannelNetworkDataSentIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_DATA_SENT;
         String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_DATA_SENT);
 
         QuantityType<DataAmount> mockedNetworkDataSent = new QuantityType<>(1000, Units.MEBIBYTE);
         when(mockedSystemInfo.getNetworkDataSent(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkDataSent);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedNetworkDataSent);
     }
 
     @Test
     public void assertChannelNetworkDataReceivedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_DATA_RECEIVED;
         String acceptedItemType = "Number:DataAmount";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_DATA_RECEIVED);
 
         QuantityType<DataAmount> mockedNetworkDataReceiveed = new QuantityType<>(800, Units.MEBIBYTE);
         when(mockedSystemInfo.getNetworkDataReceived(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkDataReceiveed);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedNetworkDataReceiveed);
     }
 
     @Test
     public void assertChannelNetworkPacketsSentIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_PACKETS_SENT;
         String acceptedItemType = "Number";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_PACKETS_SENT);
 
         DecimalType mockedNetworkPacketsSent = new DecimalType(50);
         when(mockedSystemInfo.getNetworkPacketsSent(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkPacketsSent);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedNetworkPacketsSent);
     }
 
     @Test
     public void assertChannelNetworkPacketsReceivedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_PACKETS_RECEIVED;
         String acceptedItemType = "Number";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_PACKETS_RECEIVED);
 
         DecimalType mockedNetworkPacketsReceived = new DecimalType(48);
         when(mockedSystemInfo.getNetworkPacketsReceived(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkPacketsReceived);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedNetworkPacketsReceived);
     }
 
     @Test
     public void assertChannelNetworkNetworkNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_NAME;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_NAME);
 
         StringType mockedNetworkName = new StringType("MockN-AQ34");
         when(mockedSystemInfo.getNetworkName(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkName);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedNetworkName);
     }
 
     @Test
     public void assertChannelNetworkNetworkDisplayNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_ADAPTER_NAME;
         String acceptedItemType = "String";
+        ChannelUID channelUID = new ChannelUID(thingUID, SystemInfoBindingConstants.CHANNEL_NETWORK_ADAPTER_NAME);
 
         StringType mockedNetworkAdapterName = new StringType("Mocked Network Adapter Name");
         when(mockedSystemInfo.getNetworkDisplayName(DEFAULT_DEVICE_INDEX)).thenReturn(mockedNetworkAdapterName);
 
-        initializeThingWithChannel(channnelID, acceptedItemType);
+        initializeThingWithChannel(channelUID, acceptedItemType);
         assertItemState(acceptedItemType, DEFAULT_TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY,
                 mockedNetworkAdapterName);
     }
@@ -956,17 +955,13 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
     @Test
     public void testDiscoveryWithUnresolvedHostname() {
         String hostname = "unresolved";
-        String expectedHostname = SystemInfoDiscoveryService.DEFAULT_THING_ID;
-
-        testDiscoveryService(expectedHostname, hostname);
+        testDiscoveryService(SystemInfoDiscoveryService.DEFAULT_THING_ID, hostname);
     }
 
     @Test
     public void testDiscoveryWithEmptyHostnameString() {
         String hostname = "";
-        String expectedHostname = SystemInfoDiscoveryService.DEFAULT_THING_ID;
-
-        testDiscoveryService(expectedHostname, hostname);
+        testDiscoveryService(SystemInfoDiscoveryService.DEFAULT_THING_ID, hostname);
     }
 
     private void testDiscoveryService(String expectedHostname, String hostname) {
@@ -1092,10 +1087,11 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
     public void testThingHandlesChannelPriorityChange() {
         String priorityKey = "priority";
         String pidKey = "pid";
+        String initialPriority = DEFAULT_CHANNEL_TEST_PRIORITY; // Evaluates to High
         String newPriority = "Low";
 
         String acceptedItemType = "Number";
-        initializeThingWithChannel(DEFAULT_TEST_CHANNEL_ID, acceptedItemType);
+        initializeThingWithChannel(new ChannelUID(thingUID, DEFAULT_TEST_CHANNEL_ID), acceptedItemType);
 
         Thing thing = systeminfoThing;
         if (thing == null) {
@@ -1116,7 +1112,7 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
         SystemInfoHandler handler = (SystemInfoHandler) thingHandler;
         waitForAssert(() -> {
             assertThat("The initial priority of channel " + channel.getUID() + " is not as expected.",
-                    channel.getConfiguration().get(priorityKey), is(equalTo(DEFAULT_CHANNEL_TEST_PRIORITY)));
+                    channel.getConfiguration().get(priorityKey), is(equalTo(initialPriority)));
             assertThat(handler.getHighPriorityChannels().contains(channel.getUID()), is(true));
         });
 
@@ -1134,7 +1130,7 @@ public class SystemInfoOSGiTest extends JavaOSGiTest {
         handler.thingUpdated(updatedThing);
 
         waitForAssert(() -> {
-            assertThat("The prority of the channel was not updated: ", channel.getConfiguration().get(priorityKey),
+            assertThat("The priority of the channel was not updated: ", channel.getConfiguration().get(priorityKey),
                     is(equalTo(newPriority)));
             assertThat(handler.getLowPriorityChannels().contains(channel.getUID()), is(true));
         });

@@ -59,54 +59,9 @@ public class SystemInfoBindingConstants {
     // List of all Channel IDs
 
     /**
-     * Name of the channel group type for memory information
-     */
-    public static final String CHANNEL_GROUP_TYPE_MEMORY = "memoryGroup";
-
-    /**
      * Name of the channel group for memory information
      */
     public static final String CHANNEL_GROUP_MEMORY = "memory";
-
-    /**
-     * Size of the available memory
-     */
-    public static final String CHANNEL_MEMORY_AVAILABLE = "memory#available";
-
-    /**
-     * Size of the used memory
-     */
-    public static final String CHANNEL_MEMORY_USED = "memory#used";
-
-    /**
-     * Total size of the memory
-     */
-    public static final String CHANNEL_MEMORY_TOTAL = "memory#total";
-
-    /**
-     * Percents of the available memory
-     */
-    public static final String CHANNEL_MEMORY_AVAILABLE_PERCENT = "memory#availablePercent";
-
-    /**
-     * Percents of the used memory
-     */
-    public static final String CHANNEL_MEMORY_USED_PERCENT = "memory#usedPercent";
-
-    /**
-     * Percents of the used heap
-     */
-    public static final String CHANNEL_MEMORY_USED_HEAP_PERCENT = "memory#usedHeapPercent";
-
-    /**
-     * Bytes used in the heap
-     */
-    public static final String CHANNEL_MEMORY_HEAP_AVAILABLE = "memory#availableHeap";
-
-    /**
-     * Name of the channel group type for swap information
-     */
-    public static final String CHANNEL_GROUP_TYPE_SWAP = "swapGroup";
 
     /**
      * Name of the channel group for swap information
@@ -114,29 +69,39 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_GROUP_SWAP = "swap";
 
     /**
-     * Total size of swap memory
+     * Size of the available memory
      */
-    public static final String CHANNEL_SWAP_TOTAL = "swap#total";
+    public static final String CHANNEL_AVAILABLE = "available";
 
     /**
-     * Size of the available swap memory
+     * Size of the used memory
      */
-    public static final String CHANNEL_SWAP_AVAILABLE = "swap#available";
+    public static final String CHANNEL_USED = "used";
 
     /**
-     * Size of the used swap memory
+     * Total size of the memory
      */
-    public static final String CHANNEL_SWAP_USED = "swap#used";
+    public static final String CHANNEL_TOTAL = "total";
 
     /**
-     * Percents of the available swap memory
+     * Percents of the available memory
      */
-    public static final String CHANNEL_SWAP_AVAILABLE_PERCENT = "swap#availablePercent";
+    public static final String CHANNEL_AVAILABLE_PERCENT = "availablePercent";
 
     /**
-     * Percents of the used swap memory
+     * Percents of the used memory
      */
-    public static final String CHANNEL_SWAP_USED_PERCENT = "swap#usedPercent";
+    public static final String CHANNEL_USED_PERCENT = "usedPercent";
+
+    /**
+     * Percents of the used heap
+     */
+    public static final String CHANNEL_MEMORY_USED_HEAP_PERCENT = "usedHeapPercent";
+
+    /**
+     * Bytes used in the heap
+     */
+    public static final String CHANNEL_MEMORY_HEAP_AVAILABLE = "availableHeap";
 
     /**
      * Name of the channel group type for drive information

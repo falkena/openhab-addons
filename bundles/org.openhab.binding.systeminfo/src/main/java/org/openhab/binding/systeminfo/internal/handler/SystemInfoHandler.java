@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -110,7 +109,7 @@ public class SystemInfoHandler extends BaseThingHandler {
 
     public final SystemInfoThingTypeProvider thingTypeProvider;
 
-    private SystemInfoInterface systeminfo;
+    private final SystemInfoInterface systeminfo;
 
     private @Nullable ScheduledFuture<?> highPriorityTasks;
     private @Nullable ScheduledFuture<?> mediumPriorityTasks;
@@ -122,9 +121,9 @@ public class SystemInfoHandler extends BaseThingHandler {
      * too low.
      */
     private static final int MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS = 2000;
-    private ExpiringCache<PercentType> cpuLoadCache = new ExpiringCache<>(MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS,
-            () -> getSystemCpuLoad());
-    private ExpiringCacheMap<Integer, @Nullable DecimalType> processLoadCache = new ExpiringCacheMap<>(
+    private final ExpiringCache<PercentType> cpuLoadCache = new ExpiringCache<>(MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS,
+            this::getSystemCpuLoad);
+    private final ExpiringCacheMap<Integer, @Nullable DecimalType> processLoadCache = new ExpiringCacheMap<>(
             MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS);
 
     private final Logger logger = LoggerFactory.getLogger(SystemInfoHandler.class);
@@ -146,7 +145,7 @@ public class SystemInfoHandler extends BaseThingHandler {
         restoreChannelsConfig();
         if (instantiateSysteminfoLibrary() && isConfigurationValid() && updateProperties()) {
             // If there are new channel groups, the thing will get recreated with a new thing type and this handler
-            // will be disposed. Therefore do not do anything further here.
+            // will be disposed. Therefore, do not do anything further here.
             if (!addDynamicChannels()) {
                 groupChannelsByPriority();
                 scheduleUpdates();
@@ -397,22 +396,93 @@ public class SystemInfoHandler extends BaseThingHandler {
 
     private void publishData(Set<ChannelUID> channels) {
         // if handler disposed while waiting for the links, don't update the channel states
-        if (!ThingStatus.ONLINE.equals(thing.getStatus())) {
-            return;
-        }
-        Iterator<ChannelUID> iter = channels.iterator();
-        while (iter.hasNext()) {
-            ChannelUID channeUID = iter.next();
-            if (isLinked(channeUID.getId())) {
-                publishDataForChannel(channeUID);
+        if (ThingStatus.ONLINE.equals(thing.getStatus())) {
+            for (final ChannelUID channelUID : channels) {
+                if (isLinked(channelUID.getId())) {
+                    publishDataForChannel(channelUID);
+                }
             }
         }
     }
 
     private void publishDataForChannel(ChannelUID channelUID) {
-        State state = getInfoForChannel(channelUID);
-        String channelID = channelUID.getId();
-        updateState(channelID, state);
+        if (CHANNEL_GROUP_MEMORY.equals(channelUID.getGroupId())) {
+            switch (channelUID.getIdWithoutGroup()) {
+                case CHANNEL_MEMORY_HEAP_AVAILABLE: {
+                    final Runtime runtime = Runtime.getRuntime();
+                    updateState(channelUID.getId(), new QuantityType<>(runtime.freeMemory(), Units.BYTE));
+                    break;
+                }
+                case CHANNEL_MEMORY_USED_HEAP_PERCENT: {
+                    final Runtime runtime = Runtime.getRuntime();
+                    updateState(channelUID.getId(), new QuantityType<>(
+                            (runtime.totalMemory() - runtime.freeMemory()) * 100 / runtime.maxMemory(), Units.PERCENT));
+                    break;
+                }
+                case CHANNEL_AVAILABLE: {
+                    updateState(channelUID.getId(), systeminfo.getMemoryAvailable());
+                    break;
+                }
+                case CHANNEL_AVAILABLE_PERCENT: {
+                    final PercentType available = systeminfo.getMemoryAvailablePercent();
+                    updateState(channelUID.getId(),
+                            (available != null) ? new QuantityType<>(available, Units.PERCENT) : UnDefType.UNDEF);
+                    break;
+                }
+                case CHANNEL_TOTAL: {
+                    updateState(channelUID.getId(), systeminfo.getMemoryTotal());
+                    break;
+                }
+                case CHANNEL_USED: {
+                    updateState(channelUID.getId(), systeminfo.getMemoryUsed());
+                    break;
+                }
+                case CHANNEL_USED_PERCENT: {
+                    final PercentType used = systeminfo.getMemoryUsedPercent();
+                    updateState(channelUID.getId(),
+                            (used != null) ? new QuantityType<>(used, Units.PERCENT) : UnDefType.UNDEF);
+                    break;
+                }
+                default: {
+                    logger.debug("Channel with unknown ID: {}.", channelUID);
+                    break;
+                }
+            }
+        } else if (CHANNEL_GROUP_SWAP.equals(channelUID.getGroupId())) {
+            switch (channelUID.getIdWithoutGroup()) {
+                case CHANNEL_AVAILABLE: {
+                    updateState(channelUID.getId(), systeminfo.getSwapAvailable());
+                    break;
+                }
+                case CHANNEL_AVAILABLE_PERCENT: {
+                    PercentType available = systeminfo.getSwapAvailablePercent();
+                    updateState(channelUID.getId(),
+                            (available != null) ? new QuantityType<>(available, Units.PERCENT) : UnDefType.UNDEF);
+                    break;
+                }
+                case CHANNEL_TOTAL: {
+                    updateState(channelUID.getId(), systeminfo.getSwapTotal());
+                    break;
+                }
+                case CHANNEL_USED: {
+                    updateState(channelUID.getId(), systeminfo.getSwapUsed());
+                    break;
+                }
+                case CHANNEL_USED_PERCENT: {
+                    PercentType used = systeminfo.getSwapUsedPercent();
+                    updateState(channelUID.getId(),
+                            (used != null) ? new QuantityType<>(used, Units.PERCENT) : UnDefType.UNDEF);
+                    break;
+                }
+                default: {
+                    logger.debug("Channel with unknown ID: {}.", channelUID);
+                    break;
+                }
+            }
+        } else {
+            State state = getInfoForChannel(channelUID);
+            updateState(channelUID.getId(), state);
+        }
     }
 
     public Set<ChannelUID> getHighPriorityChannels() {
@@ -453,13 +523,6 @@ public class SystemInfoHandler extends BaseThingHandler {
 
         try {
             switch (channelID) {
-                case CHANNEL_MEMORY_HEAP_AVAILABLE:
-                    state = new QuantityType<>(Runtime.getRuntime().freeMemory(), Units.BYTE);
-                    break;
-                case CHANNEL_MEMORY_USED_HEAP_PERCENT:
-                    state = new QuantityType<>((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
-                            * 100 / Runtime.getRuntime().maxMemory(), Units.PERCENT);
-                    break;
                 case CHANNEL_DISPLAY_INFORMATION:
                     state = systeminfo.getDisplayInformation(deviceIndex);
                     break;
@@ -505,42 +568,6 @@ public class SystemInfoHandler extends BaseThingHandler {
                     break;
                 case CHANNEL_CPU_NAME:
                     state = systeminfo.getCpuName();
-                    break;
-                case CHANNEL_MEMORY_AVAILABLE:
-                    state = systeminfo.getMemoryAvailable();
-                    break;
-                case CHANNEL_MEMORY_USED:
-                    state = systeminfo.getMemoryUsed();
-                    break;
-                case CHANNEL_MEMORY_TOTAL:
-                    state = systeminfo.getMemoryTotal();
-                    break;
-                case CHANNEL_MEMORY_AVAILABLE_PERCENT:
-                    PercentType memoryAvailablePercent = systeminfo.getMemoryAvailablePercent();
-                    state = (memoryAvailablePercent != null) ? new QuantityType<>(memoryAvailablePercent, Units.PERCENT)
-                            : null;
-                    break;
-                case CHANNEL_MEMORY_USED_PERCENT:
-                    PercentType memoryUsedPercent = systeminfo.getMemoryUsedPercent();
-                    state = (memoryUsedPercent != null) ? new QuantityType<>(memoryUsedPercent, Units.PERCENT) : null;
-                    break;
-                case CHANNEL_SWAP_AVAILABLE:
-                    state = systeminfo.getSwapAvailable();
-                    break;
-                case CHANNEL_SWAP_USED:
-                    state = systeminfo.getSwapUsed();
-                    break;
-                case CHANNEL_SWAP_TOTAL:
-                    state = systeminfo.getSwapTotal();
-                    break;
-                case CHANNEL_SWAP_AVAILABLE_PERCENT:
-                    PercentType swapAvailablePercent = systeminfo.getSwapAvailablePercent();
-                    state = (swapAvailablePercent != null) ? new QuantityType<>(swapAvailablePercent, Units.PERCENT)
-                            : null;
-                    break;
-                case CHANNEL_SWAP_USED_PERCENT:
-                    PercentType swapUsedPercent = systeminfo.getSwapUsedPercent();
-                    state = (swapUsedPercent != null) ? new QuantityType<>(swapUsedPercent, Units.PERCENT) : null;
                     break;
                 case CHANNEL_DRIVE_MODEL:
                     state = systeminfo.getDriveModel(deviceIndex);
