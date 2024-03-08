@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.systeminfo.internal.handler;
 
-import static org.openhab.binding.systeminfo.internal.SysteminfoBindingConstants.*;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,13 +24,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.systeminfo.internal.SysteminfoThingTypeProvider;
+import org.openhab.binding.systeminfo.internal.SystemInfoThingTypeProvider;
 import org.openhab.binding.systeminfo.internal.model.DeviceNotFoundException;
-import org.openhab.binding.systeminfo.internal.model.SysteminfoInterface;
+import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
 import org.openhab.core.cache.ExpiringCache;
 import org.openhab.core.cache.ExpiringCacheMap;
 import org.openhab.core.config.core.Configuration;
@@ -56,7 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link SysteminfoHandler} is responsible for providing real time information about the system
+ * The {@link SystemInfoHandler} is responsible for providing real time information about the system
  * (CPU, Memory, Storage, Display and others).
  *
  * @author Svilen Valkanov - Initial contribution
@@ -65,7 +64,7 @@ import org.slf4j.LoggerFactory;
  * @author Mark Herwege - Add dynamic creation of extra channels
  */
 @NonNullByDefault
-public class SysteminfoHandler extends BaseThingHandler {
+public class SystemInfoHandler extends BaseThingHandler {
     /**
      * Refresh interval for {@link #highPriorityChannels} in seconds.
      */
@@ -109,9 +108,9 @@ public class SysteminfoHandler extends BaseThingHandler {
      */
     public final String idExtString;
 
-    public final SysteminfoThingTypeProvider thingTypeProvider;
+    public final SystemInfoThingTypeProvider thingTypeProvider;
 
-    private SysteminfoInterface systeminfo;
+    private SystemInfoInterface systeminfo;
 
     private @Nullable ScheduledFuture<?> highPriorityTasks;
     private @Nullable ScheduledFuture<?> mediumPriorityTasks;
@@ -128,10 +127,10 @@ public class SysteminfoHandler extends BaseThingHandler {
     private ExpiringCacheMap<Integer, @Nullable DecimalType> processLoadCache = new ExpiringCacheMap<>(
             MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS);
 
-    private final Logger logger = LoggerFactory.getLogger(SysteminfoHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(SystemInfoHandler.class);
 
-    public SysteminfoHandler(Thing thing, SysteminfoThingTypeProvider thingTypeProvider,
-            SysteminfoInterface systeminfo) {
+    public SystemInfoHandler(Thing thing, SystemInfoThingTypeProvider thingTypeProvider,
+            SystemInfoInterface systeminfo) {
         super(thing);
         this.thingTypeProvider = thingTypeProvider;
         this.systeminfo = systeminfo;
@@ -143,12 +142,12 @@ public class SysteminfoHandler extends BaseThingHandler {
     public void initialize() {
         logger.trace("Initializing thing {} with thing type {}", thing.getUID().getId(),
                 thing.getThingTypeUID().getId());
-        restoreChannelsConfig(); // After a thing type change, previous channel configs will have been stored, and will
-                                 // be restored here.
+        // After a thing type change, previous channel configs will have been stored, and will be restored here.
+        restoreChannelsConfig();
         if (instantiateSysteminfoLibrary() && isConfigurationValid() && updateProperties()) {
-            if (!addDynamicChannels()) { // If there are new channel groups, the thing will get recreated with a new
-                                         // thing type and this handler will be disposed. Therefore do not do anything
-                                         // further here.
+            // If there are new channel groups, the thing will get recreated with a new thing type and this handler
+            // will be disposed. Therefore do not do anything further here.
+            if (!addDynamicChannels()) {
                 groupChannelsByPriority();
                 scheduleUpdates();
                 updateStatus(ThingStatus.ONLINE);
@@ -179,9 +178,9 @@ public class SysteminfoHandler extends BaseThingHandler {
     private boolean isConfigurationValid() {
         logger.debug("Start reading Thing configuration.");
         try {
-            refreshIntervalMediumPriority = (BigDecimal) this.thing.getConfiguration()
-                    .get(MEDIUM_PRIORITY_REFRESH_TIME);
-            refreshIntervalHighPriority = (BigDecimal) this.thing.getConfiguration().get(HIGH_PRIORITY_REFRESH_TIME);
+            final Configuration configuration = this.thing.getConfiguration();
+            refreshIntervalMediumPriority = (BigDecimal) configuration.get(MEDIUM_PRIORITY_REFRESH_TIME);
+            refreshIntervalHighPriority = (BigDecimal) configuration.get(HIGH_PRIORITY_REFRESH_TIME);
 
             if (refreshIntervalHighPriority.intValue() <= 0 || refreshIntervalMediumPriority.intValue() <= 0) {
                 throw new IllegalArgumentException("Refresh time must be positive number!");
@@ -256,8 +255,8 @@ public class SysteminfoHandler extends BaseThingHandler {
             return true;
         }
 
-        List<Channel> newChannels = new ArrayList<>();
-        newChannels.addAll(createChannels(thingUID, CHANNEL_SENSORS_FAN_SPEED, systeminfo.getFanCount()));
+        List<Channel> newChannels = new ArrayList<>(
+                createChannels(thingUID, CHANNEL_SENSORS_FAN_SPEED, systeminfo.getFanCount()));
         if (!newChannels.isEmpty()) {
             logger.debug("Creating additional channels");
             newChannels.addAll(0, thing.getChannels());
@@ -276,7 +275,7 @@ public class SysteminfoHandler extends BaseThingHandler {
         }
 
         List<String> channelGroups = thingTypeProvider.getChannelGroupDefinitions(thing.getThingTypeUID()).stream()
-                .map(ChannelGroupDefinition::getId).collect(Collectors.toList());
+                .map(ChannelGroupDefinition::getId).toList();
 
         List<ChannelGroupDefinition> newChannelGroups = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -429,9 +428,9 @@ public class SysteminfoHandler extends BaseThingHandler {
     }
 
     /**
-     * This method gets the information for specific channel through the {@link SysteminfoInterface}. It uses the
-     * channel ID to call the correct method from the {@link SysteminfoInterface} with deviceIndex parameter (in case of
-     * multiple devices, for reference see {@link #getDeviceIndex(String)}})
+     * This method gets the information for specific channel through the {@link SystemInfoInterface}. It uses the
+     * channel ID to call the correct method from the {@link SystemInfoInterface} with deviceIndex parameter (in case of
+     * multiple devices, for reference see {@link getDeviceIndex(String)}})
      *
      * @param channelUID the UID of the channel
      * @return State object or null, if there is no information for the device with this index
@@ -657,7 +656,7 @@ public class SysteminfoHandler extends BaseThingHandler {
      * first will have deviceIndex=0, the second deviceIndex=1 ant etc).
      * When no device index is specified, default value of 0 (first device in the list) is returned.
      *
-     * @param channelID the ID of the channel
+     * @param channelUID the UID of the channel
      * @return natural number (number >=0)
      */
     private int getDeviceIndex(ChannelUID channelUID) {

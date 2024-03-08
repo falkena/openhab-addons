@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.systeminfo.internal;
 
-import static org.openhab.binding.systeminfo.internal.SysteminfoBindingConstants.*;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
 
 import java.net.URI;
 import java.util.Collections;
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Extended channels can be auto discovered and added to newly created groups in the
- * {@link org.openhab.binding.systeminfo.internal.handler.SysteminfoHandler}. The
+ * {@link org.openhab.binding.systeminfo.internal.handler.SystemInfoHandler}. The
  * thing needs to be updated to add the groups. The `SysteminfoThingTypeProvider` OSGi service gives access to the
  * `ThingTypeRegistry` and serves the updated `ThingType`.
  *
@@ -59,9 +59,9 @@ import org.slf4j.LoggerFactory;
  *
  */
 @NonNullByDefault
-@Component(service = { SysteminfoThingTypeProvider.class, ThingTypeProvider.class })
-public class SysteminfoThingTypeProvider extends AbstractStorageBasedTypeProvider {
-    private final Logger logger = LoggerFactory.getLogger(SysteminfoThingTypeProvider.class);
+@Component(service = { SystemInfoThingTypeProvider.class, ThingTypeProvider.class })
+public class SystemInfoThingTypeProvider extends AbstractStorageBasedTypeProvider {
+    private final Logger logger = LoggerFactory.getLogger(SystemInfoThingTypeProvider.class);
 
     private final ThingTypeRegistry thingTypeRegistry;
     private final ChannelGroupTypeRegistry channelGroupTypeRegistry;
@@ -70,7 +70,7 @@ public class SysteminfoThingTypeProvider extends AbstractStorageBasedTypeProvide
     private final Map<ThingUID, Map<String, Configuration>> thingChannelsConfig = new HashMap<>();
 
     @Activate
-    public SysteminfoThingTypeProvider(@Reference ThingTypeRegistry thingTypeRegistry,
+    public SystemInfoThingTypeProvider(@Reference ThingTypeRegistry thingTypeRegistry,
             @Reference ChannelGroupTypeRegistry channelGroupTypeRegistry,
             @Reference ChannelTypeRegistry channelTypeRegistry, @Reference StorageService storageService) {
         super(storageService);
@@ -247,7 +247,7 @@ public class SysteminfoThingTypeProvider extends AbstractStorageBasedTypeProvide
      */
     public void storeChannelsConfig(Thing thing) {
         Map<String, Configuration> channelsConfig = thing.getChannels().stream()
-                .collect(Collectors.toMap(c -> c.getUID().getId(), c -> c.getConfiguration()));
+                .collect(Collectors.toMap(c -> c.getUID().getId(), Channel::getConfiguration));
         thingChannelsConfig.put(thing.getUID(), channelsConfig);
     }
 

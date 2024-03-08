@@ -12,12 +12,13 @@
  */
 package org.openhab.binding.systeminfo.internal;
 
-import static org.openhab.binding.systeminfo.internal.SysteminfoBindingConstants.*;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BINDING_ID;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_COMPUTER_ID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.systeminfo.internal.handler.SysteminfoHandler;
-import org.openhab.binding.systeminfo.internal.model.SysteminfoInterface;
+import org.openhab.binding.systeminfo.internal.handler.SystemInfoHandler;
+import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
@@ -27,7 +28,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * The {@link SysteminfoHandlerFactory} is responsible for creating things and thing
+ * The {@link SystemInfoHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
  * @author Svilen Valkanov - Initial contribution
@@ -37,9 +38,9 @@ import org.osgi.service.component.annotations.Reference;
  */
 @NonNullByDefault
 @Component(service = ThingHandlerFactory.class, configurationPid = "binding.systeminfo")
-public class SysteminfoHandlerFactory extends BaseThingHandlerFactory {
-    private @NonNullByDefault({}) SysteminfoInterface systeminfo;
-    private @NonNullByDefault({}) SysteminfoThingTypeProvider thingTypeProvider;
+public class SystemInfoHandlerFactory extends BaseThingHandlerFactory {
+    private @NonNullByDefault({}) SystemInfoInterface systeminfo;
+    private @NonNullByDefault({}) SystemInfoThingTypeProvider thingTypeProvider;
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -55,29 +56,29 @@ public class SysteminfoHandlerFactory extends BaseThingHandlerFactory {
             ThingTypeUID extThingTypeUID = new ThingTypeUID(BINDING_ID, THING_TYPE_COMPUTER_ID + extString);
             if (thingTypeProvider.getThingType(extThingTypeUID, null) == null) {
                 thingTypeProvider.createThingType(extThingTypeUID);
-                thingTypeProvider.storeChannelsConfig(thing); // Save the current channels configs, will be restored
-                                                              // after thing type change.
+                // Save the current channels configs, will be restored after thing type change.
+                thingTypeProvider.storeChannelsConfig(thing);
             }
-            return new SysteminfoHandler(thing, thingTypeProvider, systeminfo);
+            return new SystemInfoHandler(thing, thingTypeProvider, systeminfo);
         }
         return null;
     }
 
     @Reference
-    public void bindSystemInfo(SysteminfoInterface systeminfo) {
+    public void bindSystemInfo(SystemInfoInterface systeminfo) {
         this.systeminfo = systeminfo;
     }
 
-    public void unbindSystemInfo(SysteminfoInterface systeminfo) {
+    public void unbindSystemInfo(SystemInfoInterface systeminfo) {
         this.systeminfo = null;
     }
 
     @Reference
-    public void setSysteminfoThingTypeProvider(SysteminfoThingTypeProvider thingTypeProvider) {
+    public void setSysteminfoThingTypeProvider(SystemInfoThingTypeProvider thingTypeProvider) {
         this.thingTypeProvider = thingTypeProvider;
     }
 
-    public void unsetSysteminfoThingTypeProvider(SysteminfoThingTypeProvider thingTypeProvider) {
+    public void unsetSysteminfoThingTypeProvider(SystemInfoThingTypeProvider thingTypeProvider) {
         this.thingTypeProvider = null;
     }
 }

@@ -12,14 +12,14 @@
  */
 package org.openhab.binding.systeminfo.internal.discovery;
 
-import static org.openhab.binding.systeminfo.internal.SysteminfoBindingConstants.THING_TYPE_COMPUTER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_COMPUTER;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.systeminfo.internal.SysteminfoBindingConstants;
+import org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
@@ -39,11 +39,11 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 @Component(service = DiscoveryService.class, configurationPid = "discovery.systeminfo")
-public class SysteminfoDiscoveryService extends AbstractDiscoveryService {
+public class SystemInfoDiscoveryService extends AbstractDiscoveryService {
     public static final String DEFAULT_THING_ID = "unknown";
     public static final String DEFAULT_THING_LABEL = "Local computer";
 
-    private final Logger logger = LoggerFactory.getLogger(SysteminfoDiscoveryService.class);
+    private final Logger logger = LoggerFactory.getLogger(SystemInfoDiscoveryService.class);
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_COMPUTER);
 
@@ -51,7 +51,7 @@ public class SysteminfoDiscoveryService extends AbstractDiscoveryService {
     private static final String THING_UID_VALID_CHARS = "A-Za-z0-9_-";
     private static final String HOST_NAME_SEPERATOR = "_";
 
-    public SysteminfoDiscoveryService() {
+    public SystemInfoDiscoveryService() {
         super(SUPPORTED_THING_TYPES_UIDS, DISCOVERY_TIME_SECONDS);
     }
 
@@ -74,13 +74,11 @@ public class SysteminfoDiscoveryService extends AbstractDiscoveryService {
                     DEFAULT_THING_ID);
         }
 
-        ThingTypeUID computerType = SysteminfoBindingConstants.THING_TYPE_COMPUTER;
-        ThingUID computer = new ThingUID(computerType, hostname);
+        ThingUID computer = new ThingUID(SystemInfoBindingConstants.THING_TYPE_COMPUTER, hostname);
         thingDiscovered(DiscoveryResultBuilder.create(computer).withLabel(DEFAULT_THING_LABEL).build());
     }
 
     protected String getHostName() throws UnknownHostException {
-        InetAddress addr = InetAddress.getLocalHost();
-        return addr.getHostName();
+        return InetAddress.getLocalHost().getHostName();
     }
 }

@@ -51,7 +51,7 @@ import oshi.software.os.OperatingSystem;
 import oshi.util.EdidUtil;
 
 /**
- * This implementation of {@link SysteminfoInterface} is using the open source library OSHI to provide system
+ * This implementation of {@link SystemInfoInterface} is using the open source library OSHI to provide system
  * information. OSHI is a free JNA-based (native) Operating System and Hardware Information library for Java.
  *
  * @author Svilen Valkanov - Initial contribution
@@ -66,10 +66,10 @@ import oshi.util.EdidUtil;
  * @see <a href="https://github.com/oshi/oshi">OSHI GitHub repository</a>
  */
 @NonNullByDefault
-@Component(service = SysteminfoInterface.class)
-public class OSHISysteminfo implements SysteminfoInterface {
+@Component(service = SystemInfoInterface.class)
+public class OSHISystemInfo implements SystemInfoInterface {
 
-    private final Logger logger = LoggerFactory.getLogger(OSHISysteminfo.class);
+    private final Logger logger = LoggerFactory.getLogger(OSHISystemInfo.class);
 
     private @NonNullByDefault({}) HardwareAbstractionLayer hal;
 
@@ -99,8 +99,8 @@ public class OSHISysteminfo implements SysteminfoInterface {
      * Some of the methods used in this constructor execute native code and require execute permissions
      *
      */
-    public OSHISysteminfo() {
-        logger.debug("OSHISysteminfo service is created");
+    public OSHISystemInfo() {
+        logger.debug("OSHISystemInfo service is created");
     }
 
     @Override
@@ -496,14 +496,12 @@ public class OSHISysteminfo implements SysteminfoInterface {
 
     private BigDecimal getPercentsValue(double decimalFraction) {
         BigDecimal result = new BigDecimal(decimalFraction * 100);
-        result = result.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.HALF_UP);
-        return result;
+        return result.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.HALF_UP);
     }
 
     private BigDecimal getTimeInMinutes(double timeInSeconds) {
         BigDecimal timeInMinutes = new BigDecimal(timeInSeconds / 60);
-        timeInMinutes = timeInMinutes.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.UP);
-        return timeInMinutes;
+        return timeInMinutes.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.UP);
     }
 
     @Override
@@ -584,40 +582,35 @@ public class OSHISysteminfo implements SysteminfoInterface {
     @Override
     public StringType getNetworkMac(int networkIndex) throws DeviceNotFoundException {
         NetworkIF network = getDevice(networks, networkIndex);
-        String mac = network.getMacaddr();
-        return new StringType(mac);
+        return new StringType(network.getMacaddr());
     }
 
     @Override
     public DecimalType getNetworkPacketsReceived(int networkIndex) throws DeviceNotFoundException {
         NetworkIF network = getDevice(networks, networkIndex);
         network.updateAttributes();
-        long packRecv = network.getPacketsRecv();
-        return new DecimalType(packRecv);
+        return new DecimalType(network.getPacketsRecv());
     }
 
     @Override
     public DecimalType getNetworkPacketsSent(int networkIndex) throws DeviceNotFoundException {
         NetworkIF network = getDevice(networks, networkIndex);
         network.updateAttributes();
-        long packSent = network.getPacketsSent();
-        return new DecimalType(packSent);
+        return new DecimalType(network.getPacketsSent());
     }
 
     @Override
     public QuantityType<DataAmount> getNetworkDataSent(int networkIndex) throws DeviceNotFoundException {
         NetworkIF network = getDevice(networks, networkIndex);
         network.updateAttributes();
-        long bytesSent = network.getBytesSent();
-        return new QuantityType<>(getSizeInMB(bytesSent), Units.MEBIBYTE);
+        return new QuantityType<>(getSizeInMB(network.getBytesSent()), Units.MEBIBYTE);
     }
 
     @Override
     public QuantityType<DataAmount> getNetworkDataReceived(int networkIndex) throws DeviceNotFoundException {
         NetworkIF network = getDevice(networks, networkIndex);
         network.updateAttributes();
-        long bytesRecv = network.getBytesRecv();
-        return new QuantityType<>(getSizeInMB(bytesRecv), Units.MEBIBYTE);
+        return new QuantityType<>(getSizeInMB(network.getBytesRecv()), Units.MEBIBYTE);
     }
 
     @Override
@@ -629,8 +622,7 @@ public class OSHISysteminfo implements SysteminfoInterface {
     public @Nullable StringType getProcessName(int pid) throws DeviceNotFoundException {
         if (pid > 0) {
             OSProcess process = getProcess(pid);
-            String name = process.getName();
-            return new StringType(name);
+            return new StringType(process.getName());
         } else {
             return null;
         }
@@ -654,9 +646,8 @@ public class OSHISysteminfo implements SysteminfoInterface {
     public @Nullable QuantityType<DataAmount> getProcessMemoryUsage(int pid) throws DeviceNotFoundException {
         if (pid > 0) {
             OSProcess process = getProcess(pid);
-            long memortInBytes = process.getResidentSetSize();
-            long memoryInMB = getSizeInMB(memortInBytes);
-            return new QuantityType<>(memoryInMB, Units.MEBIBYTE);
+            long memoryInBytes = process.getResidentSetSize();
+            return new QuantityType<>(getSizeInMB(memoryInBytes), Units.MEBIBYTE);
         } else {
             return null;
         }
@@ -677,8 +668,7 @@ public class OSHISysteminfo implements SysteminfoInterface {
     public @Nullable DecimalType getProcessThreads(int pid) throws DeviceNotFoundException {
         if (pid > 0) {
             OSProcess process = getProcess(pid);
-            int threadCount = process.getThreadCount();
-            return new DecimalType(threadCount);
+            return new DecimalType(process.getThreadCount());
         } else {
             return null;
         }

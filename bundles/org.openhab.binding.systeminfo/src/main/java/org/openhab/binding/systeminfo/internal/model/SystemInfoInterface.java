@@ -25,7 +25,7 @@ import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 
 /**
- * {@link SysteminfoInterface} defines the methods needed to provide this binding with the required system information.
+ * {@link SystemInfoInterface} defines the methods needed to provide this binding with the required system information.
  *
  * @author Svilen Valkanov - Initial contribution
  * @author Wouter Born - Add null annotations
@@ -33,7 +33,7 @@ import org.openhab.core.library.types.StringType;
  * @author Mark Herwege - Use units of measure
  */
 @NonNullByDefault
-public interface SysteminfoInterface {
+public interface SystemInfoInterface {
 
     /**
      * Initialize logic for the Systeminfo implementation

@@ -16,14 +16,14 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ThingTypeUID;
 
 /**
- * The {@link SysteminfoBindingConstants} class defines common constants, which are
+ * The {@link SystemInfoBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
  * @author Svilen Valkanov - Initial contribution
  * @author Mark Herwege - Add dynamic creation of extra channels
  */
 @NonNullByDefault
-public class SysteminfoBindingConstants {
+public class SystemInfoBindingConstants {
 
     public static final String BINDING_ID = "systeminfo";
 
@@ -52,7 +52,7 @@ public class SysteminfoBindingConstants {
     public static final String PROPERTY_OS_MANUFACTURER = "OS Manufacturer";
 
     /**
-     * Version of the operation system
+     * Version of the operating system
      */
     public static final String PROPERTY_OS_VERSION = "OS Version";
 

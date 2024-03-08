@@ -13,7 +13,6 @@
 package org.openhab.binding.systeminfo.test;
 
 import static java.lang.Thread.sleep;
-import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,13 +37,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.openhab.binding.systeminfo.internal.SysteminfoBindingConstants;
-import org.openhab.binding.systeminfo.internal.SysteminfoHandlerFactory;
-import org.openhab.binding.systeminfo.internal.discovery.SysteminfoDiscoveryService;
-import org.openhab.binding.systeminfo.internal.handler.SysteminfoHandler;
+import org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants;
+import org.openhab.binding.systeminfo.internal.SystemInfoHandlerFactory;
+import org.openhab.binding.systeminfo.internal.discovery.SystemInfoDiscoveryService;
+import org.openhab.binding.systeminfo.internal.handler.SystemInfoHandler;
 import org.openhab.binding.systeminfo.internal.model.DeviceNotFoundException;
-import org.openhab.binding.systeminfo.internal.model.OSHISysteminfo;
-import org.openhab.binding.systeminfo.internal.model.SysteminfoInterface;
+import org.openhab.binding.systeminfo.internal.model.OSHISystemInfo;
+import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryService;
@@ -87,7 +86,7 @@ import org.openhab.core.types.State;
 import org.openhab.core.types.UnDefType;
 
 /**
- * OSGi tests for the {@link SysteminfoHandler}
+ * OSGi tests for the {@link SystemInfoHandler}
  *
  * @author Svilen Valkanov - Initial contribution
  * @author Lyubomir Papazov - Created a mock systeminfo object. This way, access to the user's OS will not be required,
@@ -97,12 +96,12 @@ import org.openhab.core.types.UnDefType;
 @NonNullByDefault
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class SysteminfoOSGiTest extends JavaOSGiTest {
+public class SystemInfoOSGiTest extends JavaOSGiTest {
     private static final String DEFAULT_TEST_THING_NAME = "work";
     private static final String DEFAULT_TEST_ITEM_NAME = "test";
     private static final String DEFAULT_CHANNEL_TEST_PRIORITY = "High";
     private static final int DEFAULT_CHANNEL_PID = -1;
-    private static final String DEFAULT_TEST_CHANNEL_ID = SysteminfoBindingConstants.CHANNEL_CPU_LOAD;
+    private static final String DEFAULT_TEST_CHANNEL_ID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
     private static final int DEFAULT_DEVICE_INDEX = 0;
 
     /**
@@ -119,8 +118,8 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
     private @Nullable Thing systeminfoThing;
     private @Nullable GenericItem testItem;
 
-    private @Mock @NonNullByDefault({}) OSHISysteminfo mockedSystemInfo;
-    private @NonNullByDefault({}) SysteminfoHandlerFactory systeminfoHandlerFactory;
+    private @Mock @NonNullByDefault({}) OSHISystemInfo mockedSystemInfo;
+    private @NonNullByDefault({}) SystemInfoHandlerFactory systeminfoHandlerFactory;
     private @NonNullByDefault({}) ThingRegistry thingRegistry;
     private @NonNullByDefault({}) ItemRegistry itemRegistry;
     private @NonNullByDefault({}) ManagedThingProvider managedThingProvider;
@@ -150,14 +149,14 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
         registerService(mockedSystemInfo);
 
         waitForAssert(() -> {
-            systeminfoHandlerFactory = getService(ThingHandlerFactory.class, SysteminfoHandlerFactory.class);
+            systeminfoHandlerFactory = getService(ThingHandlerFactory.class, SystemInfoHandlerFactory.class);
             assertThat(systeminfoHandlerFactory, is(notNullValue()));
         });
 
         if (systeminfoHandlerFactory != null) {
             // Unbind oshiSystemInfo service and bind the mock service to make the systeminfo binding tests independent
             // of the external OSHI library
-            SysteminfoInterface oshiSystemInfo = getService(SysteminfoInterface.class);
+            SystemInfoInterface oshiSystemInfo = getService(SystemInfoInterface.class);
             if (oshiSystemInfo != null) {
                 systeminfoHandlerFactory.unbindSystemInfo(oshiSystemInfo);
             }
@@ -165,7 +164,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
         }
 
         waitForAssert(() -> {
-            systeminfoHandlerFactory = getService(ThingHandlerFactory.class, SysteminfoHandlerFactory.class);
+            systeminfoHandlerFactory = getService(ThingHandlerFactory.class, SystemInfoHandlerFactory.class);
             assertThat(systeminfoHandlerFactory, is(notNullValue()));
         });
 
@@ -217,9 +216,9 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     private void initializeThingWithChannelAndPID(String channelID, String acceptedItemType, int pid) {
         Configuration thingConfig = new Configuration();
-        thingConfig.put(SysteminfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME,
+        thingConfig.put(SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
-        thingConfig.put(SysteminfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
+        thingConfig.put(SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
         String priority = DEFAULT_CHANNEL_TEST_PRIORITY;
 
@@ -228,9 +227,9 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     private void initializeThingWithChannelAndPriority(String channelID, String acceptedItemType, String priority) {
         Configuration thingConfig = new Configuration();
-        thingConfig.put(SysteminfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME,
+        thingConfig.put(SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
-        thingConfig.put(SysteminfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
+        thingConfig.put(SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
         int pid = DEFAULT_CHANNEL_PID;
 
@@ -248,9 +247,9 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     private void initializeThingWithChannel(String channelID, String acceptedItemType) {
         Configuration thingConfig = new Configuration();
-        thingConfig.put(SysteminfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME,
+        thingConfig.put(SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
-        thingConfig.put(SysteminfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
+        thingConfig.put(SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
                 new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
 
         String priority = DEFAULT_CHANNEL_TEST_PRIORITY;
@@ -260,7 +259,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     private void initializeThing(Configuration thingConfiguration, String channelID, String acceptedItemType,
             String priority, int pid) {
-        ThingTypeUID thingTypeUID = SysteminfoBindingConstants.THING_TYPE_COMPUTER;
+        ThingTypeUID thingTypeUID = SystemInfoBindingConstants.THING_TYPE_COMPUTER;
         ThingUID thingUID = new ThingUID(thingTypeUID, DEFAULT_TEST_THING_NAME);
 
         ChannelUID channelUID = new ChannelUID(thingUID, channelID);
@@ -268,7 +267,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
         if ("load1".equals(channelTypeId) || "load5".equals(channelTypeId) || "load15".equals(channelTypeId)) {
             channelTypeId = "loadAverage";
         }
-        ChannelTypeUID channelTypeUID = new ChannelTypeUID(SysteminfoBindingConstants.BINDING_ID, channelTypeId);
+        ChannelTypeUID channelTypeUID = new ChannelTypeUID(SystemInfoBindingConstants.BINDING_ID, channelTypeId);
         Configuration channelConfig = new Configuration();
         channelConfig.put("priority", priority);
         channelConfig.put("pid", new BigDecimal(pid));
@@ -282,7 +281,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
         managedThingProvider.add(thing);
 
         waitForAssert(() -> {
-            SysteminfoHandler handler = (SysteminfoHandler) thing.getHandler();
+            SystemInfoHandler handler = (SystemInfoHandler) thing.getHandler();
             assertThat(handler, is(notNullValue()));
         });
 
@@ -307,7 +306,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
         });
         // The binding starts all refresh tasks in SysteminfoHandler.scheduleUpdates() after this delay !
         try {
-            sleep(SysteminfoHandler.WAIT_TIME_CHANNEL_ITEM_LINK_INIT * 1000);
+            sleep(SystemInfoHandler.WAIT_TIME_CHANNEL_ITEM_LINK_INIT * 1000);
         } catch (InterruptedException e) {
             throw new AssertionError("Interrupted while sleeping");
         }
@@ -356,10 +355,10 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
         // invalid value - must be positive
         int refreshIntervalHigh = -5;
-        configuration.put(SysteminfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME, new BigDecimal(refreshIntervalHigh));
+        configuration.put(SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME, new BigDecimal(refreshIntervalHigh));
 
         int refreshIntervalMedium = 3;
-        configuration.put(SysteminfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
+        configuration.put(SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME,
                 new BigDecimal(refreshIntervalMedium));
         initializeThingWithConfiguration(configuration);
 
@@ -401,7 +400,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuLoadIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_LOAD;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
         String acceptedItemType = "Number";
 
         PercentType mockedCpuLoadValue = new PercentType(9);
@@ -413,7 +412,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuLoad1IsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_LOAD_1;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_1;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuLoad1Value = new DecimalType(1.1);
@@ -425,7 +424,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuLoad5IsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_LOAD_5;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_5;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuLoad5Value = new DecimalType(5.5);
@@ -437,7 +436,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuLoad15IsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_LOAD_15;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_15;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuLoad15Value = new DecimalType(15.15);
@@ -449,7 +448,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuThreadsIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_THREADS;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_THREADS;
         String acceptedItemType = "Number";
 
         DecimalType mockedCpuThreadsValue = new DecimalType(16);
@@ -461,7 +460,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuUptimeIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_UPTIME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_UPTIME;
         String acceptedItemType = "Number:Time";
 
         QuantityType<Time> mockedCpuUptimeValue = new QuantityType<>(100, Units.MINUTE);
@@ -473,7 +472,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuDescriptionIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_DESCRIPTION;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_DESCRIPTION;
         String acceptedItemType = "String";
 
         StringType mockedCpuDescriptionValue = new StringType("Mocked Cpu Descr");
@@ -486,7 +485,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelCpuNameIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_CPU_NAME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_NAME;
         String acceptedItemType = "String";
 
         StringType mockedCpuNameValue = new StringType("Mocked Cpu Name");
@@ -498,7 +497,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelMemoryAvailableIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_MEMORY_AVAILABLE;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_AVAILABLE;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedMemoryAvailableValue = new QuantityType<>(1000, Units.MEBIBYTE);
@@ -511,7 +510,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelMemoryUsedIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_MEMORY_USED;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_USED;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedMemoryUsedValue = new QuantityType<>(24, Units.MEBIBYTE);
@@ -523,7 +522,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelMemoryTotalIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_MEMORY_TOTAL;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_TOTAL;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedMemoryTotalValue = new QuantityType<>(1024, Units.MEBIBYTE);
@@ -536,7 +535,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelMemoryAvailablePercentIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_MEMORY_AVAILABLE_PERCENT;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_AVAILABLE_PERCENT;
         String acceptedItemType = "Number";
 
         PercentType mockedMemoryAvailablePercentValue = new PercentType(97);
@@ -549,7 +548,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelSwapAvailableIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_SWAP_AVAILABLE;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_AVAILABLE;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedSwapAvailableValue = new QuantityType<>(482, Units.MEBIBYTE);
@@ -562,7 +561,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelSwapUsedIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_SWAP_USED;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_USED;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedSwapUsedValue = new QuantityType<>(30, Units.MEBIBYTE);
@@ -574,7 +573,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelSwapTotalIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_SWAP_TOTAL;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_TOTAL;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedSwapTotalValue = new QuantityType<>(512, Units.MEBIBYTE);
@@ -586,7 +585,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelSwapAvailablePercentIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_SWAP_AVAILABLE_PERCENT;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_AVAILABLE_PERCENT;
         String acceptedItemType = "Number";
 
         PercentType mockedSwapAvailablePercentValue = new PercentType(94);
@@ -599,7 +598,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelStorageNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_STORAGE_NAME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_NAME;
         String acceptedItemType = "String";
 
         StringType mockedStorageName = new StringType("Mocked Storage Name");
@@ -611,7 +610,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelStorageTypeIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_STORAGE_TYPE;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_TYPE;
         String acceptedItemType = "String";
 
         StringType mockedStorageType = new StringType("Mocked Storage Type");
@@ -623,7 +622,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelStorageDescriptionIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_STORAGE_DESCRIPTION;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_DESCRIPTION;
         String acceptedItemType = "String";
 
         StringType mockedStorageDescription = new StringType("Mocked Storage Description");
@@ -636,7 +635,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelStorageAvailableIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_STORAGE_AVAILABLE;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedStorageAvailableValue = new QuantityType<>(2000, Units.MEBIBYTE);
@@ -649,7 +648,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelStorageUsedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_STORAGE_USED;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_USED;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedStorageUsedValue = new QuantityType<>(500, Units.MEBIBYTE);
@@ -662,7 +661,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelStorageTotalIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_STORAGE_TOTAL;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_TOTAL;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedStorageTotalValue = new QuantityType<>(2500, Units.MEBIBYTE);
@@ -675,7 +674,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelStorageAvailablePercentIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_STORAGE_AVAILABLE_PERCENT;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE_PERCENT;
         String acceptedItemType = "Number";
 
         PercentType mockedStorageAvailablePercent = new PercentType(20);
@@ -689,7 +688,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelDriveNameIsUpdated() throws DeviceNotFoundException {
-        String channelID = SysteminfoBindingConstants.CHANNEL_DRIVE_NAME;
+        String channelID = SystemInfoBindingConstants.CHANNEL_DRIVE_NAME;
         String acceptedItemType = "String";
 
         StringType mockedDriveNameValue = new StringType("Mocked Drive Name");
@@ -701,7 +700,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelDriveModelIsUpdated() throws DeviceNotFoundException {
-        String channelID = SysteminfoBindingConstants.CHANNEL_DRIVE_MODEL;
+        String channelID = SystemInfoBindingConstants.CHANNEL_DRIVE_MODEL;
         String acceptedItemType = "String";
 
         StringType mockedDriveModelValue = new StringType("Mocked Drive Model");
@@ -713,7 +712,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelDriveSerialIsUpdated() throws DeviceNotFoundException {
-        String channelID = SysteminfoBindingConstants.CHANNEL_DRIVE_SERIAL;
+        String channelID = SystemInfoBindingConstants.CHANNEL_DRIVE_SERIAL;
         String acceptedItemType = "String";
 
         StringType mockedDriveSerialNumber = new StringType("Mocked Drive Serial Number");
@@ -728,7 +727,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
     // There is a bug opened for this issue - https://github.com/dblock/oshi/issues/185
     @Test
     public void assertChannelSensorsCpuTempIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_SENSORS_CPU_TEMPERATURE;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_SENSORS_CPU_TEMPERATURE;
         String acceptedItemType = "Number:Temperature";
 
         QuantityType<Temperature> mockedSensorsCpuTemperatureValue = new QuantityType<>(60, SIUnits.CELSIUS);
@@ -741,7 +740,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelSensorsCpuVoltageIsUpdated() {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_SENOSRS_CPU_VOLTAGE;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_SENOSRS_CPU_VOLTAGE;
         String acceptedItemType = "Number:ElectricPotential";
 
         QuantityType<ElectricPotential> mockedSensorsCpuVoltageValue = new QuantityType<>(1000, Units.VOLT);
@@ -754,7 +753,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelSensorsFanSpeedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_SENSORS_FAN_SPEED;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_SENSORS_FAN_SPEED;
         String acceptedItemType = "Number";
 
         DecimalType mockedSensorsCpuFanSpeedValue = new DecimalType(180);
@@ -767,7 +766,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelBatteryNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_BATTERY_NAME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_NAME;
         String acceptedItemType = "String";
 
         StringType mockedBatteryName = new StringType("Mocked Battery Name");
@@ -779,7 +778,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelBatteryRemainingCapacityIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_BATTERY_REMAINING_CAPACITY;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_CAPACITY;
         String acceptedItemType = "Number";
 
         PercentType mockedBatteryRemainingCapacity = new PercentType(20);
@@ -793,7 +792,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelBatteryRemainingTimeIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_BATTERY_REMAINING_TIME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_TIME;
         String acceptedItemType = "Number:Time";
 
         QuantityType<Time> mockedBatteryRemainingTime = new QuantityType<>(3600, Units.MINUTE);
@@ -806,7 +805,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelDisplayInformationIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_DISPLAY_INFORMATION;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_DISPLAY_INFORMATION;
         String acceptedItemType = "String";
 
         StringType mockedDisplayInfo = new StringType("Mocked Display Information");
@@ -818,7 +817,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkIpIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_IP;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_IP;
         String acceptedItemType = "String";
 
         StringType mockedNetworkIp = new StringType("192.168.1.0");
@@ -830,7 +829,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkMacIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_MAC;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_MAC;
         String acceptedItemType = "String";
 
         StringType mockedNetworkMacValue = new StringType("AB-10-11-12-13-14");
@@ -842,7 +841,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkDataSentIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_DATA_SENT;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_DATA_SENT;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedNetworkDataSent = new QuantityType<>(1000, Units.MEBIBYTE);
@@ -854,7 +853,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkDataReceivedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_DATA_RECEIVED;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_DATA_RECEIVED;
         String acceptedItemType = "Number:DataAmount";
 
         QuantityType<DataAmount> mockedNetworkDataReceiveed = new QuantityType<>(800, Units.MEBIBYTE);
@@ -867,7 +866,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkPacketsSentIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_PACKETS_SENT;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_PACKETS_SENT;
         String acceptedItemType = "Number";
 
         DecimalType mockedNetworkPacketsSent = new DecimalType(50);
@@ -880,7 +879,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkPacketsReceivedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_PACKETS_RECEIVED;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_PACKETS_RECEIVED;
         String acceptedItemType = "Number";
 
         DecimalType mockedNetworkPacketsReceived = new DecimalType(48);
@@ -893,7 +892,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkNetworkNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_NAME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_NAME;
         String acceptedItemType = "String";
 
         StringType mockedNetworkName = new StringType("MockN-AQ34");
@@ -905,7 +904,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelNetworkNetworkDisplayNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_NETWORK_ADAPTER_NAME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_NETWORK_ADAPTER_NAME;
         String acceptedItemType = "String";
 
         StringType mockedNetworkAdapterName = new StringType("Mocked Network Adapter Name");
@@ -916,10 +915,10 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
                 mockedNetworkAdapterName);
     }
 
-    class SysteminfoDiscoveryServiceMock extends SysteminfoDiscoveryService {
+    static class SystemInfoDiscoveryServiceMock extends SystemInfoDiscoveryService {
         String hostname;
 
-        SysteminfoDiscoveryServiceMock(String hostname) {
+        SystemInfoDiscoveryServiceMock(String hostname) {
             super();
             this.hostname = hostname;
         }
@@ -957,7 +956,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
     @Test
     public void testDiscoveryWithUnresolvedHostname() {
         String hostname = "unresolved";
-        String expectedHostname = SysteminfoDiscoveryService.DEFAULT_THING_ID;
+        String expectedHostname = SystemInfoDiscoveryService.DEFAULT_THING_ID;
 
         testDiscoveryService(expectedHostname, hostname);
     }
@@ -965,24 +964,24 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
     @Test
     public void testDiscoveryWithEmptyHostnameString() {
         String hostname = "";
-        String expectedHostname = SysteminfoDiscoveryService.DEFAULT_THING_ID;
+        String expectedHostname = SystemInfoDiscoveryService.DEFAULT_THING_ID;
 
         testDiscoveryService(expectedHostname, hostname);
     }
 
     private void testDiscoveryService(String expectedHostname, String hostname) {
-        SysteminfoDiscoveryService discoveryService = getService(DiscoveryService.class,
-                SysteminfoDiscoveryService.class);
+        SystemInfoDiscoveryService discoveryService = getService(DiscoveryService.class,
+                SystemInfoDiscoveryService.class);
         waitForAssert(() -> {
             assertThat(discoveryService, is(notNullValue()));
         });
-        SysteminfoDiscoveryServiceMock discoveryServiceMock = new SysteminfoDiscoveryServiceMock(hostname);
+        SystemInfoDiscoveryServiceMock discoveryServiceMock = new SystemInfoDiscoveryServiceMock(hostname);
         if (discoveryService != null) {
             unregisterService(DiscoveryService.class);
         }
         registerService(discoveryServiceMock, DiscoveryService.class.getName(), new Hashtable<>());
 
-        ThingTypeUID computerType = SysteminfoBindingConstants.THING_TYPE_COMPUTER;
+        ThingTypeUID computerType = SystemInfoBindingConstants.THING_TYPE_COMPUTER;
         ThingUID computerUID = new ThingUID(computerType, expectedHostname);
 
         discoveryServiceMock.startScan();
@@ -997,12 +996,11 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
         }
 
         waitForAssert(() -> {
-            List<DiscoveryResult> results = inbox.stream().filter(InboxPredicates.forThingUID(computerUID))
-                    .collect(toList());
+            List<DiscoveryResult> results = inbox.stream().filter(InboxPredicates.forThingUID(computerUID)).toList();
             assertFalse(results.isEmpty(), "No Thing with UID " + computerUID.getAsString() + " in inbox");
         });
 
-        inbox.approve(computerUID, SysteminfoDiscoveryService.DEFAULT_THING_LABEL, null);
+        inbox.approve(computerUID, SystemInfoDiscoveryService.DEFAULT_THING_LABEL, null);
 
         waitForAssert(() -> {
             systeminfoThing = thingRegistry.get(computerUID);
@@ -1021,7 +1019,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelProcessThreadsIsUpdatedWithPIDse() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_PROCESS_THREADS;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_THREADS;
         String acceptedItemType = "Number";
         // The pid of the System idle process in Windows
         int pid = 0;
@@ -1036,7 +1034,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelProcessPathIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_PROCESS_PATH;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_PATH;
         String acceptedItemType = "String";
         // The pid of the System idle process in Windows
         int pid = 0;
@@ -1050,7 +1048,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelProcessNameIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_PROCESS_NAME;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_NAME;
         String acceptedItemType = "String";
         // The pid of the System idle process in Windows
         int pid = 0;
@@ -1064,7 +1062,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelProcessMemoryIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_PROCESS_MEMORY;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_MEMORY;
         String acceptedItemType = "Number:DataAmount";
         // The pid of the System idle process in Windows
         int pid = 0;
@@ -1078,7 +1076,7 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
 
     @Test
     public void assertChannelProcessLoadIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SysteminfoBindingConstants.CHANNEL_PROCESS_LOAD;
+        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_LOAD;
         String acceptedItemType = "Number";
         // The pid of the System idle process in Windows
         int pid = 0;
@@ -1094,7 +1092,6 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
     public void testThingHandlesChannelPriorityChange() {
         String priorityKey = "priority";
         String pidKey = "pid";
-        String initialPriority = DEFAULT_CHANNEL_TEST_PRIORITY; // Evaluates to High
         String newPriority = "Low";
 
         String acceptedItemType = "Number";
@@ -1113,13 +1110,13 @@ public class SysteminfoOSGiTest extends JavaOSGiTest {
         if (thingHandler == null) {
             throw new AssertionError("Thing handler is null");
         }
-        if (!(thingHandler.getClass().equals(SysteminfoHandler.class))) {
+        if (!(thingHandler.getClass().equals(SystemInfoHandler.class))) {
             throw new AssertionError("Thing handler not of class SysteminfoHandler");
         }
-        SysteminfoHandler handler = (SysteminfoHandler) thingHandler;
+        SystemInfoHandler handler = (SystemInfoHandler) thingHandler;
         waitForAssert(() -> {
             assertThat("The initial priority of channel " + channel.getUID() + " is not as expected.",
-                    channel.getConfiguration().get(priorityKey), is(equalTo(initialPriority)));
+                    channel.getConfiguration().get(priorityKey), is(equalTo(DEFAULT_CHANNEL_TEST_PRIORITY)));
             assertThat(handler.getHighPriorityChannels().contains(channel.getUID()), is(true));
         });
 
