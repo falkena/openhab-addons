@@ -27,13 +27,14 @@
 
 		<properties>
 			<property name="thingTypeVersion">1</property>
-
 			<property name="CPU Logical Cores">Not available</property>
 			<property name="CPU Physical Cores">Not available</property>
 			<property name="OS Manufacturer">Not available</property>
 			<property name="OS Version">Not available</property>
 			<property name="OS Family">Not available</property>
+			<property name="hostname">unknown</property>
 		</properties>
+		<representation-property>hostname</representation-property>
 
 		<config-description-ref uri="thing-type:systeminfo:computerConfig"/>
 	</thing-type>

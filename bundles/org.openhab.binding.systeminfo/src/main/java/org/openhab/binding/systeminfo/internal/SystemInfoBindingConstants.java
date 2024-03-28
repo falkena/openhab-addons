@@ -28,8 +28,8 @@ public class SystemInfoBindingConstants {
 
     public static final String BINDING_ID = "systeminfo";
 
-    public static final String THING_TYPE_COMPUTER_ID = "computer";
-    public static final ThingTypeUID THING_TYPE_COMPUTER = new ThingTypeUID(BINDING_ID, THING_TYPE_COMPUTER_ID);
+    public static final ThingTypeUID THING_TYPE_COMPUTER = new ThingTypeUID(BINDING_ID, "computer");
+    public static final ThingTypeUID THING_TYPE_COMPUTER_IMPL = new ThingTypeUID(BINDING_ID, "computer-impl");
 
     // Thing properties
     /**
@@ -41,6 +41,9 @@ public class SystemInfoBindingConstants {
      * Number of CPU physical cores
      */
     public static final String PROPERTY_CPU_PHYSICAL_CORES = "CPU Physical Cores";
+
+    public static final String PROPERTY_HOSTNAME = "hostname";
+    public static final String PROPERTY_HOSTNAME_DEFAULT = "unknown";
 
     /**
      * Contains information about the family /Windows, Linux, OS X etc/ of the operation system

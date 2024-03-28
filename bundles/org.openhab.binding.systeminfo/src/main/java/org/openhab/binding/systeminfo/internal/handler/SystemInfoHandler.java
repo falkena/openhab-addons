@@ -15,15 +15,15 @@ package org.openhab.binding.systeminfo.internal.handler;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
 
 import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -43,7 +43,6 @@ import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.ThingTypeUID;
-import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.builder.ThingBuilder;
 import org.openhab.core.thing.type.ChannelGroupDefinition;
@@ -103,12 +102,6 @@ public class SystemInfoHandler extends BaseThingHandler {
      */
     public static final int WAIT_TIME_CHANNEL_ITEM_LINK_INIT = 1;
 
-    /**
-     * String used to extend thingUID and channelGroupTypeUID for thing definition with added dynamic channels and
-     * extended channels. It is set in the constructor and unique to the thing.
-     */
-    public final String idExtString;
-
     public final SystemInfoThingTypeProvider thingTypeProvider;
 
     private SystemInfoInterface systeminfo;
@@ -135,8 +128,6 @@ public class SystemInfoHandler extends BaseThingHandler {
         super(thing);
         this.thingTypeProvider = thingTypeProvider;
         this.systeminfo = systeminfo;
-
-        idExtString = "-" + thing.getUID().getId();
     }
 
     @Override
@@ -206,6 +197,12 @@ public class SystemInfoHandler extends BaseThingHandler {
             properties.put(PROPERTY_OS_FAMILY, systeminfo.getOsFamily().toString());
             properties.put(PROPERTY_OS_MANUFACTURER, systeminfo.getOsManufacturer().toString());
             properties.put(PROPERTY_OS_VERSION, systeminfo.getOsVersion().toString());
+            try {
+                properties.put(PROPERTY_HOSTNAME, InetAddress.getLocalHost().getHostName());
+            } catch (UnknownHostException exception) {
+                properties.put(PROPERTY_HOSTNAME, PROPERTY_HOSTNAME_DEFAULT);
+            }
+
             updateProperties(properties);
             logger.debug("Properties updated!");
             return true;
@@ -229,26 +226,22 @@ public class SystemInfoHandler extends BaseThingHandler {
      * @return true if channel groups where added
      */
     private boolean addDynamicChannels() {
-        ThingUID thingUID = thing.getUID();
-
         List<ChannelGroupDefinition> newChannelGroups = new ArrayList<>();
-        newChannelGroups.addAll(createChannelGroups(thingUID, CHANNEL_GROUP_STORAGE, CHANNEL_GROUP_TYPE_STORAGE,
-                systeminfo.getFileOSStoreCount()));
-        newChannelGroups.addAll(createChannelGroups(thingUID, CHANNEL_GROUP_DRIVE, CHANNEL_GROUP_TYPE_DRIVE,
-                systeminfo.getDriveCount()));
-        newChannelGroups.addAll(createChannelGroups(thingUID, CHANNEL_GROUP_DISPLAY, CHANNEL_GROUP_TYPE_DISPLAY,
-                systeminfo.getDisplayCount()));
-        newChannelGroups.addAll(createChannelGroups(thingUID, CHANNEL_GROUP_BATTERY, CHANNEL_GROUP_TYPE_BATTERY,
-                systeminfo.getPowerSourceCount()));
-        newChannelGroups.addAll(createChannelGroups(thingUID, CHANNEL_GROUP_NETWORK, CHANNEL_GROUP_TYPE_NETWORK,
-                systeminfo.getNetworkIFCount()));
+        addChannelGroups(CHANNEL_GROUP_STORAGE, CHANNEL_GROUP_TYPE_STORAGE, systeminfo.getFileOSStoreCount(),
+                newChannelGroups);
+        addChannelGroups(CHANNEL_GROUP_DRIVE, CHANNEL_GROUP_TYPE_DRIVE, systeminfo.getDriveCount(), newChannelGroups);
+        addChannelGroups(CHANNEL_GROUP_DISPLAY, CHANNEL_GROUP_TYPE_DISPLAY, systeminfo.getDisplayCount(),
+                newChannelGroups);
+        addChannelGroups(CHANNEL_GROUP_BATTERY, CHANNEL_GROUP_TYPE_BATTERY, systeminfo.getPowerSourceCount(),
+                newChannelGroups);
+        addChannelGroups(CHANNEL_GROUP_NETWORK, CHANNEL_GROUP_TYPE_NETWORK, systeminfo.getNetworkIFCount(),
+                newChannelGroups);
         if (!newChannelGroups.isEmpty()) {
             logger.debug("Creating additional channel groups");
             newChannelGroups.addAll(0, thingTypeProvider.getChannelGroupDefinitions(thing.getThingTypeUID()));
-            ThingTypeUID thingTypeUID = new ThingTypeUID(BINDING_ID, THING_TYPE_COMPUTER_ID + idExtString);
-            if (thingTypeProvider.updateThingType(thingTypeUID, newChannelGroups)) {
+            if (thingTypeProvider.updateThingType(THING_TYPE_COMPUTER_IMPL, newChannelGroups)) {
                 logger.trace("Channel groups were added, changing the thing type");
-                changeThingType(thingTypeUID, thing.getConfiguration());
+                changeThingType(THING_TYPE_COMPUTER_IMPL, thing.getConfiguration());
             } else {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_INITIALIZING_ERROR,
                         "@text/offline.cannot-initialize");
@@ -257,8 +250,8 @@ public class SystemInfoHandler extends BaseThingHandler {
         }
 
         List<Channel> newChannels = new ArrayList<>();
-        newChannels.addAll(createChannels(thingUID, CHANNEL_SENSORS_FAN_SPEED, systeminfo.getFanCount()));
-        newChannels.addAll(createChannels(thingUID, CHANNEL_CPU_FREQ, systeminfo.getCpuLogicalCores().intValue()));
+        addChannels(CHANNEL_SENSORS_FAN_SPEED, systeminfo.getFanCount(), newChannels);
+        addChannels(CHANNEL_CPU_FREQ, systeminfo.getCpuLogicalCores().intValue(), newChannels);
         if (!newChannels.isEmpty()) {
             logger.debug("Creating additional channels");
             newChannels.addAll(0, thing.getChannels());
@@ -270,42 +263,38 @@ public class SystemInfoHandler extends BaseThingHandler {
         return false;
     }
 
-    private List<ChannelGroupDefinition> createChannelGroups(ThingUID thingUID, String channelGroupID,
-            String channelGroupTypeID, int count) {
+    private void addChannelGroups(String channelGroupID, String channelGroupTypeID, int count,
+            List<ChannelGroupDefinition> groups) {
         if (count <= 1) {
-            return Collections.emptyList();
+            return;
         }
 
         List<String> channelGroups = thingTypeProvider.getChannelGroupDefinitions(thing.getThingTypeUID()).stream()
-                .map(ChannelGroupDefinition::getId).collect(Collectors.toList());
+                .map(ChannelGroupDefinition::getId).toList();
 
-        List<ChannelGroupDefinition> newChannelGroups = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             String index = String.valueOf(i);
             ChannelGroupDefinition channelGroupDef = thingTypeProvider
                     .createChannelGroupDefinitionWithIndex(channelGroupID, channelGroupTypeID, i);
             if (!(channelGroupDef == null || channelGroups.contains(channelGroupID + index))) {
                 logger.trace("Adding channel group {}", channelGroupID + index);
-                newChannelGroups.add(channelGroupDef);
+                groups.add(channelGroupDef);
             }
         }
-        return newChannelGroups;
     }
 
-    private List<Channel> createChannels(ThingUID thingUID, String channelID, int count) {
+    private void addChannels(String channelID, int count, List<Channel> channels) {
         if (count <= 1) {
-            return Collections.emptyList();
+            return;
         }
 
-        List<Channel> newChannels = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             Channel channel = thingTypeProvider.createChannelWithIndex(thing, channelID, i);
             if (channel != null && thing.getChannel(channel.getUID()) == null) {
                 logger.trace("Creating channel {}", channel.getUID().getId());
-                newChannels.add(channel);
+                channels.add(channel);
             }
         }
-        return newChannels;
     }
 
     private void storeChannelsConfig() {
