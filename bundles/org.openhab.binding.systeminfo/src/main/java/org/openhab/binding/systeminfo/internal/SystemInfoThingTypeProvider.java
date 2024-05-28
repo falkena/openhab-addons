@@ -51,9 +51,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Extended channels can be auto discovered and added to newly created groups in the
- * {@link org.openhab.binding.systeminfo.internal.handler.SystemInfoHandler}. The
- * thing needs to be updated to add the groups. The `SystemInfoThingTypeProvider` OSGi service gives access to the
- * `ThingTypeRegistry` and serves the updated `ThingType`.
+ * {@link org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler}.
+ * The thing needs to be updated to add the groups. The `SystemInfoThingTypeProvider`
+ * OSGi service gives access to the `ThingTypeRegistry` and serves the updated `ThingType`.
  *
  * @author Mark Herwege - Initial contribution
  *
@@ -93,45 +93,48 @@ public class SystemInfoThingTypeProvider extends AbstractStorageBasedTypeProvide
      * Update `ThingType`with `typeUID`, replacing the channel group definitions with `groupDefs`.
      *
      * @param typeUID
-     * @param groupDefs
+     * @param groupDefinitions
      * @return false if `typeUID` or its base type UID `systeminfo:computer` cannot be found in the thingTypeRegistry
      */
-    public boolean updateThingType(ThingTypeUID typeUID, List<ChannelGroupDefinition> groupDefs) {
-        ThingType baseType = thingTypeRegistry.getThingType(typeUID);
-        if (baseType == null) {
-            baseType = thingTypeRegistry.getThingType(THING_TYPE_COMPUTER);
-            if (baseType == null) {
+    public boolean updateThingType(ThingTypeUID typeUID, List<ChannelGroupDefinition> groupDefinitions) {
+        ThingType type = thingTypeRegistry.getThingType(typeUID);
+        if (type == null) {
+            type = thingTypeRegistry.getThingType(BRIDGE_TYPE_COMPUTER);
+            if (type == null) {
                 logger.warn("Could not find base thing type in registry.");
                 return false;
             }
         }
 
-        final ThingTypeBuilder builder = ThingTypeBuilder.instance(THING_TYPE_COMPUTER_IMPL, baseType.getLabel());
-        builder.withChannelGroupDefinitions(baseType.getChannelGroupDefinitions());
-        builder.withChannelDefinitions(baseType.getChannelDefinitions());
-        builder.withExtensibleChannelTypeIds(baseType.getExtensibleChannelTypeIds());
-        builder.withSupportedBridgeTypeUIDs(baseType.getSupportedBridgeTypeUIDs());
-        builder.withProperties(baseType.getProperties()).isListed(false);
+        final ThingTypeBuilder builder = ThingTypeBuilder.instance(BRIDGE_TYPE_COMPUTER_IMPL, type.getLabel());
+        builder.withChannelGroupDefinitions(type.getChannelGroupDefinitions());
+        builder.withChannelDefinitions(type.getChannelDefinitions());
+        builder.withExtensibleChannelTypeIds(type.getExtensibleChannelTypeIds());
+        builder.withSupportedBridgeTypeUIDs(type.getSupportedBridgeTypeUIDs());
+        builder.withProperties(type.getProperties()).isListed(false);
 
-        final String representationProperty = baseType.getRepresentationProperty();
+        final String representationProperty = type.getRepresentationProperty();
         if (representationProperty != null) {
             builder.withRepresentationProperty(representationProperty);
         }
-        final URI configDescriptionURI = baseType.getConfigDescriptionURI();
+
+        final URI configDescriptionURI = type.getConfigDescriptionURI();
         if (configDescriptionURI != null) {
             builder.withConfigDescriptionURI(configDescriptionURI);
         }
-        final String category = baseType.getCategory();
+
+        final String category = type.getCategory();
         if (category != null) {
             builder.withCategory(category);
         }
-        final String description = baseType.getDescription();
+
+        final String description = type.getDescription();
         if (description != null) {
             builder.withDescription(description);
         }
 
         logger.trace("Adding channel group definitions to thing type");
-        putThingType(builder.withChannelGroupDefinitions(groupDefs).build());
+        putThingType(builder.withChannelGroupDefinitions(groupDefinitions).buildBridge());
         return true;
     }
 
@@ -145,7 +148,7 @@ public class SystemInfoThingTypeProvider extends AbstractStorageBasedTypeProvide
     public List<ChannelGroupDefinition> getChannelGroupDefinitions(ThingTypeUID typeUID) {
         ThingType type = thingTypeRegistry.getThingType(typeUID);
         if (type == null) {
-            type = thingTypeRegistry.getThingType(THING_TYPE_COMPUTER);
+            type = thingTypeRegistry.getThingType(BRIDGE_TYPE_COMPUTER);
         }
         if (type != null) {
             return type.getChannelGroupDefinitions();

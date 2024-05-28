@@ -12,7 +12,9 @@
  */
 package org.openhab.binding.systeminfo.internal;
 
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER_IMPL;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_DRIVE;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,8 +22,10 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.systeminfo.internal.handler.SystemInfoHandler;
+import org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler;
+import org.openhab.binding.systeminfo.internal.handler.SystemInfoDriveHandler;
 import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
+import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
@@ -42,14 +46,15 @@ import org.osgi.service.component.annotations.Reference;
 @NonNullByDefault
 @Component(service = ThingHandlerFactory.class, configurationPid = "binding.systeminfo")
 public class SystemInfoHandlerFactory extends BaseThingHandlerFactory {
-    private @NonNullByDefault({}) SystemInfoInterface systeminfo;
-    private @NonNullByDefault({}) SystemInfoThingTypeProvider thingTypeProvider;
+    private @Nullable SystemInfoInterface systemInfo;
+    private @Nullable SystemInfoThingTypeProvider thingTypeProvider;
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS;
     static {
         Set<ThingTypeUID> buffer = new HashSet<>();
-        buffer.add(THING_TYPE_COMPUTER);
-        buffer.add(THING_TYPE_COMPUTER_IMPL);
+        buffer.add(BRIDGE_TYPE_COMPUTER);
+        buffer.add(BRIDGE_TYPE_COMPUTER_IMPL);
+        buffer.add(THING_TYPE_DRIVE);
         SUPPORTED_THING_TYPES_UIDS = Collections.unmodifiableSet(buffer);
     }
 
@@ -60,26 +65,36 @@ public class SystemInfoHandlerFactory extends BaseThingHandlerFactory {
 
     @Override
     protected @Nullable ThingHandler createHandler(Thing thing) {
-        if (THING_TYPE_COMPUTER.equals(thing.getThingTypeUID())) {
-            if (thingTypeProvider.getThingType(THING_TYPE_COMPUTER_IMPL, null) == null) {
-                thingTypeProvider.createThingType(THING_TYPE_COMPUTER_IMPL);
-                // Save the current channels configs, will be restored after thing type change.
-                thingTypeProvider.storeChannelsConfig(thing);
+        final SystemInfoInterface systemInfo = this.systemInfo;
+        final SystemInfoThingTypeProvider thingTypeProvider = this.thingTypeProvider;
+        if ((systemInfo != null) && (thingTypeProvider != null)) {
+            if (thing instanceof Bridge bridge) {
+                if (BRIDGE_TYPE_COMPUTER.equals(thing.getThingTypeUID())) {
+                    if (thingTypeProvider.getThingType(BRIDGE_TYPE_COMPUTER_IMPL, null) == null) {
+                        thingTypeProvider.createThingType(BRIDGE_TYPE_COMPUTER_IMPL);
+                        // Save the current channels configs, will be restored after thing type change.
+                        thingTypeProvider.storeChannelsConfig(bridge);
+                    }
+                    return new SystemInfoComputerHandler(bridge, thingTypeProvider, systemInfo);
+                } else if (BRIDGE_TYPE_COMPUTER_IMPL.equals(thing.getThingTypeUID())) {
+                    return new SystemInfoComputerHandler(bridge, thingTypeProvider, systemInfo);
+                }
+            } else {
+                if (THING_TYPE_DRIVE.equals(thing.getThingTypeUID())) {
+                    return new SystemInfoDriveHandler(thing, systemInfo);
+                }
             }
-            return new SystemInfoHandler(thing, thingTypeProvider, systeminfo);
-        } else if (THING_TYPE_COMPUTER_IMPL.equals(thing.getThingTypeUID())) {
-            return new SystemInfoHandler(thing, thingTypeProvider, systeminfo);
         }
         return null;
     }
 
     @Reference
-    public void bindSystemInfo(SystemInfoInterface systeminfo) {
-        this.systeminfo = systeminfo;
+    public void bindSystemInfo(SystemInfoInterface systemInfo) {
+        this.systemInfo = systemInfo;
     }
 
-    public void unbindSystemInfo(SystemInfoInterface systeminfo) {
-        this.systeminfo = null;
+    public void unbindSystemInfo(SystemInfoInterface systemInfo) {
+        this.systemInfo = null;
     }
 
     @Reference
