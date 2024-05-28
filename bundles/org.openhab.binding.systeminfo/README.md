@@ -16,34 +16,21 @@ The system information binding provides operating system and hardware informatio
 
 The binding uses the [OSHI](https://github.com/oshi/oshi) library to access this information regardless of the underlying OS and hardware.
 
-## Supported Things
+## Bridge configuration
 
-The binding supports only one thing type - **computer**. This thing represents a system with one storage volume, one display device and one network adapter.
+### Computer
 
-The thing has the following properties:
+Bridge **computer** represents an computer system with information about CPU, memory, one storage volume, one display device and one network adapter.
 
-- `cpu_logicalCores` - Number of CPU logical cores
-- `cpu_physicalCores` - Number of CPU physical cores
-- `os_manufacturer` - The manufacturer of the operating system
-- `os_version` - The version of the operating system
-- `os_family` - The family of the operating system
+```
+Bridge systeminfo:computer:<SystemId> [ interval_high=<number>, interval_medium=<number> ]
+```
 
-If multiple storage or display devices support is needed, a new thing type has to be defined.
+The configuration of the bridge gives the user the possibility to update channels at different intervals.
+The bridge has two configuration parameters:
 
-## Discovery
-
-The discovery service implementation tries to resolve the computer name.
-If the resolving process fails, the computer name is set to "Unknown".
-In both cases it creates a Discovery Result with thing type  **computer**.
-
-## Thing configuration
-
-The configuration of the Thing gives the user the possibility to update channels at different intervals.
-
-The thing has two configuration parameters:
-
-- **interval_high** - refresh interval in seconds for channels with 'High' priority configuration. Default value is 1 s.
-- **interval_medium** - refresh interval in seconds for channels with 'Medium' priority configuration. Default value is 60s.
+- **interval_high** - Refresh interval in seconds for channels with 'High' priority configuration. Default value is 1 s.
+- **interval_medium** - Refresh interval in seconds for channels with 'Medium' priority configuration. Default value is 60s.
 
 That means that by default configuration:
 
@@ -54,11 +41,52 @@ That means that by default configuration:
 Channels, not linked to an item, do not get updates, and do not periodically consume resources.
 
 For more info see [channel configuration](#channel-configuration)
+The bridge has the following properties:
+
+- `cpu_logicalCores` - Number of CPU logical cores
+- `cpu_physicalCores` - Number of CPU physical cores
+- `os_manufacturer` - The manufacturer of the operating system
+- `os_version` - The version of the operating system
+- `os_family` - The family of the operating system
+
+If multiple storage or display devices support is needed, a new thing type has to be defined.
+
+### Drive
+
+Binding supports **drive** as additional bridge.
+
+```
+Bridge systeminfo:drive:<DriveId> [ index=<number> ]
+```
+
+The configuration of the bridge gives the user the possibility to identify multiple hard drives available on the system.
+The bridge has one configuration parameter:
+
+- **index** - Hard drive device index. Default value is 0.
+
+For example, on single Windows computer several local disks could be installed with names
+C:\, D:\, E:\ - the first will have index=0, the second index=1 etc.
+
+The thing has the following properties:
+
+- `modelId` - Hard drive model
+- `serialNumber` - Hard drive serial number
+
+## Thing configuration
+
+Currently no things are supported.
+
+## Discovery
+
+The discovery service implementation tries to resolve the computer name.
+If the resolving process fails, the computer name is set to "Unknown".
+In both cases it creates a Discovery Result with thing type  **computer**.
 
 ## Channels
 
-The binding support several channel group.
-Each channel group, contains one or more channels.
+### Computer
+
+The binding support several channel group. Each channel group, contains one or more channels.
 In the list below, you can find, how are channel group and channels id`s related.
 
 **thing** `computer`
@@ -69,8 +97,6 @@ In the list below, you can find, how are channel group and channels id`s related
   - **channel** `available, total, used, availablePercent, usedPercent`
 - **group** `storage` (deviceIndex)
   - **channel** `available, total, used, availablePercent, usedPercent, name, description, type`
-- **group** `drive` (deviceIndex)
-  - **channel** `name, model, serial`
 - **group** `display` (deviceIndex)
   - **channel** `information`
 - **group** `battery` (deviceIndex)
@@ -106,11 +132,10 @@ This makes it possible to change the tracked process at runtime.
 The group `currentProcess` has the same channels as the `process` group without the "pid" configuration parameter.
 The PID is dynamically set to the PID of the process running openHAB.
 
-The binding uses this index to get information about a specific device from a list of devices (e.g on a single computer several local disks could be installed with names C:\, D:\, E:\ - the first will have deviceIndex=0, the second deviceIndex=1 etc).
-If device with this index is not existing, the binding will display an error message on the console.
+The binding uses `deviceIndex` to get information about a specific device from a list of devices. If device with
+this index is not existing, the binding will display an error message on the console.
 
-The table shows more detailed information about each Channel type.
-The binding introduces the following channels:
+The table shows more detailed information about each channel type:
 
 | Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
 |--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
@@ -129,8 +154,6 @@ The binding introduces the following channels:
 | total              | Total size                                                       | Number:DataAmount   | Low              | False    |
 | availablePercent   | Available size in %                                              | Number:Dimensionless| High             | False    |
 | usedPercent        | Used size in %                                                   | Number:Dimensionless| High             | False    |
-| model              | The model of the device                                          | String              | Low              | True     |
-| serial             | The serial number of the device                                  | String              | Low              | True     |
 | description        | Description of the device                                        | String              | Low              | True     |
 | type               | Storage type                                                     | String              | Low              | True     |
 | cpuTemp            | CPU Temperature in degrees Celsius                               | Number:Temperature  | High             | True     |
@@ -149,6 +172,20 @@ The binding introduces the following channels:
 | dataReceived       | Volume of data received                                          | Number:DataAmount   | Medium           | True     |
 | availableHeap      | How much space is available in the currently committed heap      | Number:DataAmount   | Medium           | True     |
 | usedHeapPercent    | How much of the MAX heap size is actually used in %              | Number:Dimensionless| Medium           | False    |
+
+### Drive
+
+The table shows more detailed information about each Channel type:
+
+| Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
+|--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
+| name               | Symbolic link name for the hard drive                            | String              | Low              | False    |
+| model              | The model of the hard drive                                      | String              | Low              | True     |
+| serial             | The serial number of the hard drive                              | String              | Low              | True     |
+| readBytes          | Number of bytes read from the hard drive                         | Number:DataAmount   | High             | False    |
+| reads              | Number of reads from the hard drive                              | Number              | Medium           | True     |
+| writeBytes         | Number of bytes written to the hard drive                        | Number:DataAmount   | High             | False    |
+| writes             | Number of writes to the hard drive                               | Number              | Medium           | True     |
 
 ## Channel configuration
 
@@ -193,7 +230,10 @@ For a general problem with the binding report the issue directly to openHAB.
 Things:
 
 ```java
-Thing systeminfo:computer:work [interval_high=3, interval_medium=60]
+Bridge systeminfo:computer:work "Computer" @ "System" [ interval_high=3, interval_medium=60 ]
+{
+   Bridge drive harddrive "Hard drive" @ "System" [ index=0 ]
+}
 ```
 
 Items:
@@ -222,9 +262,13 @@ Number CPU_Threads                 "Threads"             <none>          { chann
 Number:Time CPU_Uptime             "Uptime"              <time>          { channel="systeminfo:computer:work:cpu#uptime" }
 
 /* Drive information*/
-String Drive_Name                  "Name"                <none>          { channel="systeminfo:computer:work:drive#name" }
-String Drive_Model                 "Model"               <none>          { channel="systeminfo:computer:work:drive#model" }
-String Drive_Serial                "Serial"              <none>          { channel="systeminfo:computer:work:drive#serial" }
+String Drive_Name                  "Name"                <none>          { channel="systeminfo:drive:harddrive:name" }
+String Drive_Model                 "Model"               <none>          { channel="systeminfo:drive:harddrive:model" }
+String Drive_Serial                "Serial"              <none>          { channel="systeminfo:drive:harddrive:serial" }
+Number:DataAmount Drive_ReadBytes  "Read [%d B]"         <none>          { channel="systeminfo:drive:harddrive:readBytes" }
+Number Drive_ReadCount             "Read [%d]"           <none>          { channel="systeminfo:drive:harddrive:reads" }
+Number:DataAmount Drive_WriteBytes "Written [%d B]"      <none>          { channel="systeminfo:drive:harddrive:writeBytes" }
+Number Drive_WriteCount            "Written [%d]"        <none>          { channel="systeminfo:drive:harddrive:writes" }
 
 /* Storage information*/
 String Storage_Name                "Name"                <none>          { channel="systeminfo:computer:work:storage#name" }

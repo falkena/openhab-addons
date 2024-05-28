@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.systeminfo.internal.discovery;
 
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_COMPUTER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -38,25 +38,25 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 @Component(service = DiscoveryService.class, configurationPid = "discovery.systeminfo")
-public class SystemInfoDiscoveryService extends AbstractDiscoveryService {
+public class SystemInfoComputerDiscoveryService extends AbstractDiscoveryService {
     public static final String DEFAULT_THING_ID = "unknown";
     public static final String DEFAULT_THING_LABEL = "Local computer";
 
-    private final Logger logger = LoggerFactory.getLogger(SystemInfoDiscoveryService.class);
+    private final Logger logger = LoggerFactory.getLogger(SystemInfoComputerDiscoveryService.class);
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_COMPUTER);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(BRIDGE_TYPE_COMPUTER);
 
     private static final int DISCOVERY_TIME_SECONDS = 30;
     private static final String THING_UID_VALID_CHARS = "A-Za-z0-9_-";
     private static final String HOST_NAME_SEPARATOR = "_";
 
-    public SystemInfoDiscoveryService() {
+    public SystemInfoComputerDiscoveryService() {
         super(SUPPORTED_THING_TYPES_UIDS, DISCOVERY_TIME_SECONDS);
     }
 
     @Override
     protected void startScan() {
-        logger.debug("Starting system information discovery !");
+        logger.debug("Starting computer discovery.");
 
         String hostname;
         try {
@@ -75,10 +75,16 @@ public class SystemInfoDiscoveryService extends AbstractDiscoveryService {
             thingId = thingId.replaceAll("[^" + THING_UID_VALID_CHARS + "]", HOST_NAME_SEPARATOR);
         }
 
-        final ThingUID computer = new ThingUID(THING_TYPE_COMPUTER, thingId);
+        final ThingUID computer = new ThingUID(BRIDGE_TYPE_COMPUTER, thingId);
         final DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(computer);
         builder.withLabel(DEFAULT_THING_LABEL);
         thingDiscovered(builder.build());
+    }
+
+    @Override
+    protected void stopScan() {
+        logger.debug("Stop computer discovery.");
+        super.stopScan();
     }
 
     protected String getHostName() throws UnknownHostException {

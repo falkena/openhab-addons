@@ -8,7 +8,7 @@
 	<!-- The thing updates at intervals the High and Medium priority channels, defined in channel configuration file. This parameters
 		specify how often (time in seconds) these channels should be updated. -->
 
-	<config-description uri="thing-type:systeminfo:computerConfig">
+	<config-description uri="thing-type:systeminfo:computer">
 		<parameter name="interval_high" type="integer">
 			<label>Interval for High Priority Tasks</label>
 			<description>Refresh interval in seconds.</description>
