@@ -156,7 +156,7 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
         Map<String, String> properties = thing.getProperties();
         String gen = getString(properties.get(PROPERTY_DEV_GEN));
         String thingType = getThingType();
-        gen2 = !"1".equals(gen) || ShellyDeviceProfile.isGeneration2(thingType);
+        gen2 = (!gen.isEmpty() && !"1".equals(gen)) || ShellyDeviceProfile.isGeneration2(thingType);
         blu = ShellyDeviceProfile.isBluSeries(thingType);
         this.api = !blu ? !gen2 ? new Shelly1HttpApi(thingName, this) : new Shelly2ApiRpc(thingName, thingTable, this)
                 : new ShellyBluApi(thingName, thingTable, this);
@@ -1024,7 +1024,7 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
             return false;
         }
 
-        if (!profile.isGen2 && config.userId.isEmpty() && !bindingConfig.defaultUserId.isEmpty()) {
+        if (profile.isGen2 && config.userId.isEmpty() && !bindingConfig.defaultUserId.isEmpty()) {
             // Gen2 has hard coded user "admin"
             config.userId = bindingConfig.defaultUserId;
             logger.debug("{}: Using default userId {} from binding config", thingName, config.userId);

@@ -186,9 +186,9 @@ public class ShellyThingCreator {
     public static final String THING_TYPE_SHELLYPLUSWALLDISPLAY_STR = "shellywalldisplay";
 
     // Shelly Plus Mini Series
-    public static final String THING_TYPE_SHELLYMINI1_STR = "shelly1mini";
-    public static final String THING_TYPE_SHELLYMINIPM_STR = "shellypmmini";
-    public static final String THING_TYPE_SHELLYMINI1PM_STR = "shelly1pmmini";
+    public static final String THING_TYPE_SHELLYMINI1_STR = "shellymini1";
+    public static final String THING_TYPE_SHELLYMINIPM_STR = "shellyminipm";
+    public static final String THING_TYPE_SHELLYMINI1PM_STR = "shellymini1pm";
 
     // Shelly Pro Series
     public static final String THING_TYPE_SHELLYPRO1_STR = "shellypro1";

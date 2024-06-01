@@ -12,9 +12,12 @@
  */
 package org.openhab.binding.shelly.internal.discovery;
 
-import static org.openhab.binding.shelly.internal.ShellyBindingConstants.*;
-import static org.openhab.binding.shelly.internal.util.ShellyUtils.*;
-import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
+import static org.openhab.binding.shelly.internal.ShellyBindingConstants.SERVICE_TYPE;
+import static org.openhab.binding.shelly.internal.ShellyBindingConstants.SUPPORTED_THING_TYPES_UIDS;
+import static org.openhab.binding.shelly.internal.ShellyBindingConstants.VENDOR;
+import static org.openhab.binding.shelly.internal.util.ShellyUtils.getString;
+import static org.openhab.binding.shelly.internal.util.ShellyUtils.substringAfter;
+import static org.openhab.binding.shelly.internal.util.ShellyUtils.substringBeforeLast;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -27,7 +30,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.openhab.binding.shelly.internal.api.ShellyDeviceProfile;
 import org.openhab.binding.shelly.internal.config.ShellyBindingConfiguration;
-import org.openhab.binding.shelly.internal.config.ShellyThingConfiguration;
 import org.openhab.binding.shelly.internal.provider.ShellyTranslationProvider;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.mdns.MDNSDiscoveryParticipant;
@@ -119,11 +121,6 @@ public class ShellyDiscoveryParticipant implements MDNSDiscoveryParticipant {
             if (serviceConfig.getProperties() != null) {
                 bindingConfig.updateFromProperties(serviceConfig.getProperties());
             }
-
-            ShellyThingConfiguration config = new ShellyThingConfiguration();
-            config.deviceIp = address;
-            config.userId = bindingConfig.defaultUserId;
-            config.password = bindingConfig.defaultPassword;
 
             String gen = getString(service.getPropertyString("gen"));
             boolean gen2 = "2".equals(gen) || "3".equals(gen) || ShellyDeviceProfile.isGeneration2(name);

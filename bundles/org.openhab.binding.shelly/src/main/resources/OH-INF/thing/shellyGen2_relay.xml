@@ -129,9 +129,9 @@
 		<config-description-ref uri="thing-type:shelly:relay-gen2"/>
 	</thing-type>
 
-	<thing-type id="shelly1mini">
+	<thing-type id="shellymini1">
 		<label>ShellyPlus 1 Mini</label>
-		<description>@text/thing-type.shelly.shelly1mini.description</description>
+		<description>@text/thing-type.shelly.shellymini1.description</description>
 		<channel-groups>
 			<channel-group id="relay" typeId="relayChannel"/>
 			<channel-group id="device" typeId="deviceStatus"/>
@@ -142,9 +142,9 @@
 	</thing-type>
 
 
-	<thing-type id="shellypmmini">
+	<thing-type id="shellyminipm">
 		<label>ShellyPlus PM Mini</label>
-		<description>@text/thing-type.shelly.shellypmmini.description</description>
+		<description>@text/thing-type.shelly.shellyminipm.description</description>
 		<channel-groups>
 			<channel-group id="meter" typeId="meter"/>
 			<channel-group id="device" typeId="deviceStatus"/>
@@ -154,9 +154,9 @@
 		<config-description-ref uri="thing-type:shelly:relay-gen2"/>
 	</thing-type>
 
-	<thing-type id="shelly1pmmini">
+	<thing-type id="shellymini1pm">
 		<label>ShellyPlus 1PM Mini</label>
-		<description>@text/thing-type.shelly.shelly1pmmini.description</description>
+		<description>@text/thing-type.shelly.shellymini1pm.description</description>
 		<channel-groups>
 			<channel-group id="relay" typeId="relayChannel"/>
 			<channel-group id="meter" typeId="meter"/>

@@ -404,21 +404,12 @@ public class ShellyDeviceProfile {
     }
 
     public static boolean isGeneration2(String thingType) {
-        return thingType.startsWith("shellyplus") || thingType.startsWith("shellypro") || thingType.contains("mini")
-                || (thingType.startsWith("shelly") && thingType.contains("g3")) || isBluSeries(thingType);
+        return isBluSeries(thingType) || thingType.startsWith("shellyplus") || thingType.startsWith("shellypro")
+                || thingType.startsWith("shellymini") || (thingType.startsWith("shelly") && thingType.contains("g3"));
     }
 
     public static boolean isBluSeries(String thingType) {
         return thingType.startsWith("shellyblu") && !thingType.startsWith(THING_TYPE_SHELLYBLUGW_STR);
-    }
-
-    public boolean coiotEnabled() {
-        if ((settings.coiot != null) && (settings.coiot.enabled != null)) {
-            return settings.coiot.enabled;
-        }
-
-        // If device is not yet intialized or the enabled property is missing we assume that CoIoT is enabled
-        return true;
     }
 
     public static String buildBluServiceName(String name, String mac) throws IllegalArgumentException {
