@@ -154,46 +154,40 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoOSGiTestBase {
     public void assertChannelNameIsUpdated() {
         final StringType mockedValue = new StringType(TEST_DRIVE_NAME);
 
-        final String acceptedItemType = "String";
-        initializeThingWithChannel(CHANNEL_NAME, CHANNEL_TYPE_NAME, acceptedItemType);
-
-        assertItemState(acceptedItemType, TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+        initializeThingWithChannel(CHANNEL_NAME, CHANNEL_TYPE_NAME, "String");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelReadsIsUpdated() {
         final DecimalType mockedValue = new DecimalType(TEST_DRIVE_READS);
 
-        final String acceptedItemType = "Number";
-        initializeThingWithChannel(CHANNEL_DRIVE_READS, CHANNEL_TYPE_IO_COUNT, acceptedItemType);
-        assertItemState(acceptedItemType, TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+        initializeThingWithChannel(CHANNEL_DRIVE_READS, CHANNEL_TYPE_IO_COUNT, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelReadBytesIsUpdated() {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(TEST_DRIVE_READ_BYTES, Units.BYTE);
 
-        final String acceptedItemType = "Number:DataAmount";
-        initializeThingWithChannel(CHANNEL_DRIVE_READ_BYTES, CHANNEL_TYPE_IO_BYTES, acceptedItemType);
-        assertItemState(acceptedItemType, TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+        initializeThingWithChannel(CHANNEL_DRIVE_READ_BYTES, CHANNEL_TYPE_IO_BYTES, "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelWritesIsUpdated() {
         final DecimalType mockedValue = new DecimalType(TEST_DRIVE_WRITES);
 
-        final String acceptedItemType = "Number";
-        initializeThingWithChannel(CHANNEL_DRIVE_WRITES, CHANNEL_TYPE_IO_COUNT, acceptedItemType);
-        assertItemState(acceptedItemType, TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+        initializeThingWithChannel(CHANNEL_DRIVE_WRITES, CHANNEL_TYPE_IO_COUNT, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelWriteBytesIsUpdated() {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(TEST_DRIVE_WRITE_BYTES, Units.BYTE);
 
-        final String acceptedItemType = "Number:DataAmount";
-        initializeThingWithChannel(CHANNEL_DRIVE_WRITE_BYTES, CHANNEL_TYPE_IO_BYTES, acceptedItemType);
-        assertItemState(acceptedItemType, TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+        initializeThingWithChannel(CHANNEL_DRIVE_WRITE_BYTES, CHANNEL_TYPE_IO_BYTES, "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     protected void initializeThingWithChannel(final String channelID, final ChannelTypeUID channelTypeUID,

@@ -185,10 +185,16 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
 
     @AfterEach
     public void dispose() {
+        final Item item = testItem;
+        if (item != null) {
+            itemRegistry.remove(item.getName());
+            testItem = null;
+        }
+
         final Bridge bridge = systemInfoBridge;
         if (bridge != null) {
             // Remove the systeminfo thing. The handler will also be disposed automatically
-            Thing removedThing = thingRegistry.forceRemove(bridge.getUID());
+            final Thing removedThing = thingRegistry.forceRemove(bridge.getUID());
             assertThat("The computer bridge cannot be deleted", removedThing, is(notNullValue()));
 
             managedThingProvider.remove(removedThing.getUID());
@@ -197,9 +203,6 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
             assertThat(handler, is(nullValue()));
         }
 
-        if (testItem != null) {
-            itemRegistry.remove(testItem.getName());
-        }
         unregisterService(mockedSystemInfo);
 
         final VolatileStorageService storageService = this.storageService;
@@ -209,7 +212,7 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
         }
     }
 
-    protected void assertItemState(String acceptedItemType, String itemName, String priority, State expectedState) {
+    protected void assertItemState(final String itemName, String priority, State expectedState) {
         // The binding starts all refresh tasks in SystemInfoHandler.scheduleUpdates() after this delay !
         try {
             sleep(SystemInfoComputerHandler.WAIT_TIME_CHANNEL_ITEM_LINK_INIT * 1000);

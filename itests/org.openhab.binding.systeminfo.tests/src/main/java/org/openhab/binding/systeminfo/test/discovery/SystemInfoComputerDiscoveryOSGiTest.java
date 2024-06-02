@@ -115,7 +115,7 @@ public class SystemInfoComputerDiscoveryOSGiTest extends JavaOSGiTest {
 
         final SystemInfoHandlerFactory systemInfoHandlerFactory = getService(ThingHandlerFactory.class,
                 SystemInfoHandlerFactory.class);
-        waitForAssert(() -> assertThat(systemInfoHandlerFactory, is(notNullValue())));
+        assertThat(systemInfoHandlerFactory, is(notNullValue()));
 
         final SystemInfoInterface systemInfo = getService(SystemInfoInterface.class);
         if (systemInfo != null) {
