@@ -48,16 +48,6 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-group-type id="driveGroup">
-		<label>Drive</label>
-		<description>Drive information</description>
-		<channels>
-			<channel id="name" typeId="name"/>
-			<channel id="model" typeId="model"/>
-			<channel id="serial" typeId="serial"/>
-		</channels>
-	</channel-group-type>
-
 	<channel-group-type id="networkGroup">
 		<label>Network</label>
 		<description>Network parameters</description>
@@ -236,22 +226,6 @@
 		<description>Name of the device (process)</description>
 		<state readOnly="true" pattern="%s"/>
 		<config-description-ref uri="channel-type:systeminfo:lowpriority_process"/>
-	</channel-type>
-
-	<channel-type id="model" advanced="true">
-		<item-type>String</item-type>
-		<label>Model</label>
-		<description>The model of the device</description>
-		<state readOnly="true" pattern="%s"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
-	</channel-type>
-
-	<channel-type id="serial" advanced="true">
-		<item-type>String</item-type>
-		<label>Serial Number</label>
-		<description>The serial number of the device</description>
-		<state readOnly="true" pattern="%s"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
 	</channel-type>
 
 	<channel-type id="description" advanced="true">
