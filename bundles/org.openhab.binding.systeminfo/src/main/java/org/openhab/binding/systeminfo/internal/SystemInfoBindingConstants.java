@@ -28,10 +28,12 @@ public class SystemInfoBindingConstants {
 
     public static final String BINDING_ID = "systeminfo";
 
-    public static final String THING_TYPE_COMPUTER_ID = "computer";
-    public static final ThingTypeUID THING_TYPE_COMPUTER = new ThingTypeUID(BINDING_ID, THING_TYPE_COMPUTER_ID);
-    public static final ThingTypeUID THING_TYPE_COMPUTER_IMPL = new ThingTypeUID(BINDING_ID,
-            THING_TYPE_COMPUTER_ID + "-impl");
+    public static final String BRIDGE_TYPE_COMPUTER_ID = "computer";
+    public static final ThingTypeUID BRIDGE_TYPE_COMPUTER = new ThingTypeUID(BINDING_ID, BRIDGE_TYPE_COMPUTER_ID);
+    public static final ThingTypeUID BRIDGE_TYPE_COMPUTER_IMPL = new ThingTypeUID(BINDING_ID,
+            BRIDGE_TYPE_COMPUTER_ID + "-impl");
+
+    public static final ThingTypeUID BRIDGE_TYPE_DRIVE = new ThingTypeUID(BINDING_ID, "drive");
 
     // Thing properties
     /**
@@ -60,6 +62,41 @@ public class SystemInfoBindingConstants {
     public static final String PROPERTY_OS_VERSION = "OS Version";
 
     // List of all Channel IDs
+
+    /**
+     * Common name channel
+     */
+    public static final String CHANNEL_NAME = "name";
+
+    /**
+     * Physical storage drive model
+     */
+    public static final String CHANNEL_DRIVE_MODEL = "model";
+
+    /**
+     * Physical storage drive serial number
+     */
+    public static final String CHANNEL_DRIVE_SERIAL = "serial";
+
+    /**
+     * The number of reads from the disk
+     */
+    public static final String CHANNEL_DRIVE_READS = "reads";
+
+    /**
+     * The number of bytes read from the disk
+     */
+    public static final String CHANNEL_DRIVE_READ_BYTES = "readBytes";
+
+    /**
+     * The number of writes to the disk
+     */
+    public static final String CHANNEL_DRIVE_WRITES = "writes";
+
+    /**
+     * The number of bytes written to the disk
+     */
+    public static final String CHANNEL_DRIVE_WRITE_BYTES = "writeBytes";
 
     /**
      * Name of the channel group type for memory information
@@ -140,31 +177,6 @@ public class SystemInfoBindingConstants {
      * Percents of the used swap memory
      */
     public static final String CHANNEL_SWAP_USED_PERCENT = "swap#usedPercent";
-
-    /**
-     * Name of the channel group type for drive information
-     */
-    public static final String CHANNEL_GROUP_TYPE_DRIVE = "driveGroup";
-
-    /**
-     * Name of the channel group for drive information
-     */
-    public static final String CHANNEL_GROUP_DRIVE = "drive";
-
-    /**
-     * Physical storage drive name
-     */
-    public static final String CHANNEL_DRIVE_NAME = "drive#name";
-
-    /**
-     * Physical storage drive model
-     */
-    public static final String CHANNEL_DRIVE_MODEL = "drive#model";
-
-    /**
-     * Physical storage drive serial number
-     */
-    public static final String CHANNEL_DRIVE_SERIAL = "drive#serial";
 
     /**
      * Name of the channel group type for storage information
@@ -474,16 +486,18 @@ public class SystemInfoBindingConstants {
      */
     public static final String MEDIUM_PRIORITY_REFRESH_TIME = "interval_medium";
 
+    public static final String DEVICE_INDEX_PARAMETER = "index";
+
     // Channel configuration
 
     /**
      * Name of the channel configuration parameter priority
      */
-    public static final String PRIOIRITY_PARAM = "priority";
+    public static final String PRIORITY_PARAMETER = "priority";
 
     /**
      * Name of the channel configuration parameter pid
      *
      */
-    public static final String PID_PARAM = "pid";
+    public static final String PID_PARAMETER = "pid";
 }
