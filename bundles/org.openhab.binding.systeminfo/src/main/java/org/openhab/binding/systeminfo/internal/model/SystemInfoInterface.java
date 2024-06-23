@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.systeminfo.internal.model;
 
+import java.util.List;
+
 import javax.measure.quantity.ElectricPotential;
 import javax.measure.quantity.Frequency;
 import javax.measure.quantity.Temperature;
@@ -24,6 +26,8 @@ import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
+
+import oshi.hardware.HWDiskStore;
 
 /**
  * {@link SystemInfoInterface} defines the methods needed to provide this binding with the required system information.
@@ -286,29 +290,18 @@ public interface SystemInfoInterface {
     StringType getStorageDescription(int deviceIndex) throws DeviceNotFoundException;
 
     // Hardware drive info
-    /**
-     * Gets the name of the physical storage drive
-     *
-     * @param deviceIndex - index of the storage drive
-     * @throws DeviceNotFoundException
-     */
-    StringType getDriveName(int deviceIndex) throws DeviceNotFoundException;
 
     /**
-     * Gets the model of the physical storage drive
+     * Returns the number of drives.
      *
-     * @param deviceIndex - index of the storage drive
-     * @throws DeviceNotFoundException
+     * @return drive count
      */
-    StringType getDriveModel(int deviceIndex) throws DeviceNotFoundException;
+    int getHardDriveCount();
 
     /**
-     * Gets the serial number of the physical storage drive
-     *
-     * @param deviceIndex - index of the storage drive
-     * @throws DeviceNotFoundException
+     * Gets the list of the physical storage drives
      */
-    StringType getDriveSerialNumber(int deviceIndex) throws DeviceNotFoundException;
+    List<HWDiskStore> getHardDriveList();
 
     // Network info
     /**
@@ -521,13 +514,6 @@ public interface SystemInfoInterface {
      * @return power source count
      */
     int getPowerSourceCount();
-
-    /**
-     * Returns the number of drives.
-     *
-     * @return drive count
-     */
-    int getDriveCount();
 
     /**
      * Returns the number of fans.

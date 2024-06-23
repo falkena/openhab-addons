@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="systeminfo"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+	<bridge-type id="drive">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="computer-impl"/>
+		</supported-bridge-type-refs>
+		<label>Drive</label>
+		<description>Information about drive devices</description>
+
+		<channels>
+			<channel id="name" typeId="name">
+				<label>Drive Name</label>
+				<description>The name of the drive</description>
+			</channel>
+			<channel id="model" typeId="model"/>
+			<channel id="serial" typeId="serial"/>
+			<channel id="reads" typeId="io_count">
+				<label>Reads Count</label>
+				<description>The number of reads from the drive</description>
+			</channel>
+			<channel id="readBytes" typeId="io_bytes">
+				<label>Read Bytes</label>
+				<description>The number of bytes read from the disk</description>
+			</channel>
+			<channel id="writes" typeId="io_count">
+				<label>Writes Count</label>
+				<description>The number of writes to the drive</description>
+			</channel>
+			<channel id="writeBytes" typeId="io_bytes">
+				<label>Written Bytes</label>
+				<description>The number of bytes written to the disk</description>
+			</channel>
+		</channels>
+
+		<properties>
+			<property name="modelId">Not available</property>
+			<property name="serialNumber">Not available</property>
+		</properties>
+		<representation-property>index</representation-property>
+
+		<config-description-ref uri="thing-type:systeminfo:drive"/>
+	</bridge-type>
+
+	<channel-type id="io_bytes" advanced="false">
+		<item-type>Number:DataAmount</item-type>
+		<label>Read/Written Bytes</label>
+		<description>Bytes read/written</description>
+		<state readOnly="true" pattern="%d B"/>
+		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
+	</channel-type>
+
+	<channel-type id="io_count" advanced="true">
+		<item-type>Number</item-type>
+		<label>Reads/Writes Count</label>
+		<description>The number of reads/writes</description>
+		<state readOnly="true" pattern="%d"/>
+		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
+	</channel-type>
+
+	<channel-type id="model" advanced="true">
+		<item-type>String</item-type>
+		<label>Model</label>
+		<description>The model of the hard drive</description>
+		<state readOnly="true" pattern="%s"/>
+		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
+	</channel-type>
+
+	<channel-type id="serial" advanced="true">
+		<item-type>String</item-type>
+		<label>Serial Number</label>
+		<description>The serial number of the hard drive</description>
+		<state readOnly="true" pattern="%s"/>
+		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
+	</channel-type>
+
+</thing:thing-descriptions>
