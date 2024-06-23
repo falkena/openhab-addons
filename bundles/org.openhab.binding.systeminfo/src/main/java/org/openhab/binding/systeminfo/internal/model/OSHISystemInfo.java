@@ -111,19 +111,19 @@ public class OSHISystemInfo implements SystemInfoInterface {
 
         SystemInfo systemInfo = new SystemInfo();
         hal = systemInfo.getHardware();
+        operatingSystem = systemInfo.getOperatingSystem();
 
         // Doesn't need regular update, they may be queried repeatedly
-        memory = hal.getMemory();
         cpu = hal.getProcessor();
+        drives = hal.getDiskStores();
+        memory = hal.getMemory();
         sensors = hal.getSensors();
 
         computerSystem = hal.getComputerSystem();
-        operatingSystem = systemInfo.getOperatingSystem();
         networks = hal.getNetworkIFs();
         displays = hal.getDisplays();
         fileStores = operatingSystem.getFileSystem().getFileStores();
         powerSources = hal.getPowerSources();
-        drives = hal.getDiskStores();
     }
 
     private <T> T getDevice(List<@Nullable T> devices, int index) throws DeviceNotFoundException {
@@ -434,24 +434,13 @@ public class OSHISystemInfo implements SystemInfoInterface {
     }
 
     @Override
-    public StringType getDriveName(int deviceIndex) throws DeviceNotFoundException {
-        HWDiskStore drive = getDevice(drives, deviceIndex);
-        String name = drive.getName();
-        return new StringType(name);
+    public int getHardDriveCount() {
+        return drives.size();
     }
 
     @Override
-    public StringType getDriveModel(int deviceIndex) throws DeviceNotFoundException {
-        HWDiskStore drive = getDevice(drives, deviceIndex);
-        String model = drive.getModel();
-        return new StringType(model);
-    }
-
-    @Override
-    public StringType getDriveSerialNumber(int deviceIndex) throws DeviceNotFoundException {
-        HWDiskStore drive = getDevice(drives, deviceIndex);
-        String serialNumber = drive.getSerial();
-        return new StringType(serialNumber);
+    public List<HWDiskStore> getHardDriveList() {
+        return drives;
     }
 
     @Override
@@ -716,11 +705,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     @Override
     public int getPowerSourceCount() {
         return powerSources.size();
-    }
-
-    @Override
-    public int getDriveCount() {
-        return drives.size();
     }
 
     @Override
