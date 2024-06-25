@@ -113,6 +113,11 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
      */
     protected static final int DEFAULT_TEST_INTERVAL_MEDIUM = 3;
 
+    /**
+     * Refresh time in seconds for tasks with priority Low.
+     */
+    protected static final int DEFAULT_TEST_INTERVAL_LOW = 5;
+
     @BeforeEach
     public void initialize() {
         VolatileStorageService storageService = this.storageService;
@@ -131,7 +136,6 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
         lenient().when(mockedSystemInfo.getOsVersion()).thenReturn(new StringType("Mock Os Version"));
 
         // Following mock method returns will make sure the thing does not get recreated with extra channels
-        lenient().when(mockedSystemInfo.getNetworkIFCount()).thenReturn(1);
         lenient().when(mockedSystemInfo.getDisplayCount()).thenReturn(1);
         lenient().when(mockedSystemInfo.getFileOSStoreCount()).thenReturn(1);
         lenient().when(mockedSystemInfo.getPowerSourceCount()).thenReturn(1);

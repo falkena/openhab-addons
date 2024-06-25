@@ -15,12 +15,21 @@ package org.openhab.binding.systeminfo.test.handler;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_DRIVE;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DRIVE_MODEL;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DRIVE_READS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DRIVE_READ_BYTES;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DRIVE_SERIAL;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DRIVE_WRITES;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DRIVE_WRITE_BYTES;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_NAME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.DEVICE_INDEX_PARAMETER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PRIORITY_PARAMETER;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_IO_BYTES;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_IO_COUNT;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_MODEL;
@@ -67,7 +76,7 @@ import oshi.hardware.HWDiskStore;
  */
 @NonNullByDefault
 @ExtendWith(MockitoExtension.class)
-public class SystemInfoDriveHandlerOSGiTest extends SystemInfoOSGiTestBase {
+public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiTestBase {
 
     private static final String TEST_ITEM_NAME = "drive";
 
@@ -163,12 +172,8 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoOSGiTestBase {
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
-    protected void initializeThingWithChannel(final String channelID, final ChannelTypeUID channelTypeUID,
+    private void initializeThingWithChannel(final String channelID, final ChannelTypeUID channelTypeUID,
             final String acceptedItemType) {
-        final Configuration configuration = new Configuration();
-        configuration.put(HIGH_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
-        configuration.put(MEDIUM_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
-
         initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
 
         final Bridge systemInfoBridge = this.systemInfoBridge;
@@ -176,13 +181,12 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoOSGiTestBase {
             throw new AssertionError("Bridge is null");
         }
 
+        final Configuration bridgeConfiguration = new Configuration();
+        bridgeConfiguration.put(DEVICE_INDEX_PARAMETER, new BigDecimal(DEFAULT_DEVICE_INDEX));
+
         final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_DRIVE, DEFAULT_TEST_THING_NAME);
         final BridgeBuilder bridgeBuilder = BridgeBuilder.create(BRIDGE_TYPE_DRIVE, thingUID);
         bridgeBuilder.withBridge(systemInfoBridge.getBridgeUID());
-
-        final Configuration thingConfiguration = new Configuration();
-        thingConfiguration.put(DEVICE_INDEX_PARAMETER, new BigDecimal(DEFAULT_DEVICE_INDEX));
-        bridgeBuilder.withConfiguration(thingConfiguration);
 
         final ChannelUID channelUID = new ChannelUID(thingUID, channelID);
         final ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
@@ -198,9 +202,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoOSGiTestBase {
         managedThingProvider.add(bridge);
 
         final BridgeHandler handler = bridge.getHandler();
-        if (handler == null) {
-            throw new AssertionError("Drive handler is null");
-        }
+        assertThat(handler, is(notNullValue()));
         assertThat(handler, is(instanceOf(SystemInfoDriveHandler.class)));
         handler.initialize();
 
