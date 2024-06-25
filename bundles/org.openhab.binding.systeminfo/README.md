@@ -74,7 +74,25 @@ The thing has the following properties:
 
 ## Thing configuration
 
-Currently no things are supported.
+### Network Things
+
+The configuration pattern for **network** things is:
+
+```
+Thing systeminfo:network:<AdapterId> [ name=<name> ]
+```
+
+The configuration of the thing gives the user the possibility to identify multiple network
+cards available on the system. The thing has one configuration parameter:
+
+- **name** - The name of network adapter. There is no default value available.
+
+For example, on single Windows computer several network adapters could be installed with names
+eth0, wlan0 and so on.
+
+The thing has the following property:
+
+- `macAddress` - The MAC address of the network card
 
 ## Discovery
 
@@ -105,8 +123,6 @@ In the list below, you can find, how are channel group and channels id`s related
   - **channel** `name, description, maxfreq, freq` (deviceIndex)`, load, load1, load5, load15, uptime, threads`
 - **group** `sensors`
   - **channel** `cpuTemp, cpuVoltage, fanSpeed` (deviceIndex)
-- **group** `network` (deviceIndex)
-  - **channel** `ip, mac, networkDisplayName, networkName, packetsSent, packetsReceived, dataSent, dataReceived`
 - **group** `currentProcess`
   - **channel** `load, used, name, threads, path`
 - **group** `process` (pid)
@@ -162,30 +178,39 @@ The table shows more detailed information about each channel type:
 | remainingTime      | Remaining time in minutes                                        | Number:Time         | Medium           | False    |
 | remainingCapacity  | Remaining capacity in %                                          | Number:Dimensionless| Medium           | False    |
 | information        | Product, manufacturer, SN, width and height of the display in cm | String              | Low              | True     |
-| ip                 | Host IP address of the network                                   | String              | Low              | False    |
-| mac                | MAC address                                                      | String              | Low              | True     |
-| networkName        | The name of the network                                          | String              | Low              | False    |
-| networkDisplayName | The display name of the network                                  | String              | Low              | False    |
-| packetsSent        | Number of packets sent                                           | Number              | Medium           | True     |
-| packetsReceived    | Number of packets received                                       | Number              | Medium           | True     |
-| dataSent           | Volume of data sent                                              | Number:DataAmount   | Medium           | True     |
-| dataReceived       | Volume of data received                                          | Number:DataAmount   | Medium           | True     |
 | availableHeap      | How much space is available in the currently committed heap      | Number:DataAmount   | Medium           | True     |
 | usedHeapPercent    | How much of the MAX heap size is actually used in %              | Number:Dimensionless| Medium           | False    |
 
 ### Drive
 
-The table shows more detailed information about each Channel type:
+The table shows more detailed information about each channel type:
 
 | Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
 |--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
-| name               | Symbolic link name for the hard drive                            | String              | Low              | False    |
+| name               | Symbolic link name of the hard drive                             | String              | Low              | False    |
 | model              | The model of the hard drive                                      | String              | Low              | True     |
 | serial             | The serial number of the hard drive                              | String              | Low              | True     |
 | readBytes          | Number of bytes read from the hard drive                         | Number:DataAmount   | High             | False    |
 | reads              | Number of reads from the hard drive                              | Number              | Medium           | True     |
 | writeBytes         | Number of bytes written to the hard drive                        | Number:DataAmount   | High             | False    |
 | writes             | Number of writes to the hard drive                               | Number              | Medium           | True     |
+
+### Network
+
+The table shows more detailed information about each channel type:
+
+| Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
+|--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
+| Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
+|--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
+| name               | The name of the network adapter                                  | String              | Low              | False    |
+| description        | The display name of the network adapter                          | String              | Low              | False    |
+| ip                 | Host IP address of the network adapter                           | String              | Low              | False    |
+| mac                | MAC address of the network adapter                               | String              | Low              | True     |
+| received           | Number of packets received over network adapter                  | Number              | Medium           | True     |
+| receivedBytes      | Number of bytes received over network adapter                    | Number:DataAmount   | High             | False    |
+| sent               | Number of packets sent over network adapter                      | Number              | Medium           | True     |
+| sentBytes          | Number of bytes sent over network adapter                        | Number:DataAmount   | High             | False    |
 
 ## Channel configuration
 
@@ -199,8 +224,8 @@ It has the following options:
 - **Medium**
 - **Low**
 
-The ''load'' channel will update total or by process CPU load at the frequency defined by the priority update interval, by default high priority, every second.
-The value corresponds to the average CPU load over the interval.
+The ''load'' channel will update total or by process CPU load at the frequency defined by the priority update interval, by default high priority,
+every second. The value corresponds to the average CPU load over the interval.
 
 Channels from group ''process'' have additional configuration parameter - PID (Process identifier).
 This parameter is used as 'deviceIndex' and defines which process is tracked from the channel.
@@ -219,8 +244,8 @@ As already mentioned this binding depends heavily on the [OSHI](https://github.c
 
 Take a look at the console for an ERROR log message.
 
-If you find an issue with support for a specific hardware or software architecture please take a look at the [OSHI issues](https://github.com/oshi/oshi/issues).
-Your problem might have be already reported and solved!
+If you find an issue with support for a specific hardware or software architecture please take a look at the
+[OSHI issues](https://github.com/oshi/oshi/issues). Your problem might have be already reported and solved!
 Feel free to open a new issue there with the log message and the information about your software or hardware configuration.
 
 For a general problem with the binding report the issue directly to openHAB.
@@ -233,21 +258,13 @@ Things:
 Bridge systeminfo:computer:work "Computer" @ "System" [ interval_high=3, interval_medium=60 ]
 {
    Bridge drive harddrive "Hard drive" @ "System" [ index=0 ]
+   Thing network adapter "Network adapter" @ "System" [ name="eth0" ]
 }
 ```
 
 Items:
 
 ```java
-/* Network information*/
-String Network_AdapterName         "Adapter name"        <network>       { channel="systeminfo:computer:work:network#networkDisplayName" }
-String Network_Name                "Name"                <network>       { channel="systeminfo:computer:work:network#networkName" }
-String Network_IP                  "IP address"          <network>       { channel="systeminfo:computer:work:network#ip" }
-String Network_Mac                 "Mac address"         <network>       { channel="systeminfo:computer:work:network#mac" }
-Number:DataAmount Network_DataSent "Data sent"           <flowpipe>      { channel="systeminfo:computer:work:network#dataSent" }
-Number:DataAmount Network_DataReceived "Data received"   <returnpipe>    { channel="systeminfo:computer:work:network#dataReceived" }
-Number Network_PacketsSent         "Packets sent"        <flowpipe>      { channel="systeminfo:computer:work:network#packetsSent" }
-Number Network_PacketsReceived     "Packets received"    <returnpipe>    { channel="systeminfo:computer:work:network#packetsReceived" }
 
 /* CPU information*/
 String CPU_Name                    "Name"                <none>          { channel="systeminfo:computer:work:cpu#name" }
@@ -269,6 +286,16 @@ Number:DataAmount Drive_ReadBytes  "Read [%d B]"         <none>          { chann
 Number Drive_ReadCount             "Read [%d]"           <none>          { channel="systeminfo:drive:harddrive:reads" }
 Number:DataAmount Drive_WriteBytes "Written [%d B]"      <none>          { channel="systeminfo:drive:harddrive:writeBytes" }
 Number Drive_WriteCount            "Written [%d]"        <none>          { channel="systeminfo:drive:harddrive:writes" }
+
+/* Network information*/
+String Network_AdapterName         "Adapter name"        <network>       { channel="systeminfo:network:adapter:network#name" }
+String Network_Name                "Name"                <network>       { channel="systeminfo:network:adapter:network#description" }
+String Network_IP                  "IP address"          <network>       { channel="systeminfo:network:adapter:network#ip" }
+String Network_Mac                 "Mac address"         <network>       { channel="systeminfo:network:adapter:network#mac" }
+Number:DataAmount Network_Sent     "Sent [%d B]"         <flowpipe>      { channel="systeminfo:network:adapter:network#sentBytes" }
+Number Network_PacketsSent         "Sent [%d]"           <flowpipe>      { channel="systeminfo:network:adapter:network#packetsSent" }
+Number:DataAmount Network_Received "Received [%d B]"     <returnpipe>    { channel="systeminfo:network:adapter:network#receivedBytes" }
+Number Network_PacketsReceived     "Received [%d]"       <returnpipe>    { channel="systeminfo:network:adapter:network#received" }
 
 /* Storage information*/
 String Storage_Name                "Name"                <none>          { channel="systeminfo:computer:work:storage#name" }
