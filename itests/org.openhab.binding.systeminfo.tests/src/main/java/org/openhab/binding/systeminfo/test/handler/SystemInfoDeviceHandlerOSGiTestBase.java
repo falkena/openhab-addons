@@ -53,10 +53,13 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
 
     private @Nullable Thing thing;
 
-    protected final static Configuration configuration = new Configuration(
-            Map.ofEntries(Map.entry(HIGH_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_HIGH)),
-                    Map.entry(MEDIUM_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_MEDIUM)),
-                    Map.entry(LOW_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_LOW))));
+    // spotless:off
+    protected final static Configuration configuration = new Configuration(Map.ofEntries(
+            Map.entry(HIGH_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_HIGH)),
+            Map.entry(MEDIUM_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_MEDIUM)),
+            Map.entry(LOW_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_LOW))
+    ));
+    // spotless:on
 
     @BeforeEach
     @Override
