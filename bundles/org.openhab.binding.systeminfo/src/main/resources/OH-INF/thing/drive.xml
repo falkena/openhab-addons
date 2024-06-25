@@ -44,22 +44,6 @@
 		<config-description-ref uri="thing-type:systeminfo:drive"/>
 	</bridge-type>
 
-	<channel-type id="io_bytes" advanced="false">
-		<item-type>Number:DataAmount</item-type>
-		<label>Read/Written Bytes</label>
-		<description>Bytes read/written</description>
-		<state readOnly="true" pattern="%d B"/>
-		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
-	</channel-type>
-
-	<channel-type id="io_count" advanced="true">
-		<item-type>Number</item-type>
-		<label>Reads/Writes Count</label>
-		<description>The number of reads/writes</description>
-		<state readOnly="true" pattern="%d"/>
-		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
-	</channel-type>
-
 	<channel-type id="model" advanced="true">
 		<item-type>String</item-type>
 		<label>Model</label>
