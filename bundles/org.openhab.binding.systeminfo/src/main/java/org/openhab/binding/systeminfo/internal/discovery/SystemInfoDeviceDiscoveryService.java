@@ -14,7 +14,10 @@ package org.openhab.binding.systeminfo.internal.discovery;
 
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_DRIVE;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.DEVICE_INDEX_PARAMETER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.DEVICE_NAME_PARAMETER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_NETWORK;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -34,25 +37,24 @@ import org.openhab.core.thing.binding.ThingHandlerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import oshi.hardware.NetworkIF;
+
 /**
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public class SystemInfoDriveDiscoveryService extends AbstractDiscoveryService
+public class SystemInfoDeviceDiscoveryService extends AbstractDiscoveryService
         implements DiscoveryService, ThingHandlerService {
-    public static final String DEFAULT_THING_ID = "drive";
-    public static final String DEFAULT_THING_LABEL = "Hard drive";
+    private final Logger logger = LoggerFactory.getLogger(SystemInfoDeviceDiscoveryService.class);
 
-    private final Logger logger = LoggerFactory.getLogger(SystemInfoDriveDiscoveryService.class);
-
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(BRIDGE_TYPE_DRIVE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(BRIDGE_TYPE_DRIVE, THING_TYPE_NETWORK);
 
     private static final int DISCOVERY_TIME_SECONDS = 30;
 
     private @Nullable SystemInfoComputerHandler handler;
     private @Nullable ScheduledFuture<?> discoveryJob;
 
-    public SystemInfoDriveDiscoveryService() {
+    public SystemInfoDeviceDiscoveryService() {
         super(SUPPORTED_THING_TYPES_UIDS, DISCOVERY_TIME_SECONDS);
     }
 
@@ -87,11 +89,25 @@ public class SystemInfoDriveDiscoveryService extends AbstractDiscoveryService
             final ThingUID bridgeUID = handler.getThing().getUID();
             final SystemInfoInterface systemInfo = handler.getSystemInfo();
             for (int index = 0; index < systemInfo.getHardDriveCount(); index++) {
-                final String thingId = String.format("%s%d", DEFAULT_THING_ID, index);
-                final ThingUID drive = new ThingUID(BRIDGE_TYPE_DRIVE, bridgeUID, thingId);
-                DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(drive);
-                builder.withBridge(bridgeUID).withLabel(DEFAULT_THING_LABEL);
-                builder.withProperty(DEVICE_INDEX_PARAMETER, index).withRepresentationProperty(DEVICE_INDEX_PARAMETER);
+                final String thingId = String.format("drive%d", index);
+                final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_DRIVE, bridgeUID, thingId);
+                DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(thingUID);
+                builder.withBridge(bridgeUID).withLabel("Hard drive");
+                builder.withProperty(DEVICE_INDEX_PARAMETER, index);
+                builder.withRepresentationProperty(DEVICE_INDEX_PARAMETER);
+                thingDiscovered(builder.build());
+            }
+
+            final List<NetworkIF> adapters = systemInfo.getNetworkInterfaceList();
+            for (int index = 0; index < systemInfo.getNetworkInterfaceCount(); index++) {
+                final NetworkIF adapter = adapters.get(index);
+                final String thingId = String.format("adapter%d", index);
+                final ThingUID thingUID = new ThingUID(THING_TYPE_NETWORK, bridgeUID, thingId);
+                DiscoveryResultBuilder builder = DiscoveryResultBuilder.create(thingUID);
+                builder.withBridge(bridgeUID).withLabel("Network adapter");
+                builder.withProperty(DEVICE_INDEX_PARAMETER, adapter.getIndex());
+                builder.withProperty(DEVICE_NAME_PARAMETER, adapter.getName());
+                builder.withRepresentationProperty(DEVICE_NAME_PARAMETER);
                 thingDiscovered(builder.build());
             }
         } else {
