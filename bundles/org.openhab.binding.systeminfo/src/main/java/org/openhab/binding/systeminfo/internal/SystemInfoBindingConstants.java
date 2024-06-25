@@ -34,6 +34,7 @@ public class SystemInfoBindingConstants {
             BRIDGE_TYPE_COMPUTER_ID + "-impl");
 
     public static final ThingTypeUID BRIDGE_TYPE_DRIVE = new ThingTypeUID(BINDING_ID, "drive");
+    public static final ThingTypeUID THING_TYPE_NETWORK = new ThingTypeUID(BINDING_ID, "network");
 
     // Thing properties
     /**
@@ -45,6 +46,9 @@ public class SystemInfoBindingConstants {
      * Number of CPU physical cores
      */
     public static final String PROPERTY_CPU_PHYSICAL_CORES = "CPU Physical Cores";
+
+    public static final String PROPERTY_HOSTNAME = "hostname";
+    public static final String PROPERTY_HOSTNAME_DEFAULT = "unknown";
 
     /**
      * Contains information about the family /Windows, Linux, OS X etc/ of the operation system
@@ -62,6 +66,11 @@ public class SystemInfoBindingConstants {
     public static final String PROPERTY_OS_VERSION = "OS Version";
 
     // List of all Channel IDs
+
+    /**
+     * Common description channel
+     */
+    public static final String CHANNEL_DESCRIPTION = "description";
 
     /**
      * Common name channel
@@ -97,6 +106,36 @@ public class SystemInfoBindingConstants {
      * The number of bytes written to the disk
      */
     public static final String CHANNEL_DRIVE_WRITE_BYTES = "writeBytes";
+
+    /**
+     * Host IP address of the network interface
+     */
+    public static final String CHANNEL_NETWORK_IP = "ip";
+
+    /**
+     * MAC address of the network interface
+     */
+    public static final String CHANNEL_NETWORK_MAC = "mac";
+
+    /**
+     * Number of packets received over network interface
+     */
+    public static final String CHANNEL_NETWORK_RECEIVED = "received";
+
+    /**
+     * The number of bytes received over network interface
+     */
+    public static final String CHANNEL_NETWORK_RECEIVED_BYTES = "receivedBytes";
+
+    /**
+     * Number of packets sent over network interface
+     */
+    public static final String CHANNEL_NETWORK_SENT = "sent";
+
+    /**
+     * The number of bytes sent over network interface
+     */
+    public static final String CHANNEL_NETWORK_SENT_BYTES = "sentBytes";
 
     /**
      * Name of the channel group type for memory information
@@ -354,56 +393,6 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_DISPLAY_INFORMATION = "display#information";
 
     /**
-     * Name of the channel group type for network information
-     */
-    public static final String CHANNEL_GROUP_TYPE_NETWORK = "networkGroup";
-
-    /**
-     * Name of the channel group for network information
-     */
-    public static final String CHANNEL_GROUP_NETWORK = "network";
-
-    /**
-     * Host IP address of the network
-     */
-    public static final String CHANNEL_NETWORK_IP = "network#ip";
-
-    /**
-     * Network display name
-     */
-    public static final String CHANNEL_NETWORK_ADAPTER_NAME = "network#networkName";
-
-    /**
-     * Network data sent
-     */
-    public static final String CHANNEL_NETWORK_DATA_SENT = "network#dataSent";
-
-    /**
-     * Network data received
-     */
-    public static final String CHANNEL_NETWORK_DATA_RECEIVED = "network#dataReceived";
-
-    /**
-     * Network packets sent
-     */
-    public static final String CHANNEL_NETWORK_PACKETS_SENT = "network#packetsSent";
-
-    /**
-     * Network packets received
-     */
-    public static final String CHANNEL_NETWORK_PACKETS_RECEIVED = "network#packetsReceived";
-
-    /**
-     * Network name
-     */
-    public static final String CHANNEL_NETWORK_NAME = "network#networkDisplayName";
-
-    /**
-     * Network mac address
-     */
-    public static final String CHANNEL_NETWORK_MAC = "network#mac";
-
-    /**
      * Name of the channel group type for process information
      */
     public static final String CHANNEL_GROUP_TYPE_CURRENT_PROCESS = "currentProcessGroup";
@@ -477,16 +466,23 @@ public class SystemInfoBindingConstants {
 
     // Thing configuraion
     /**
-     * Name of the configuration parameter of the thing that defines refresh time for High priority channels
+     * Name of the configuration parameter of the thing that defines refresh time for Low priority channels
      */
-    public static final String HIGH_PRIORITY_REFRESH_TIME = "interval_high";
+    public static final String LOW_PRIORITY_REFRESH_TIME = "interval_low";
 
     /**
      * Name of the configuration parameter of the thing that defines refresh time for Medium priority channels
      */
     public static final String MEDIUM_PRIORITY_REFRESH_TIME = "interval_medium";
 
+    /**
+     * Name of the configuration parameter of the thing that defines refresh time for High priority channels
+     */
+    public static final String HIGH_PRIORITY_REFRESH_TIME = "interval_high";
+
     public static final String DEVICE_INDEX_PARAMETER = "index";
+
+    public static final String DEVICE_NAME_PARAMETER = "name";
 
     // Channel configuration
 
