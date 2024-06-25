@@ -316,29 +316,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     }
 
     @Override
-    public StringType getNetworkIp(int index) throws DeviceNotFoundException {
-        NetworkIF netInterface = getDevice(networks, index);
-        netInterface.updateAttributes();
-        String[] ipAddresses = netInterface.getIPv4addr();
-        String ipv4 = getDevice(ipAddresses, 0);
-        return new StringType(ipv4);
-    }
-
-    @Override
-    public StringType getNetworkName(int index) throws DeviceNotFoundException {
-        NetworkIF netInterface = getDevice(networks, index);
-        String name = netInterface.getName();
-        return new StringType(name);
-    }
-
-    @Override
-    public StringType getNetworkDisplayName(int index) throws DeviceNotFoundException {
-        NetworkIF netInterface = getDevice(networks, index);
-        String adapterName = netInterface.getDisplayName();
-        return new StringType(adapterName);
-    }
-
-    @Override
     public StringType getDisplayInformation(int index) throws DeviceNotFoundException {
         Display display = getDevice(displays, index);
 
@@ -441,6 +418,16 @@ public class OSHISystemInfo implements SystemInfoInterface {
     @Override
     public List<HWDiskStore> getHardDriveList() {
         return drives;
+    }
+
+    @Override
+    public int getNetworkInterfaceCount() {
+        return networks.size();
+    }
+
+    @Override
+    public List<NetworkIF> getNetworkInterfaceList() {
+        return networks;
     }
 
     @Override
@@ -585,45 +572,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     }
 
     @Override
-    public StringType getNetworkMac(int networkIndex) throws DeviceNotFoundException {
-        NetworkIF network = getDevice(networks, networkIndex);
-        String mac = network.getMacaddr();
-        return new StringType(mac);
-    }
-
-    @Override
-    public DecimalType getNetworkPacketsReceived(int networkIndex) throws DeviceNotFoundException {
-        NetworkIF network = getDevice(networks, networkIndex);
-        network.updateAttributes();
-        long packRecv = network.getPacketsRecv();
-        return new DecimalType(packRecv);
-    }
-
-    @Override
-    public DecimalType getNetworkPacketsSent(int networkIndex) throws DeviceNotFoundException {
-        NetworkIF network = getDevice(networks, networkIndex);
-        network.updateAttributes();
-        long packSent = network.getPacketsSent();
-        return new DecimalType(packSent);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getNetworkDataSent(int networkIndex) throws DeviceNotFoundException {
-        NetworkIF network = getDevice(networks, networkIndex);
-        network.updateAttributes();
-        long bytesSent = network.getBytesSent();
-        return new QuantityType<>(getSizeInMB(bytesSent), Units.MEBIBYTE);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getNetworkDataReceived(int networkIndex) throws DeviceNotFoundException {
-        NetworkIF network = getDevice(networks, networkIndex);
-        network.updateAttributes();
-        long bytesRecv = network.getBytesRecv();
-        return new QuantityType<>(getSizeInMB(bytesRecv), Units.MEBIBYTE);
-    }
-
-    @Override
     public int getCurrentProcessID() {
         return operatingSystem.getProcessId();
     }
@@ -685,11 +633,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
         } else {
             return null;
         }
-    }
-
-    @Override
-    public int getNetworkIFCount() {
-        return networks.size();
     }
 
     @Override
