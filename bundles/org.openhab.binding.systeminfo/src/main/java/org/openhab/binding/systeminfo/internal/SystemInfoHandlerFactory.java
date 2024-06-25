@@ -16,6 +16,7 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER_ID;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER_IMPL;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_DRIVE;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_NETWORK;
 
 import java.util.Set;
 
@@ -23,6 +24,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoDriveHandler;
+import org.openhab.binding.systeminfo.internal.handler.SystemInfoNetworkHandler;
 import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -48,7 +50,7 @@ public class SystemInfoHandlerFactory extends BaseThingHandlerFactory {
     private @Nullable SystemInfoInterface systemInfo;
     private @Nullable SystemInfoThingTypeProvider thingTypeProvider;
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(BRIDGE_TYPE_DRIVE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(BRIDGE_TYPE_DRIVE, THING_TYPE_NETWORK);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -74,6 +76,8 @@ public class SystemInfoHandlerFactory extends BaseThingHandlerFactory {
                 } else if (BRIDGE_TYPE_DRIVE.equals(thingTypeUID)) {
                     return new SystemInfoDriveHandler(bridge, systemInfo);
                 }
+            } else if (THING_TYPE_NETWORK.equals(thingTypeUID)) {
+                return new SystemInfoNetworkHandler(thing, systemInfo);
             }
         }
 

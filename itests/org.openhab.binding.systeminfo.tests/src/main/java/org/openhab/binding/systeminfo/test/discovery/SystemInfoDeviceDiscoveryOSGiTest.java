@@ -29,7 +29,7 @@ import org.openhab.core.test.storage.VolatileStorageService;
 @NonNullByDefault
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class SystemInfoDriveDiscoveryOSGiTest extends JavaOSGiTest {
+public class SystemInfoDeviceDiscoveryOSGiTest extends JavaOSGiTest {
 
     private @Nullable VolatileStorageService storageService;
 
