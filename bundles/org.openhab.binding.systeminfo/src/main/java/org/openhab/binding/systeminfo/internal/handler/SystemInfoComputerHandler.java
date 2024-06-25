@@ -15,6 +15,8 @@ package org.openhab.binding.systeminfo.internal.handler;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
 
 import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.systeminfo.internal.SystemInfoThingTypeProvider;
-import org.openhab.binding.systeminfo.internal.discovery.SystemInfoDriveDiscoveryService;
+import org.openhab.binding.systeminfo.internal.discovery.SystemInfoDeviceDiscoveryService;
 import org.openhab.binding.systeminfo.internal.model.DeviceNotFoundException;
 import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
 import org.openhab.core.cache.ExpiringCache;
@@ -135,7 +137,7 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
 
     @Override
     public Collection<Class<? extends ThingHandlerService>> getServices() {
-        return List.of(SystemInfoDriveDiscoveryService.class);
+        return List.of(SystemInfoDeviceDiscoveryService.class);
     }
 
     @Override
@@ -231,6 +233,11 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
             properties.put(PROPERTY_OS_FAMILY, systeminfo.getOsFamily().toString());
             properties.put(PROPERTY_OS_MANUFACTURER, systeminfo.getOsManufacturer().toString());
             properties.put(PROPERTY_OS_VERSION, systeminfo.getOsVersion().toString());
+            try {
+                properties.put(PROPERTY_HOSTNAME, InetAddress.getLocalHost().getHostName());
+            } catch (UnknownHostException exception) {
+                properties.put(PROPERTY_HOSTNAME, PROPERTY_HOSTNAME_DEFAULT);
+            }
 
             updateProperties(properties);
             logger.debug("Properties updated!");
@@ -262,8 +269,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         addChannelGroups(CHANNEL_GROUP_DISPLAY, CHANNEL_GROUP_TYPE_DISPLAY, systeminfo.getDisplayCount(),
                 newChannelGroups);
         addChannelGroups(CHANNEL_GROUP_BATTERY, CHANNEL_GROUP_TYPE_BATTERY, systeminfo.getPowerSourceCount(),
-                newChannelGroups);
-        addChannelGroups(CHANNEL_GROUP_NETWORK, CHANNEL_GROUP_TYPE_NETWORK, systeminfo.getNetworkIFCount(),
                 newChannelGroups);
         if (!newChannelGroups.isEmpty()) {
             logger.debug("Creating additional channel groups");
@@ -520,30 +525,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
                 case CHANNEL_STORAGE_USED_PERCENT:
                     PercentType storageUsedPercent = systeminfo.getStorageUsedPercent(deviceIndex);
                     state = (storageUsedPercent != null) ? new QuantityType<>(storageUsedPercent, Units.PERCENT) : null;
-                    break;
-                case CHANNEL_NETWORK_IP:
-                    state = systeminfo.getNetworkIp(deviceIndex);
-                    break;
-                case CHANNEL_NETWORK_ADAPTER_NAME:
-                    state = systeminfo.getNetworkDisplayName(deviceIndex);
-                    break;
-                case CHANNEL_NETWORK_NAME:
-                    state = systeminfo.getNetworkName(deviceIndex);
-                    break;
-                case CHANNEL_NETWORK_MAC:
-                    state = systeminfo.getNetworkMac(deviceIndex);
-                    break;
-                case CHANNEL_NETWORK_DATA_SENT:
-                    state = systeminfo.getNetworkDataSent(deviceIndex);
-                    break;
-                case CHANNEL_NETWORK_DATA_RECEIVED:
-                    state = systeminfo.getNetworkDataReceived(deviceIndex);
-                    break;
-                case CHANNEL_NETWORK_PACKETS_RECEIVED:
-                    state = systeminfo.getNetworkPacketsReceived(deviceIndex);
-                    break;
-                case CHANNEL_NETWORK_PACKETS_SENT:
-                    state = systeminfo.getNetworkPacketsSent(deviceIndex);
                     break;
                 case CHANNEL_PROCESS_LOAD:
                 case CHANNEL_CURRENT_PROCESS_LOAD:

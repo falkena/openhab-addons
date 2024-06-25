@@ -109,7 +109,6 @@ public class SystemInfoComputerDiscoveryOSGiTest extends JavaOSGiTest {
         when(mockedSystemInfo.getFileOSStoreCount()).thenReturn(1);
         when(mockedSystemInfo.getDisplayCount()).thenReturn(1);
         when(mockedSystemInfo.getPowerSourceCount()).thenReturn(1);
-        when(mockedSystemInfo.getNetworkIFCount()).thenReturn(1);
 
         registerService(mockedSystemInfo);
 
