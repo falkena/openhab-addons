@@ -519,6 +519,7 @@ Import-Package: \\
                 <version>${spotless.eclipse.version}</version>
               </eclipse>
               <removeUnusedImports/>
+              <toggleOffOn/>
               <importOrder>
                 <file>openhab.importorder</file>
               </importOrder>
