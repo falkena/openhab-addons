@@ -28,6 +28,7 @@ import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 
 import oshi.hardware.HWDiskStore;
+import oshi.hardware.NetworkIF;
 
 /**
  * {@link SystemInfoInterface} defines the methods needed to provide this binding with the required system information.
@@ -304,70 +305,18 @@ public interface SystemInfoInterface {
     List<HWDiskStore> getHardDriveList();
 
     // Network info
-    /**
-     * Get the Host IP address of the network.
-     *
-     * @param networkIndex - the index of the network
-     * @return 32-bit IPv4 address
-     * @throws DeviceNotFoundException
-     */
-    StringType getNetworkIp(int networkIndex) throws DeviceNotFoundException;
 
     /**
-     * Get the name of this network.
+     * Returns the number of network interfaces.
      *
-     * @param networkIndex - the index of the network
-     * @throws DeviceNotFoundException
+     * @return network interface count
      */
-    StringType getNetworkName(int networkIndex) throws DeviceNotFoundException;
+    int getNetworkInterfaceCount();
 
     /**
-     * The description of the network. On some platforms, this is identical to the name.
-     *
-     * @param networkIndex - the index of the network
-     * @throws DeviceNotFoundException
+     * Gets the list of the network interfaces
      */
-    StringType getNetworkDisplayName(int networkIndex) throws DeviceNotFoundException;
-
-    /**
-     * Gets the MAC Address of the network.
-     *
-     * @param networkIndex - the index of the network
-     * @throws DeviceNotFoundException
-     */
-    StringType getNetworkMac(int networkIndex) throws DeviceNotFoundException;
-
-    /**
-     * Get number of packets received
-     *
-     * @param networkIndex - the index of the network
-     * @throws DeviceNotFoundException
-     */
-    DecimalType getNetworkPacketsReceived(int networkIndex) throws DeviceNotFoundException;
-
-    /**
-     * Get number of packets sent
-     *
-     * @param networkIndex - the index of the network
-     * @throws DeviceNotFoundException
-     */
-    DecimalType getNetworkPacketsSent(int networkIndex) throws DeviceNotFoundException;
-
-    /**
-     * Get data sent for this network
-     *
-     * @param networkIndex - the index of the network
-     * @throws DeviceNotFoundException
-     */
-    QuantityType<DataAmount> getNetworkDataSent(int networkIndex) throws DeviceNotFoundException;
-
-    /**
-     * Get data received for this network
-     *
-     * @param networkIndex - the index of the network
-     * @throws DeviceNotFoundException
-     */
-    QuantityType<DataAmount> getNetworkDataReceived(int networkIndex) throws DeviceNotFoundException;
+    List<NetworkIF> getNetworkInterfaceList();
 
     // Display info
     /**
@@ -486,13 +435,6 @@ public interface SystemInfoInterface {
      */
     @Nullable
     DecimalType getProcessThreads(int pid) throws DeviceNotFoundException;
-
-    /**
-     * Returns the number of network interfaces.
-     *
-     * @return network interface count
-     */
-    int getNetworkIFCount();
 
     /**
      * Returns the number of displays.
