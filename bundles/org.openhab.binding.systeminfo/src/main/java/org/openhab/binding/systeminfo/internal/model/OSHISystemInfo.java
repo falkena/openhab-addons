@@ -46,6 +46,7 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 import oshi.hardware.PowerSource;
 import oshi.hardware.Sensors;
+import oshi.hardware.VirtualMemory;
 import oshi.software.os.OSFileStore;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
@@ -212,29 +213,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     }
 
     @Override
-    public QuantityType<DataAmount> getMemoryTotal() {
-        long totalMemory = memory.getTotal();
-        totalMemory = getSizeInMB(totalMemory);
-        return new QuantityType<>(totalMemory, Units.MEBIBYTE);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getMemoryAvailable() {
-        long availableMemory = memory.getAvailable();
-        availableMemory = getSizeInMB(availableMemory);
-        return new QuantityType<>(availableMemory, Units.MEBIBYTE);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getMemoryUsed() {
-        long totalMemory = memory.getTotal();
-        long availableMemory = memory.getAvailable();
-        long usedMemory = totalMemory - availableMemory;
-        usedMemory = getSizeInMB(usedMemory);
-        return new QuantityType<>(usedMemory, Units.MEBIBYTE);
-    }
-
-    @Override
     public QuantityType<DataAmount> getStorageTotal(int index) throws DeviceNotFoundException {
         OSFileStore fileStore = getDevice(fileStores, index);
         fileStore.updateAttributes();
@@ -384,33 +362,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     }
 
     @Override
-    public @Nullable PercentType getMemoryAvailablePercent() {
-        long availableMemory = memory.getAvailable();
-        long totalMemory = memory.getTotal();
-        if (totalMemory > 0) {
-            double freePercentDecimal = (double) availableMemory / (double) totalMemory;
-            BigDecimal freePercent = getPercentsValue(freePercentDecimal);
-            return new PercentType(freePercent);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public @Nullable PercentType getMemoryUsedPercent() {
-        long availableMemory = memory.getAvailable();
-        long totalMemory = memory.getTotal();
-        long usedMemory = totalMemory - availableMemory;
-        if (totalMemory > 0) {
-            double usedPercentDecimal = (double) usedMemory / (double) totalMemory;
-            BigDecimal usedPercent = getPercentsValue(usedPercentDecimal);
-            return new PercentType(usedPercent);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
     public int getHardDriveCount() {
         return drives.size();
     }
@@ -421,6 +372,16 @@ public class OSHISystemInfo implements SystemInfoInterface {
     }
 
     @Override
+    public GlobalMemory getMemorySpecifications() {
+        return memory;
+    }
+
+    @Override
+    public VirtualMemory getSwapSpecifications() {
+        return memory.getVirtualMemory();
+    }
+
+    @Override
     public int getNetworkInterfaceCount() {
         return networks.size();
     }
@@ -428,56 +389,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     @Override
     public List<NetworkIF> getNetworkInterfaceList() {
         return networks;
-    }
-
-    @Override
-    public QuantityType<DataAmount> getSwapTotal() {
-        long swapTotal = memory.getVirtualMemory().getSwapTotal();
-        swapTotal = getSizeInMB(swapTotal);
-        return new QuantityType<>(swapTotal, Units.MEBIBYTE);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getSwapAvailable() {
-        long swapTotal = memory.getVirtualMemory().getSwapTotal();
-        long swapUsed = memory.getVirtualMemory().getSwapUsed();
-        long swapAvailable = swapTotal - swapUsed;
-        swapAvailable = getSizeInMB(swapAvailable);
-        return new QuantityType<>(swapAvailable, Units.MEBIBYTE);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getSwapUsed() {
-        long swapUsed = memory.getVirtualMemory().getSwapUsed();
-        swapUsed = getSizeInMB(swapUsed);
-        return new QuantityType<>(swapUsed, Units.MEBIBYTE);
-    }
-
-    @Override
-    public @Nullable PercentType getSwapAvailablePercent() {
-        long swapTotal = memory.getVirtualMemory().getSwapTotal();
-        long swapUsed = memory.getVirtualMemory().getSwapUsed();
-        long swapAvailable = swapTotal - swapUsed;
-        if (swapTotal > 0) {
-            double swapAvailablePercentDecimal = (double) swapAvailable / (double) swapTotal;
-            BigDecimal swapAvailablePercent = getPercentsValue(swapAvailablePercentDecimal);
-            return new PercentType(swapAvailablePercent);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public @Nullable PercentType getSwapUsedPercent() {
-        long swapTotal = memory.getVirtualMemory().getSwapTotal();
-        long swapUsed = memory.getVirtualMemory().getSwapUsed();
-        if (swapTotal > 0) {
-            double swapUsedPercentDecimal = (double) swapUsed / (double) swapTotal;
-            BigDecimal swapUsedPercent = getPercentsValue(swapUsedPercentDecimal);
-            return new PercentType(swapUsedPercent);
-        } else {
-            return null;
-        }
     }
 
     private long getSizeInMB(long sizeInBytes) {
