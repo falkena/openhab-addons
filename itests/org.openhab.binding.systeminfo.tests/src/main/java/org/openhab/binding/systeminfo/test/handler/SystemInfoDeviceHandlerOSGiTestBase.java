@@ -17,13 +17,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.LOW_PRIORITY_REFRESH_TIME;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PRIORITY_PARAMETER;
-
-import java.math.BigDecimal;
-import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -52,14 +46,6 @@ import org.openhab.core.thing.type.ChannelTypeUID;
 public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase {
 
     private @Nullable Thing thing;
-
-    // spotless:off
-    protected final static Configuration configuration = new Configuration(Map.ofEntries(
-            Map.entry(HIGH_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_HIGH)),
-            Map.entry(MEDIUM_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_MEDIUM)),
-            Map.entry(LOW_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_LOW))
-    ));
-    // spotless:on
 
     @BeforeEach
     @Override
