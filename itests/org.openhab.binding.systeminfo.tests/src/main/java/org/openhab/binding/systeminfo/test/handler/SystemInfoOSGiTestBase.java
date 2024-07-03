@@ -24,6 +24,7 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.LOW_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PID_PARAMETER;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PRIORITY_PARAMETER;
@@ -117,6 +118,14 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
      * Refresh time in seconds for tasks with priority Low.
      */
     protected static final int DEFAULT_TEST_INTERVAL_LOW = 5;
+
+    // spotless:off
+    protected final static Configuration configuration = new Configuration(Map.ofEntries(
+            Map.entry(HIGH_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_HIGH)),
+            Map.entry(MEDIUM_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_MEDIUM)),
+            Map.entry(LOW_PRIORITY_REFRESH_TIME, BigDecimal.valueOf(DEFAULT_TEST_INTERVAL_LOW))
+    ));
+    // spotless:on
 
     @BeforeEach
     public void initialize() {
@@ -252,10 +261,6 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
     }
 
     protected void initializeThingWithChannel(String channelID, String acceptedItemType) {
-        Configuration configuration = new Configuration();
-        configuration.put(HIGH_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
-        configuration.put(MEDIUM_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
-
         initializeThing(configuration, channelID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
     }
 
@@ -274,6 +279,8 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
             String channelTypeId = channelUID.getIdWithoutGroup();
             if ("load1".equals(channelTypeId) || "load5".equals(channelTypeId) || "load15".equals(channelTypeId)) {
                 channelTypeId = "loadAverage";
+            } else if ("process".equalsIgnoreCase(channelUID.getGroupId())) {
+                channelTypeId = channelTypeId + "_process";
             }
 
             ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
