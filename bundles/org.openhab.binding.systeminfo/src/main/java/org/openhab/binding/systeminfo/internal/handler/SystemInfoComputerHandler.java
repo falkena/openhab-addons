@@ -15,6 +15,7 @@ package org.openhab.binding.systeminfo.internal.handler;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -57,6 +58,9 @@ import org.openhab.core.types.State;
 import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import oshi.hardware.GlobalMemory;
+import oshi.hardware.VirtualMemory;
 
 /**
  * The {@link SystemInfoComputerHandler} is responsible for providing real time information about the system
@@ -357,9 +361,7 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
                                 child.getUID());
                     }
                 } else {
-                    if (isLinked(channelUID)) {
-                        updateState(channelUID, getInfoForChannel(channelUID));
-                    }
+                    handleCommand(channelUID, RefreshType.REFRESH);
                 }
             }
         }
@@ -403,13 +405,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
 
         try {
             switch (channelID) {
-                case CHANNEL_MEMORY_HEAP_AVAILABLE:
-                    state = new QuantityType<>(Runtime.getRuntime().freeMemory(), Units.BYTE);
-                    break;
-                case CHANNEL_MEMORY_USED_HEAP_PERCENT:
-                    state = new QuantityType<>((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
-                            * 100 / Runtime.getRuntime().maxMemory(), Units.PERCENT);
-                    break;
                 case CHANNEL_DISPLAY_INFORMATION:
                     state = systeminfo.getDisplayInformation(deviceIndex);
                     break;
@@ -461,42 +456,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
                     break;
                 case CHANNEL_CPU_NAME:
                     state = systeminfo.getCpuName();
-                    break;
-                case CHANNEL_MEMORY_AVAILABLE:
-                    state = systeminfo.getMemoryAvailable();
-                    break;
-                case CHANNEL_MEMORY_USED:
-                    state = systeminfo.getMemoryUsed();
-                    break;
-                case CHANNEL_MEMORY_TOTAL:
-                    state = systeminfo.getMemoryTotal();
-                    break;
-                case CHANNEL_MEMORY_AVAILABLE_PERCENT:
-                    PercentType memoryAvailablePercent = systeminfo.getMemoryAvailablePercent();
-                    state = (memoryAvailablePercent != null) ? new QuantityType<>(memoryAvailablePercent, Units.PERCENT)
-                            : null;
-                    break;
-                case CHANNEL_MEMORY_USED_PERCENT:
-                    PercentType memoryUsedPercent = systeminfo.getMemoryUsedPercent();
-                    state = (memoryUsedPercent != null) ? new QuantityType<>(memoryUsedPercent, Units.PERCENT) : null;
-                    break;
-                case CHANNEL_SWAP_AVAILABLE:
-                    state = systeminfo.getSwapAvailable();
-                    break;
-                case CHANNEL_SWAP_USED:
-                    state = systeminfo.getSwapUsed();
-                    break;
-                case CHANNEL_SWAP_TOTAL:
-                    state = systeminfo.getSwapTotal();
-                    break;
-                case CHANNEL_SWAP_AVAILABLE_PERCENT:
-                    PercentType swapAvailablePercent = systeminfo.getSwapAvailablePercent();
-                    state = (swapAvailablePercent != null) ? new QuantityType<>(swapAvailablePercent, Units.PERCENT)
-                            : null;
-                    break;
-                case CHANNEL_SWAP_USED_PERCENT:
-                    PercentType swapUsedPercent = systeminfo.getSwapUsedPercent();
-                    state = (swapUsedPercent != null) ? new QuantityType<>(swapUsedPercent, Units.PERCENT) : null;
                     break;
                 case CHANNEL_STORAGE_NAME:
                     state = systeminfo.getStorageName(deviceIndex);
@@ -649,7 +608,21 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         if (thing.getStatus().equals(ThingStatus.ONLINE)) {
             if (command instanceof RefreshType) {
                 logger.debug("Refresh command received for channel {} !", channelUID);
-                updateState(channelUID, getInfoForChannel(channelUID));
+                if (CHANNEL_MEMORY_GROUP.equals(channelUID.getGroupId())) {
+                    final GlobalMemory memory = systeminfo.getMemorySpecifications();
+                    updateState(channelUID, getChannelState(channelUID, memory.getAvailable(),
+                            memory.getTotal() - memory.getAvailable(), memory.getTotal()));
+                } else if (CHANNEL_HEAP_GROUP.equals(channelUID.getGroupId())) {
+                    final Runtime runtime = Runtime.getRuntime();
+                    updateState(channelUID, getChannelState(channelUID, runtime.freeMemory(),
+                            runtime.totalMemory() - runtime.freeMemory(), runtime.totalMemory()));
+                } else if (CHANNEL_SWAP_GROUP.equals(channelUID.getGroupId())) {
+                    final VirtualMemory swap = systeminfo.getSwapSpecifications();
+                    updateState(channelUID, getChannelState(channelUID, swap.getSwapTotal() - swap.getSwapUsed(),
+                            swap.getSwapUsed(), swap.getSwapTotal()));
+                } else {
+                    updateState(channelUID, getInfoForChannel(channelUID));
+                }
             } else {
                 logger.debug("Unsupported command {} ! Supported commands: REFRESH", command);
             }
@@ -730,16 +703,17 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         }
     }
 
-    private void handleChannelConfigurationChange(Channel channel, Configuration newConfig, String parameter) {
-        Configuration configuration = channel.getConfiguration();
-        Object oldValue = configuration.get(parameter);
+    private void handleChannelConfigurationChange(final Channel channel, final Configuration newConfig,
+            final String parameter) {
+        final Configuration configuration = channel.getConfiguration();
+        final Object oldValue = configuration.get(parameter);
 
         configuration.put(parameter, newConfig.get(parameter));
 
-        Object newValue = newConfig.get(parameter);
+        final Object newValue = newConfig.get(parameter);
         logger.debug("Channel with UID {} has changed its {} from {} to {}", channel.getUID(), parameter, oldValue,
                 newValue);
-        updateState(channel.getUID(), getInfoForChannel(channel.getUID()));
+        handleCommand(channel.getUID(), RefreshType.REFRESH);
     }
 
     // Don't remove this override. If absent channels will not be populated properly
@@ -750,22 +724,39 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         super.changeThingType(thingTypeUID, configuration);
     }
 
-    private void stopScheduledUpdates() {
-        ScheduledFuture<?> localHighPriorityTasks = highPriorityTasks;
-        if (localHighPriorityTasks != null) {
-            logger.debug("High prioriy tasks will not be run anymore!");
-            localHighPriorityTasks.cancel(true);
+    @Override
+    public void dispose() {
+        ScheduledFuture<?> highPriorityTasks = this.highPriorityTasks;
+        if (highPriorityTasks != null) {
+            logger.debug("High priority tasks will not be run anymore");
+            highPriorityTasks.cancel(true);
+            this.highPriorityTasks = null;
         }
 
-        ScheduledFuture<?> localMediumPriorityTasks = mediumPriorityTasks;
-        if (localMediumPriorityTasks != null) {
-            logger.debug("Medium prioriy tasks will not be run anymore!");
-            localMediumPriorityTasks.cancel(true);
+        ScheduledFuture<?> mediumPriorityTasks = this.mediumPriorityTasks;
+        if (mediumPriorityTasks != null) {
+            logger.debug("Medium priority tasks will not be run anymore");
+            mediumPriorityTasks.cancel(true);
+            this.mediumPriorityTasks = null;
         }
     }
 
-    @Override
-    public void dispose() {
-        stopScheduledUpdates();
+    private State getChannelState(final ChannelUID channelUID, long available, long used, long total) {
+        return (total <= 0) || (total < available) || (total < used) ? UnDefType.UNDEF
+                : switch (channelUID.getIdWithoutGroup()) {
+                    case CHANNEL_AVAILABLE -> new QuantityType<>(available, Units.BYTE);
+                    case CHANNEL_AVAILABLE_PERCENT ->
+                        new QuantityType<>(round((double) available / (double) total), Units.PERCENT);
+                    case CHANNEL_TOTAL -> new QuantityType<>(total, Units.BYTE);
+                    case CHANNEL_USED -> new QuantityType<>(used, Units.BYTE);
+                    case CHANNEL_USED_PERCENT ->
+                        new QuantityType<>(round((double) used / (double) total), Units.PERCENT);
+                    default -> UnDefType.UNDEF;
+                };
+    }
+
+    private BigDecimal round(final double quotient) {
+        final BigDecimal result = BigDecimal.valueOf(quotient * 100.0);
+        return result.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.HALF_UP);
     }
 }
