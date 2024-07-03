@@ -27,8 +27,10 @@ import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 
+import oshi.hardware.GlobalMemory;
 import oshi.hardware.HWDiskStore;
 import oshi.hardware.NetworkIF;
+import oshi.hardware.VirtualMemory;
 
 /**
  * {@link SystemInfoInterface} defines the methods needed to provide this binding with the required system information.
@@ -145,82 +147,6 @@ public interface SystemInfoInterface {
      */
     DecimalType getCpuThreads();
 
-    // Memory info
-    /**
-     * Returns total size of memory
-     *
-     * @return memory size
-     */
-    QuantityType<DataAmount> getMemoryTotal();
-
-    /**
-     * Returns available size of memory
-     *
-     * @return memory size
-     */
-    QuantityType<DataAmount> getMemoryAvailable();
-
-    /**
-     * Returns used size of memory
-     *
-     * @return memory size
-     */
-    QuantityType<DataAmount> getMemoryUsed();
-
-    /**
-     * Percents of available memory on the machine
-     *
-     * @return percent of available memory or null, if no information is available
-     */
-    @Nullable
-    PercentType getMemoryAvailablePercent();
-
-    /**
-     * Percents of used memory on the machine
-     *
-     * @return percent of used memory or null, if no information is available
-     */
-    @Nullable
-    PercentType getMemoryUsedPercent();
-
-    // Swap memory info
-    /**
-     * Returns total size of swap memory
-     *
-     * @return memory size or 0, if there is no swap memory
-     */
-    QuantityType<DataAmount> getSwapTotal();
-
-    /**
-     * Returns available size swap of memory
-     *
-     * @return memory size or 0, if no there is no swap memory
-     */
-    QuantityType<DataAmount> getSwapAvailable();
-
-    /**
-     * Returns used size of swap memory
-     *
-     * @return memory size or 0, if no there is no swap memory
-     */
-    QuantityType<DataAmount> getSwapUsed();
-
-    /**
-     * Percents of available swap memory on the machine
-     *
-     * @return percent of available memory or null, if no there is no swap memory
-     */
-    @Nullable
-    PercentType getSwapAvailablePercent();
-
-    /**
-     * Percents of used swap memory on the machine
-     *
-     * @return percent of used memory or null, if no there is no swap memory
-     */
-    @Nullable
-    PercentType getSwapUsedPercent();
-
     // Storage info
     /**
      * Returns the total space of the logical storage volume.
@@ -303,6 +229,22 @@ public interface SystemInfoInterface {
      * Gets the list of the physical storage drives
      */
     List<HWDiskStore> getHardDriveList();
+
+    // Memory info
+
+    /**
+     * Returns the memory parameter and information.
+     *
+     * @return memory information
+     */
+    GlobalMemory getMemorySpecifications();
+
+    /**
+     * Returns the swap parameter and information.
+     *
+     * @return swap information
+     */
+    VirtualMemory getSwapSpecifications();
 
     // Network info
 
