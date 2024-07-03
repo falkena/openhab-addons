@@ -109,8 +109,10 @@ In the list below, you can find, how are channel group and channels id`s related
 
 **thing** `computer`
 
+- **group** `heap`
+  - **channel** `available, total, used, availablePercent, usedPercent`
 - **group** `memory`
-  - **channel** `available, total, used, availablePercent, usedPercent, usedHeapPercent, availableHeap`
+  - **channel** `available, total, used, availablePercent, usedPercent`
 - **group** `swap`
   - **channel** `available, total, used, availablePercent, usedPercent`
 - **group** `storage` (deviceIndex)
@@ -166,9 +168,9 @@ The table shows more detailed information about each channel type:
 | uptime             | System uptime (time after start) in minutes                      | Number:Time         | Medium           | True     |
 | name               | Name of the device or process                                    | String              | Low              | False    |
 | available          | Available size                                                   | Number:DataAmount   | High             | False    |
-| used               | Used size                                                        | Number:DataAmount   | High             | False    |
-| total              | Total size                                                       | Number:DataAmount   | Low              | False    |
 | availablePercent   | Available size in %                                              | Number:Dimensionless| High             | False    |
+| total              | Total size                                                       | Number:DataAmount   | Low              | False    |
+| used               | Used size                                                        | Number:DataAmount   | High             | False    |
 | usedPercent        | Used size in %                                                   | Number:Dimensionless| High             | False    |
 | description        | Description of the device                                        | String              | Low              | True     |
 | type               | Storage type                                                     | String              | Low              | True     |
@@ -178,8 +180,6 @@ The table shows more detailed information about each channel type:
 | remainingTime      | Remaining time in minutes                                        | Number:Time         | Medium           | False    |
 | remainingCapacity  | Remaining capacity in %                                          | Number:Dimensionless| Medium           | False    |
 | information        | Product, manufacturer, SN, width and height of the display in cm | String              | Low              | True     |
-| availableHeap      | How much space is available in the currently committed heap      | Number:DataAmount   | Medium           | True     |
-| usedHeapPercent    | How much of the MAX heap size is actually used in %              | Number:Dimensionless| Medium           | False    |
 
 ### Drive
 

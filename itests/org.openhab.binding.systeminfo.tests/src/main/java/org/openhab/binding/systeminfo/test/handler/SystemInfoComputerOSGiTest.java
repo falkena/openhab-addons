@@ -17,23 +17,32 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_MEMORY_BYTES;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_PERCENT;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_TOTAL;
 
 import java.math.BigDecimal;
 
+import javax.measure.quantity.Dimensionless;
 import javax.measure.quantity.ElectricPotential;
 import javax.measure.quantity.Frequency;
 import javax.measure.quantity.Temperature;
 import javax.measure.quantity.Time;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler;
 import org.openhab.binding.systeminfo.internal.model.DeviceNotFoundException;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedGlobalMemory;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedVirtualMemory;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
@@ -54,6 +63,8 @@ import org.openhab.core.thing.binding.BridgeHandler;
 import org.openhab.core.thing.binding.builder.BridgeBuilder;
 import org.openhab.core.thing.binding.builder.ChannelBuilder;
 import org.openhab.core.thing.binding.builder.ThingBuilder;
+import org.openhab.core.thing.type.ChannelKind;
+import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.UnDefType;
 
 /**
@@ -69,29 +80,10 @@ import org.openhab.core.types.UnDefType;
 @ExtendWith(MockitoExtension.class)
 public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     private static final String TEST_ITEM_NAME = "computer";
+    private final SystemInfoMockedGlobalMemory memory = new SystemInfoMockedGlobalMemory();
 
     private void initializeThingWithChannelAndPID(String channelID, String acceptedItemType, int pid) {
-        final Configuration thingConfig = new Configuration();
-        thingConfig.put(HIGH_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
-        thingConfig.put(MEDIUM_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
-
-        initializeThing(thingConfig, channelID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, pid);
-
-        final Bridge bridge = systemInfoBridge;
-        if (bridge == null) {
-            throw new AssertionError("Bridge is null");
-        }
-
-        final ChannelUID channelUID = new ChannelUID(bridge.getUID(), channelID);
-        initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);
-    }
-
-    private void initializeThingWithChannelAndPriority(String channelID, String acceptedItemType, String priority) {
-        final Configuration thingConfig = new Configuration();
-        thingConfig.put(HIGH_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_HIGH));
-        thingConfig.put(MEDIUM_PRIORITY_REFRESH_TIME, new BigDecimal(DEFAULT_TEST_INTERVAL_MEDIUM));
-
-        initializeThing(thingConfig, channelID, acceptedItemType, priority, DEFAULT_CHANNEL_PID);
+        initializeThing(configuration, channelID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, pid);
 
         final Bridge bridge = systemInfoBridge;
         if (bridge == null) {
@@ -113,6 +105,12 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
         final ChannelUID channelUID = new ChannelUID(bridge.getUID(), channelID);
         initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);
+    }
+
+    @BeforeEach
+    public void setUp() {
+        lenient().when(mockedSystemInfo.getMemorySpecifications()).thenReturn(memory);
+        lenient().when(mockedSystemInfo.getSwapSpecifications()).thenReturn(memory.getVirtualMemory());
     }
 
     @Test
@@ -149,10 +147,19 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertMediumPriorityChannelIsUpdated() {
-        String channnelID = DEFAULT_TEST_CHANNEL_ID;
-        String priority = "Medium";
+        final String channelID = DEFAULT_TEST_CHANNEL_ID;
+        final String acceptedItemType = "Number";
+        final String priority = "Medium";
 
-        initializeThingWithChannelAndPriority(channnelID, "Number", priority);
+        initializeThing(configuration, channelID, acceptedItemType, priority, DEFAULT_CHANNEL_PID);
+
+        final Bridge bridge = systemInfoBridge;
+        if (bridge == null) {
+            throw new AssertionError("Bridge is null");
+        }
+
+        final ChannelUID channelUID = new ChannelUID(bridge.getUID(), channelID);
+        initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);
         assertItemState(TEST_ITEM_NAME, priority, UnDefType.UNDEF);
     }
 
@@ -278,90 +285,56 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelMemoryAvailableIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_AVAILABLE;
+        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
+                SystemInfoMockedGlobalMemory.TEST_MEMORY_AVAILABLE, Units.BYTE);
 
-        QuantityType<DataAmount> mockedMemoryAvailableValue = new QuantityType<>(1000, Units.MEBIBYTE);
-        when(mockedSystemInfo.getMemoryAvailable()).thenReturn(mockedMemoryAvailableValue);
-
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedMemoryAvailableValue);
-    }
-
-    @Test
-    public void assertChannelMemoryUsedIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_USED;
-
-        QuantityType<DataAmount> mockedMemoryUsedValue = new QuantityType<>(24, Units.MEBIBYTE);
-        when(mockedSystemInfo.getMemoryUsed()).thenReturn(mockedMemoryUsedValue);
-
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedMemoryUsedValue);
-    }
-
-    @Test
-    public void assertChannelMemoryTotalIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_TOTAL;
-
-        QuantityType<DataAmount> mockedMemoryTotalValue = new QuantityType<>(1024, Units.MEBIBYTE);
-        when(mockedSystemInfo.getMemoryTotal()).thenReturn(mockedMemoryTotalValue);
-
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedMemoryTotalValue);
+        initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_MEMORY_BYTES,
+                "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelMemoryAvailablePercentIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_MEMORY_AVAILABLE_PERCENT;
+        final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
+        final double percent = (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_AVAILABLE
+                / (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_TOTAL * 100.0;
+        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
+                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
 
-        PercentType mockedMemoryAvailablePercentValue = new PercentType(97);
-        when(mockedSystemInfo.getMemoryAvailablePercent()).thenReturn(mockedMemoryAvailablePercentValue);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedMemoryAvailablePercentValue);
+        initializeBridgeWithChannel(CHANNEL_AVAILABLE_PERCENT, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_PERCENT,
+                "Number:Dimensionless");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
-    public void assertChannelSwapAvailableIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_AVAILABLE;
+    public void assertChannelMemoryTotalIsUpdated() {
+        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_TOTAL,
+                Units.BYTE);
 
-        QuantityType<DataAmount> mockedSwapAvailableValue = new QuantityType<>(482, Units.MEBIBYTE);
-        when(mockedSystemInfo.getSwapAvailable()).thenReturn(mockedSwapAvailableValue);
-
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapAvailableValue);
+        initializeBridgeWithChannel(CHANNEL_TOTAL, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_TOTAL, "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
-    public void assertChannelSwapUsedIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_USED;
+    public void assertChannelMemoryUsedIsUpdated() {
+        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_USED,
+                Units.BYTE);
 
-        QuantityType<DataAmount> mockedSwapUsedValue = new QuantityType<>(30, Units.MEBIBYTE);
-        when(mockedSystemInfo.getSwapUsed()).thenReturn(mockedSwapUsedValue);
-
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapUsedValue);
+        initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_MEMORY_BYTES, "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
-    public void assertChannelSwapTotalIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_TOTAL;
+    public void assertChannelMemoryUsedPercentIsUpdated() {
+        final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
+        final double percent = (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_USED
+                / (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_TOTAL * 100.0;
+        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
+                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
 
-        QuantityType<DataAmount> mockedSwapTotalValue = new QuantityType<>(512, Units.MEBIBYTE);
-        when(mockedSystemInfo.getSwapTotal()).thenReturn(mockedSwapTotalValue);
-
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapTotalValue);
-    }
-
-    @Test
-    public void assertChannelSwapAvailablePercentIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SWAP_AVAILABLE_PERCENT;
-
-        PercentType mockedSwapAvailablePercentValue = new PercentType(94);
-        when(mockedSystemInfo.getSwapAvailablePercent()).thenReturn(mockedSwapAvailablePercentValue);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSwapAvailablePercentValue);
+        initializeBridgeWithChannel(CHANNEL_USED_PERCENT, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_PERCENT,
+                "Number:Dimensionless");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
@@ -373,17 +346,6 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
         initializeThingWithChannel(channnelID, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageName);
-    }
-
-    @Test
-    public void assertChannelStorageTypeIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_TYPE;
-
-        StringType mockedStorageType = new StringType("Mocked Storage Type");
-        when(mockedSystemInfo.getStorageType(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageType);
-
-        initializeThingWithChannel(channnelID, "String");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageType);
     }
 
     @Test
@@ -399,47 +361,112 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelStorageAvailableIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE;
-
-        QuantityType<DataAmount> mockedStorageAvailableValue = new QuantityType<>(2000, Units.MEBIBYTE);
+        QuantityType<DataAmount> mockedStorageAvailableValue = new QuantityType<>(2000, Units.BYTE);
         when(mockedSystemInfo.getStorageAvailable(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageAvailableValue);
 
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
+        initializeBridgeWithChannel(CHANNEL_STORAGE_AVAILABLE, null, CHANNEL_TYPE_MEMORY_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageAvailableValue);
     }
 
     @Test
-    public void assertChannelStorageUsedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_USED;
+    public void assertChannelStorageAvailablePercentIsUpdated() throws DeviceNotFoundException {
+        PercentType mockedValue = new PercentType(20);
+        when(mockedSystemInfo.getStorageAvailablePercent(DEFAULT_DEVICE_INDEX)).thenReturn(mockedValue);
 
-        QuantityType<DataAmount> mockedStorageUsedValue = new QuantityType<>(500, Units.MEBIBYTE);
-        when(mockedSystemInfo.getStorageUsed(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageUsedValue);
-
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageUsedValue);
+        initializeBridgeWithChannel(CHANNEL_STORAGE_AVAILABLE_PERCENT, null, CHANNEL_TYPE_PERCENT, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelStorageTotalIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_TOTAL;
-
-        QuantityType<DataAmount> mockedStorageTotalValue = new QuantityType<>(2500, Units.MEBIBYTE);
+        QuantityType<DataAmount> mockedStorageTotalValue = new QuantityType<>(2500, Units.BYTE);
         when(mockedSystemInfo.getStorageTotal(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageTotalValue);
 
-        initializeThingWithChannel(channnelID, "Number:DataAmount");
+        initializeBridgeWithChannel(CHANNEL_STORAGE_TOTAL, null, CHANNEL_TYPE_TOTAL, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageTotalValue);
     }
 
     @Test
-    public void assertChannelStorageAvailablePercentIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_AVAILABLE_PERCENT;
+    public void assertChannelStorageUsedIsUpdated() throws DeviceNotFoundException {
+        QuantityType<DataAmount> mockedStorageUsedValue = new QuantityType<>(500, Units.BYTE);
+        when(mockedSystemInfo.getStorageUsed(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageUsedValue);
 
-        PercentType mockedStorageAvailablePercent = new PercentType(20);
-        when(mockedSystemInfo.getStorageAvailablePercent(DEFAULT_DEVICE_INDEX))
-                .thenReturn(mockedStorageAvailablePercent);
+        initializeBridgeWithChannel(CHANNEL_STORAGE_USED, null, CHANNEL_TYPE_MEMORY_BYTES, "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageUsedValue);
+    }
 
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageAvailablePercent);
+    @Test
+    public void assertChannelStorageUsedPercentIsUpdated() throws DeviceNotFoundException {
+        PercentType mockedValue = new PercentType(20);
+        when(mockedSystemInfo.getStorageUsedPercent(DEFAULT_DEVICE_INDEX)).thenReturn(mockedValue);
+
+        initializeBridgeWithChannel(CHANNEL_STORAGE_USED_PERCENT, null, CHANNEL_TYPE_PERCENT, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelStorageTypeIsUpdated() throws DeviceNotFoundException {
+        String channnelID = SystemInfoBindingConstants.CHANNEL_STORAGE_TYPE;
+
+        StringType mockedStorageType = new StringType("Mocked Storage Type");
+        when(mockedSystemInfo.getStorageType(DEFAULT_DEVICE_INDEX)).thenReturn(mockedStorageType);
+
+        initializeThingWithChannel(channnelID, "String");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedStorageType);
+    }
+
+    @Test
+    public void assertChannelSwapAvailableIsUpdated() {
+        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
+                SystemInfoMockedVirtualMemory.TEST_SWAP_AVAILABLE, Units.BYTE);
+
+        initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_MEMORY_BYTES,
+                "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSwapAvailablePercentIsUpdated() {
+        final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
+        final double percent = (double) SystemInfoMockedVirtualMemory.TEST_SWAP_AVAILABLE
+                / (double) SystemInfoMockedVirtualMemory.TEST_SWAP_TOTAL * 100.0;
+        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
+                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
+
+        initializeBridgeWithChannel(CHANNEL_AVAILABLE_PERCENT, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_PERCENT,
+                "Number:Dimensionless");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSwapTotalIsUpdated() {
+        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_TOTAL,
+                Units.BYTE);
+
+        initializeBridgeWithChannel(CHANNEL_TOTAL, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_TOTAL, "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSwapUsedIsUpdated() {
+        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_USED,
+                Units.BYTE);
+
+        initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_MEMORY_BYTES, "Number:DataAmount");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSwapUsedPercentIsUpdated() {
+        final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
+        final double percent = (double) SystemInfoMockedVirtualMemory.TEST_SWAP_USED
+                / (double) SystemInfoMockedVirtualMemory.TEST_SWAP_TOTAL * 100.0;
+        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
+                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
+
+        initializeBridgeWithChannel(CHANNEL_USED_PERCENT, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_PERCENT,
+                "Number:Dimensionless");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     // Re-enable this previously disabled test, as it is not relying on hardware anymore, but a mocked object
@@ -642,5 +669,47 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
                     is(equalTo(newPriority)));
             assertThat(computerHandler.getLowPriorityChannels().contains(channel.getUID()), is(true));
         });
+    }
+
+    protected void initializeBridgeWithChannel(final String channelID, @Nullable String groupID,
+            final ChannelTypeUID channelTypeUID, final String acceptedItemType) {
+        final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_COMPUTER, DEFAULT_TEST_THING_NAME);
+
+        final BridgeBuilder builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
+        builder.withConfiguration(configuration);
+
+        final ChannelUID channelUID;
+        if (groupID == null) {
+            channelUID = new ChannelUID(thingUID, channelID);
+        } else {
+            channelUID = new ChannelUID(thingUID, groupID, channelID);
+        }
+        ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
+        channelBuilder.withType(channelTypeUID).withKind(ChannelKind.STATE);
+
+        Configuration channelConfiguration = new Configuration();
+        channelConfiguration.put(PRIORITY_PARAMETER, DEFAULT_CHANNEL_TEST_PRIORITY);
+        channelBuilder.withConfiguration(channelConfiguration);
+        builder.withChannel(channelBuilder.build());
+
+        final Bridge bridge = builder.build();
+        managedThingProvider.add(bridge);
+
+        final BridgeHandler handler = bridge.getHandler();
+        if (handler == null) {
+            throw new AssertionError("Bridge handler is null");
+        }
+        assertThat(handler, is(instanceOf(SystemInfoComputerHandler.class)));
+        handler.initialize();
+
+        waitForAssert(() -> {
+            final ThingStatusInfo statusInfo = bridge.getStatusInfo();
+            assertThat(String.format("Bridge status detail is %s with description %s", statusInfo.getStatusDetail(),
+                    statusInfo.getDescription()), bridge.getStatus(), is(equalTo(ThingStatus.ONLINE)));
+        });
+
+        systemInfoBridge = bridge;
+
+        initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);
     }
 }
