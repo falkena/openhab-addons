@@ -21,6 +21,36 @@
 			serviceId="urn:DeviceInfo-com:serviceId:DeviceInfo1"/>
 		<getAction name="GetInfo" argument="NewDeviceLog"/>
 	</channel>
+	<channel name="model" label="Model" description="The router model name.">
+		<item type="String"/>
+		<service deviceType="urn:dslforum-org:device:InternetGatewayDevice:1"
+			serviceId="urn:DeviceInfo-com:serviceId:DeviceInfo1"/>
+		<getAction name="GetInfo" argument="NewModelName"/>
+	</channel>
+	<channel name="manufacturer" label="Manufacturer" description="The router manufacturer.">
+		<item type="String"/>
+		<service deviceType="urn:dslforum-org:device:InternetGatewayDevice:1"
+			serviceId="urn:DeviceInfo-com:serviceId:DeviceInfo1"/>
+		<getAction name="GetInfo" argument="NewManufacturerName"/>
+	</channel>
+	<channel name="serial" label="Serial number" description="The router serial number.">
+		<item type="String"/>
+		<service deviceType="urn:dslforum-org:device:InternetGatewayDevice:1"
+			serviceId="urn:DeviceInfo-com:serviceId:DeviceInfo1"/>
+		<getAction name="GetInfo" argument="NewSerialNumber"/>
+	</channel>
+	<channel name="version" label="Software version" description="The router software version.">
+		<item type="String"/>
+		<service deviceType="urn:dslforum-org:device:InternetGatewayDevice:1"
+			serviceId="urn:DeviceInfo-com:serviceId:DeviceInfo1"/>
+		<getAction name="GetInfo" argument="NewSoftwareVersion"/>
+	</channel>
+	<channel name="revision" label="Hardware version" description="The router hardware version.">
+		<item type="String"/>
+		<service deviceType="urn:dslforum-org:device:InternetGatewayDevice:1"
+			serviceId="urn:DeviceInfo-com:serviceId:DeviceInfo1"/>
+		<getAction name="GetInfo" argument="NewHardwareVersion"/>
+	</channel>
 	<channel name="reboot" label="Reboot">
 		<item type="Switch"/>
 		<service deviceType="urn:dslforum-org:device:InternetGatewayDevice:1"
