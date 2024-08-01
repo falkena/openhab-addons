@@ -89,6 +89,10 @@ public class SystemInfoThingTypeProvider extends AbstractStorageBasedTypeProvide
         updateThingType(typeUID, getChannelGroupDefinitions(typeUID));
     }
 
+    public @Nullable ThingType getThingType(ThingTypeUID typeUID) {
+        return thingTypeRegistry.getThingType(typeUID);
+    }
+
     /**
      * Update `ThingType`with `typeUID`, replacing the channel group definitions with `groupDefs`.
      *
@@ -159,22 +163,22 @@ public class SystemInfoThingTypeProvider extends AbstractStorageBasedTypeProvide
     /**
      * Create a new channel group definition with index appended to id and label.
      *
-     * @param channelGroupID id of channel group without index
-     * @param channelGroupTypeID id ChannelGroupType for new channel group definition
-     * @param i index
+     * @param groupID id of channel group without index
+     * @param groupTypeID id ChannelGroupType for new channel group definition
+     * @param index index
      * @return channel group definition, null if provided channelGroupTypeID cannot be found in ChannelGroupTypeRegistry
      */
-    public @Nullable ChannelGroupDefinition createChannelGroupDefinitionWithIndex(String channelGroupID,
-            String channelGroupTypeID, int i) {
-        ChannelGroupTypeUID channelGroupTypeUID = new ChannelGroupTypeUID(BINDING_ID, channelGroupTypeID);
-        ChannelGroupType channelGroupType = channelGroupTypeRegistry.getChannelGroupType(channelGroupTypeUID);
-        if (channelGroupType == null) {
-            logger.debug("Cannot create channel group definition, group type {} invalid", channelGroupTypeID);
-            return null;
+    public @Nullable ChannelGroupDefinition createChannelGroupDefinitionWithIndex(final String groupID,
+            String groupTypeID, int index) {
+        final ChannelGroupTypeUID typeUID = new ChannelGroupTypeUID(BINDING_ID, groupTypeID);
+        final ChannelGroupType type = channelGroupTypeRegistry.getChannelGroupType(typeUID);
+        if (type != null) {
+            return new ChannelGroupDefinition(String.format("%s%d", groupID, index), typeUID,
+                    String.format("%s %d", type.getLabel(), index), type.getDescription());
+        } else {
+            logger.debug("Cannot create channel group definition, group type {} invalid", groupTypeID);
         }
-        String index = String.valueOf(i);
-        return new ChannelGroupDefinition(channelGroupID + index, channelGroupTypeUID,
-                channelGroupType.getLabel() + " " + index, channelGroupType.getDescription());
+        return null;
     }
 
     /**

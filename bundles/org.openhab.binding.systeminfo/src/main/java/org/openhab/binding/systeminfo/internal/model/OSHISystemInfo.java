@@ -213,87 +213,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     }
 
     @Override
-    public QuantityType<DataAmount> getStorageTotal(int index) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, index);
-        fileStore.updateAttributes();
-        long totalSpace = fileStore.getTotalSpace();
-        totalSpace = getSizeInMB(totalSpace);
-        return new QuantityType<>(totalSpace, Units.MEBIBYTE);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getStorageAvailable(int index) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, index);
-        fileStore.updateAttributes();
-        long freeSpace = fileStore.getUsableSpace();
-        freeSpace = getSizeInMB(freeSpace);
-        return new QuantityType<>(freeSpace, Units.MEBIBYTE);
-    }
-
-    @Override
-    public QuantityType<DataAmount> getStorageUsed(int index) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, index);
-        fileStore.updateAttributes();
-        long totalSpace = fileStore.getTotalSpace();
-        long freeSpace = fileStore.getUsableSpace();
-        long usedSpace = totalSpace - freeSpace;
-        usedSpace = getSizeInMB(usedSpace);
-        return new QuantityType<>(usedSpace, Units.MEBIBYTE);
-    }
-
-    @Override
-    public @Nullable PercentType getStorageAvailablePercent(int deviceIndex) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, deviceIndex);
-        fileStore.updateAttributes();
-        long totalSpace = fileStore.getTotalSpace();
-        long freeSpace = fileStore.getUsableSpace();
-        if (totalSpace > 0) {
-            double freePercentDecimal = (double) freeSpace / (double) totalSpace;
-            BigDecimal freePercent = getPercentsValue(freePercentDecimal);
-            return new PercentType(freePercent);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public @Nullable PercentType getStorageUsedPercent(int deviceIndex) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, deviceIndex);
-        fileStore.updateAttributes();
-        long totalSpace = fileStore.getTotalSpace();
-        long freeSpace = fileStore.getUsableSpace();
-        long usedSpace = totalSpace - freeSpace;
-        if (totalSpace > 0) {
-            double usedPercentDecimal = (double) usedSpace / (double) totalSpace;
-            BigDecimal usedPercent = getPercentsValue(usedPercentDecimal);
-            return new PercentType(usedPercent);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public StringType getStorageName(int index) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, index);
-        String name = fileStore.getName();
-        return new StringType(name);
-    }
-
-    @Override
-    public StringType getStorageType(int deviceIndex) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, deviceIndex);
-        String type = fileStore.getType();
-        return new StringType(type);
-    }
-
-    @Override
-    public StringType getStorageDescription(int index) throws DeviceNotFoundException {
-        OSFileStore fileStore = getDevice(fileStores, index);
-        String description = fileStore.getDescription();
-        return new StringType(description);
-    }
-
-    @Override
     public StringType getDisplayInformation(int index) throws DeviceNotFoundException {
         Display display = getDevice(displays, index);
 
@@ -359,6 +278,16 @@ public class OSHISystemInfo implements SystemInfoInterface {
         PowerSource powerSource = getDevice(powerSources, index);
         String name = powerSource.getName();
         return new StringType(name);
+    }
+
+    @Override
+    public int getFileStorageCount() {
+        return fileStores.size();
+    }
+
+    @Override
+    public List<OSFileStore> getFileStorageList() {
+        return fileStores;
     }
 
     @Override
