@@ -24,6 +24,10 @@ import oshi.hardware.HWPartition;
  */
 @NonNullByDefault
 public class SystemInfoMockedHWDiskStore implements HWDiskStore {
+    private final HWPartition partition = new HWPartition(TEST_PARTITION_IDENTIFICATION, TEST_PARTITION_NAME,
+            TEST_PARTITION_TYPE, TEST_PARTITION_UUID, TEST_PARTITION_SIZE, TEST_PARTITION_MAJOR, TEST_PARTITION_MINOR,
+            TEST_PARTITION_MOUNT);
+
     public static final String TEST_DRIVE_NAME = "Mocked Drive Name";
     public static final String TEST_DRIVE_MODEL = "Mocked Drive Model";
     public static final String TEST_DRIVE_SERIAL = "Mocked Drive Serial Number";
@@ -32,6 +36,15 @@ public class SystemInfoMockedHWDiskStore implements HWDiskStore {
     public static final long TEST_DRIVE_SIZE = 1024;
     public static final long TEST_DRIVE_WRITES = 1;
     public static final long TEST_DRIVE_WRITE_BYTES = 512;
+
+    public static final String TEST_PARTITION_IDENTIFICATION = "Mocked Partition";
+    public static final String TEST_PARTITION_MOUNT = "Mocked Partition Mount";
+    public static final String TEST_PARTITION_NAME = "Mocked Partition Name";
+    public static final String TEST_PARTITION_TYPE = "Mocked Partition Type";
+    public static final String TEST_PARTITION_UUID = "Mocked Partition UUID";
+    public static final long TEST_PARTITION_SIZE = TEST_DRIVE_SIZE / 2;
+    public static final int TEST_PARTITION_MAJOR = 1;
+    public static final int TEST_PARTITION_MINOR = 0;
 
     @Override
     public String getName() {
@@ -86,7 +99,7 @@ public class SystemInfoMockedHWDiskStore implements HWDiskStore {
     @Override
     @NonNullByDefault({})
     public List<HWPartition> getPartitions() {
-        return List.of();
+        return List.of(partition);
     }
 
     @Override
