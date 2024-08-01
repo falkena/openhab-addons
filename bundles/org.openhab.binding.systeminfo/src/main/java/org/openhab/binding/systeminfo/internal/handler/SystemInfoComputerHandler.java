@@ -12,15 +12,61 @@
  */
 package org.openhab.binding.systeminfo.internal.handler;
 
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER_IMPL;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_BATTERY_NAME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_CAPACITY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_TIME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_DESCRIPTION;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_FREQ;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD_1;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD_15;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD_5;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_MAXFREQ;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_NAME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_THREADS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_UPTIME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_LOAD;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_MEMORY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_NAME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_PATH;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_THREADS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DISPLAY_INFORMATION;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_BATTERY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_CURRENT_PROCESS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_DISPLAY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_PROCESS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_TYPE_BATTERY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_TYPE_DISPLAY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_HEAP_GROUP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_MEMORY_GROUP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_LOAD;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_MEMORY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_NAME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_PATH;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_THREADS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SENOSRS_CPU_VOLTAGE;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SENSORS_CPU_TEMPERATURE;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SENSORS_FAN_SPEED;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SWAP_GROUP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PID_PARAMETER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PRIORITY_PARAMETER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_CPU_LOGICAL_CORES;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_CPU_PHYSICAL_CORES;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_HOSTNAME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_HOSTNAME_DEFAULT;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_OS_FAMILY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_OS_MANUFACTURER;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_OS_VERSION;
+import static org.openhab.binding.systeminfo.internal.handler.SystemInfoHandlerUtilities.getChannelState;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,10 +90,10 @@ import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.ThingRegistry;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.ThingTypeUID;
-import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.thing.binding.builder.ThingBuilder;
@@ -73,47 +119,16 @@ import oshi.hardware.VirtualMemory;
  * @author Mark Herwege - Processor frequency channels
  */
 @NonNullByDefault
-public class SystemInfoComputerHandler extends BaseBridgeHandler {
-    /**
-     * Refresh interval for {@link #highPriorityChannels} in seconds.
-     */
-    private @NonNullByDefault({}) BigDecimal refreshIntervalHighPriority;
-
-    /**
-     * Refresh interval for {@link #mediumPriorityChannels} in seconds.
-     */
-    private @NonNullByDefault({}) BigDecimal refreshIntervalMediumPriority;
-
-    /**
-     * Channels with priority configuration parameter set to High. They usually need frequent update of the state like
-     * CPU load, or information about the free and used memory.
-     * They are updated periodically at {@link #refreshIntervalHighPriority}.
-     */
-    private final Set<ChannelUID> highPriorityChannels = new HashSet<>();
-
-    /**
-     * Channels with priority configuration parameter set to Medium. These channels usually need update of the
-     * state not so oft like battery capacity, storage used and etc.
-     * They are updated periodically at {@link #refreshIntervalMediumPriority}.
-     */
-    private final Set<ChannelUID> mediumPriorityChannels = new HashSet<>();
-
-    /**
-     * Channels with priority configuration parameter set to Low. They represent static information or information
-     * that is updated rare- e.g. CPU name, storage name and etc.
-     * They are updated only at {@link #initialize()}.
-     */
-    private final Set<ChannelUID> lowPriorityChannels = new HashSet<>();
-
+public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
     /**
      * Wait time for the creation of Item-Channel links in seconds. This delay is needed, because the Item-Channel
      * links have to be created before the thing state is updated, otherwise item state will not be updated.
      */
     public static final int WAIT_TIME_CHANNEL_ITEM_LINK_INIT = 1;
 
+    private final SystemInfoInterface systeminfo;
     public final SystemInfoThingTypeProvider thingTypeProvider;
-
-    private SystemInfoInterface systeminfo;
+    private final ThingRegistry thingRegistry;
 
     private @Nullable ScheduledFuture<?> highPriorityTasks;
     private @Nullable ScheduledFuture<?> mediumPriorityTasks;
@@ -132,11 +147,12 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
 
     private final Logger logger = LoggerFactory.getLogger(SystemInfoComputerHandler.class);
 
-    public SystemInfoComputerHandler(Bridge bridge, SystemInfoThingTypeProvider thingTypeProvider,
-            SystemInfoInterface systeminfo) {
+    public SystemInfoComputerHandler(final Bridge bridge, final SystemInfoInterface systeminfo,
+            final SystemInfoThingTypeProvider thingTypeProvider, final ThingRegistry thingRegistry) {
         super(bridge);
         this.systeminfo = systeminfo;
         this.thingTypeProvider = thingTypeProvider;
+        this.thingRegistry = thingRegistry;
     }
 
     @Override
@@ -170,7 +186,7 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
             if (!addDynamicChannels()) {
                 for (final Channel channel : this.thing.getChannels()) {
                     final Configuration properties = channel.getConfiguration();
-                    final String priority = (String) properties.get(PRIORITY_PARAMETER);
+                    final Object priority = properties.get(PRIORITY_PARAMETER);
                     if (priority != null) {
                         changeChannelPriority(channel.getUID(), priority);
                     } else {
@@ -188,9 +204,90 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
     }
 
     @Override
+    public void dispose() {
+        ScheduledFuture<?> highPriorityTasks = this.highPriorityTasks;
+        if (highPriorityTasks != null) {
+            logger.debug("High priority tasks will not be run anymore");
+            highPriorityTasks.cancel(true);
+            this.highPriorityTasks = null;
+        }
+
+        ScheduledFuture<?> mediumPriorityTasks = this.mediumPriorityTasks;
+        if (mediumPriorityTasks != null) {
+            logger.debug("Medium priority tasks will not be run anymore");
+            mediumPriorityTasks.cancel(true);
+            this.mediumPriorityTasks = null;
+        }
+    }
+
+    @Override
+    public synchronized void thingUpdated(Thing thing) {
+        logger.trace("About to update thing");
+        boolean isChannelConfigChanged = false;
+
+        List<Channel> channels = thing.getChannels();
+
+        for (Channel channel : channels) {
+            ChannelUID channelUID = channel.getUID();
+            Configuration newChannelConfig = channel.getConfiguration();
+            Channel oldChannel = this.thing.getChannel(channelUID.getId());
+
+            if (oldChannel == null) {
+                logger.warn("Channel with UID {} cannot be updated, as it cannot be found!", channelUID);
+                continue;
+            }
+            Configuration currentChannelConfig = oldChannel.getConfiguration();
+
+            if (isConfigurationKeyChanged(currentChannelConfig, newChannelConfig, PRIORITY_PARAMETER)) {
+                isChannelConfigChanged = true;
+
+                handleChannelConfigurationChange(oldChannel, newChannelConfig, PRIORITY_PARAMETER);
+                changeChannelPriority(channelUID, newChannelConfig.get(PRIORITY_PARAMETER));
+            }
+
+            if (isConfigurationKeyChanged(currentChannelConfig, newChannelConfig, PID_PARAMETER)) {
+                isChannelConfigChanged = true;
+                handleChannelConfigurationChange(oldChannel, newChannelConfig, PID_PARAMETER);
+            }
+        }
+
+        if (!(isInitialized() && isChannelConfigChanged)) {
+            super.thingUpdated(thing);
+        }
+    }
+
+    @Override
     public void handleRemoval() {
         thingTypeProvider.removeThingType(thing.getThingTypeUID());
         super.handleRemoval();
+    }
+
+    @Override
+    public void handleCommand(ChannelUID channelUID, Command command) {
+        if (thing.getStatus().equals(ThingStatus.ONLINE)) {
+            if (command instanceof RefreshType) {
+                logger.debug("Refresh command received for channel {} !", channelUID);
+                if (CHANNEL_MEMORY_GROUP.equals(channelUID.getGroupId())) {
+                    final GlobalMemory memory = systeminfo.getMemorySpecifications();
+                    updateState(channelUID, getChannelState(channelUID, memory.getAvailable(),
+                            memory.getTotal() - memory.getAvailable(), memory.getTotal()));
+                } else if (CHANNEL_HEAP_GROUP.equals(channelUID.getGroupId())) {
+                    final Runtime runtime = Runtime.getRuntime();
+                    updateState(channelUID, getChannelState(channelUID, runtime.freeMemory(),
+                            runtime.totalMemory() - runtime.freeMemory(), runtime.totalMemory()));
+                } else if (CHANNEL_SWAP_GROUP.equals(channelUID.getGroupId())) {
+                    final VirtualMemory swap = systeminfo.getSwapSpecifications();
+                    updateState(channelUID, getChannelState(channelUID, swap.getSwapTotal() - swap.getSwapUsed(),
+                            swap.getSwapUsed(), swap.getSwapTotal()));
+                } else {
+                    updateState(channelUID, getInfoForChannel(channelUID));
+                }
+            } else {
+                logger.debug("Unsupported command {} ! Supported commands: REFRESH", command);
+            }
+        } else {
+            logger.debug("Cannot handle command. Thing is not ONLINE.");
+        }
     }
 
     public SystemInfoInterface getSystemInfo() {
@@ -212,19 +309,27 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         logger.debug("Start reading Thing configuration.");
         try {
             final Configuration configuration = thing.getConfiguration();
-            refreshIntervalMediumPriority = (BigDecimal) configuration.get(MEDIUM_PRIORITY_REFRESH_TIME);
-            refreshIntervalHighPriority = (BigDecimal) configuration.get(HIGH_PRIORITY_REFRESH_TIME);
-
-            if (refreshIntervalHighPriority.intValue() <= 0 || refreshIntervalMediumPriority.intValue() <= 0) {
-                throw new IllegalArgumentException("Refresh time must be positive number!");
+            if (configuration.get(HIGH_PRIORITY_REFRESH_TIME) instanceof BigDecimal highPriorityInterval) {
+                setHighPriorityRefreshInterval(highPriorityInterval);
+            } else {
+                throw new IllegalArgumentException("Refresh time object type is wrong");
             }
-            logger.debug("Refresh time for medium priority channels set to {} s", refreshIntervalMediumPriority);
-            logger.debug("Refresh time for high priority channels set to {} s", refreshIntervalHighPriority);
+            if (configuration.get(MEDIUM_PRIORITY_REFRESH_TIME) instanceof BigDecimal mediumPriorityInterval) {
+                setMediumPriorityRefreshInterval(mediumPriorityInterval);
+            } else {
+                throw new IllegalArgumentException("Refresh time object type is wrong");
+            }
+
+            if ((getHighPriorityRefreshInterval() <= 0) || (getMediumPriorityRefreshInterval() <= 0)) {
+                throw new IllegalArgumentException("Refresh time must be positive number");
+            }
+            logger.debug("Refresh time for high priority channels set to {} s", highPriorityInterval);
+            logger.debug("Refresh time for medium priority channels set to {} s", mediumPriorityInterval);
             return true;
         } catch (IllegalArgumentException exception) {
-            logger.warn("Refresh time value is invalid! Please change the thing configuration!");
+            logger.warn("{}. Please change the thing configuration", exception.getLocalizedMessage());
         } catch (ClassCastException exception) {
-            logger.debug("Channel configuration cannot be read!");
+            logger.debug("Channel configuration cannot be read");
         }
         return false;
     }
@@ -268,8 +373,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
      */
     private boolean addDynamicChannels() {
         List<ChannelGroupDefinition> newChannelGroups = new ArrayList<>();
-        addChannelGroups(CHANNEL_GROUP_STORAGE, CHANNEL_GROUP_TYPE_STORAGE, systeminfo.getFileOSStoreCount(),
-                newChannelGroups);
         addChannelGroups(CHANNEL_GROUP_DISPLAY, CHANNEL_GROUP_TYPE_DISPLAY, systeminfo.getDisplayCount(),
                 newChannelGroups);
         addChannelGroups(CHANNEL_GROUP_BATTERY, CHANNEL_GROUP_TYPE_BATTERY, systeminfo.getPowerSourceCount(),
@@ -332,51 +435,41 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
     }
 
     private void scheduleUpdates() {
-        logger.debug("Schedule high priority tasks at fixed rate {} s", refreshIntervalHighPriority);
+        final int highPriorityInterval = getHighPriorityRefreshInterval();
         highPriorityTasks = scheduler.scheduleWithFixedDelay(() -> {
-            publishData(highPriorityChannels);
-        }, WAIT_TIME_CHANNEL_ITEM_LINK_INIT, refreshIntervalHighPriority.intValue(), TimeUnit.SECONDS);
+            logger.debug("Schedule high priority tasks at fixed rate {} s", highPriorityInterval);
+            publishData(getHighPriorityChannels());
+        }, WAIT_TIME_CHANNEL_ITEM_LINK_INIT, highPriorityInterval, TimeUnit.SECONDS);
 
-        logger.debug("Schedule medium priority tasks at fixed rate {} s", refreshIntervalMediumPriority);
+        final int mediumPriorityInterval = getMediumPriorityRefreshInterval();
         mediumPriorityTasks = scheduler.scheduleWithFixedDelay(() -> {
-            publishData(mediumPriorityChannels);
-        }, WAIT_TIME_CHANNEL_ITEM_LINK_INIT, refreshIntervalMediumPriority.intValue(), TimeUnit.SECONDS);
+            logger.debug("Schedule medium priority tasks at fixed rate {} s", mediumPriorityInterval);
+            publishData(getMediumPriorityChannels());
+        }, WAIT_TIME_CHANNEL_ITEM_LINK_INIT, mediumPriorityInterval, TimeUnit.SECONDS);
 
         logger.debug("Schedule one time update for low priority tasks");
         scheduler.schedule(() -> {
-            publishData(lowPriorityChannels);
+            publishData(getLowPriorityChannels());
         }, WAIT_TIME_CHANNEL_ITEM_LINK_INIT, TimeUnit.SECONDS);
     }
 
-    private void publishData(Set<ChannelUID> channels) {
+    private void publishData(final Set<ChannelUID> channels) {
         if (ThingStatus.ONLINE.equals(thing.getStatus())) {
             for (final ChannelUID channelUID : channels) {
-                final Thing child = getThing().getThing(channelUID.getThingUID());
-                if (child != null) {
-                    final ThingHandler handler = child.getHandler();
+                final Thing thing = thingRegistry.get(channelUID.getThingUID());
+                if (thing != null) {
+                    final ThingHandler handler = thing.getHandler();
                     if (handler != null) {
                         handler.handleCommand(channelUID, RefreshType.REFRESH);
                     } else {
                         logger.warn("Tried to update channel {} on not configured thing {}", channelUID,
-                                child.getUID());
+                                thing.getUID());
                     }
                 } else {
-                    handleCommand(channelUID, RefreshType.REFRESH);
+                    logger.warn("Tried to update channel {} on not available thing", channelUID);
                 }
             }
         }
-    }
-
-    public Set<ChannelUID> getHighPriorityChannels() {
-        return highPriorityChannels;
-    }
-
-    public Set<ChannelUID> getMediumPriorityChannels() {
-        return mediumPriorityChannels;
-    }
-
-    public Set<ChannelUID> getLowPriorityChannels() {
-        return lowPriorityChannels;
     }
 
     /**
@@ -456,34 +549,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
                     break;
                 case CHANNEL_CPU_NAME:
                     state = systeminfo.getCpuName();
-                    break;
-                case CHANNEL_STORAGE_NAME:
-                    state = systeminfo.getStorageName(deviceIndex);
-                    break;
-                case CHANNEL_STORAGE_DESCRIPTION:
-                    state = systeminfo.getStorageDescription(deviceIndex);
-                    break;
-                case CHANNEL_STORAGE_AVAILABLE:
-                    state = systeminfo.getStorageAvailable(deviceIndex);
-                    break;
-                case CHANNEL_STORAGE_USED:
-                    state = systeminfo.getStorageUsed(deviceIndex);
-                    break;
-                case CHANNEL_STORAGE_TOTAL:
-                    state = systeminfo.getStorageTotal(deviceIndex);
-                    break;
-                case CHANNEL_STORAGE_TYPE:
-                    state = systeminfo.getStorageType(deviceIndex);
-                    break;
-                case CHANNEL_STORAGE_AVAILABLE_PERCENT:
-                    PercentType storageAvailablePercent = systeminfo.getStorageAvailablePercent(deviceIndex);
-                    state = (storageAvailablePercent != null)
-                            ? new QuantityType<>(storageAvailablePercent, Units.PERCENT)
-                            : null;
-                    break;
-                case CHANNEL_STORAGE_USED_PERCENT:
-                    PercentType storageUsedPercent = systeminfo.getStorageUsedPercent(deviceIndex);
-                    state = (storageUsedPercent != null) ? new QuantityType<>(storageUsedPercent, Units.PERCENT) : null;
                     break;
                 case CHANNEL_PROCESS_LOAD:
                 case CHANNEL_CURRENT_PROCESS_LOAD:
@@ -603,34 +668,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         return pid;
     }
 
-    @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
-        if (thing.getStatus().equals(ThingStatus.ONLINE)) {
-            if (command instanceof RefreshType) {
-                logger.debug("Refresh command received for channel {} !", channelUID);
-                if (CHANNEL_MEMORY_GROUP.equals(channelUID.getGroupId())) {
-                    final GlobalMemory memory = systeminfo.getMemorySpecifications();
-                    updateState(channelUID, getChannelState(channelUID, memory.getAvailable(),
-                            memory.getTotal() - memory.getAvailable(), memory.getTotal()));
-                } else if (CHANNEL_HEAP_GROUP.equals(channelUID.getGroupId())) {
-                    final Runtime runtime = Runtime.getRuntime();
-                    updateState(channelUID, getChannelState(channelUID, runtime.freeMemory(),
-                            runtime.totalMemory() - runtime.freeMemory(), runtime.totalMemory()));
-                } else if (CHANNEL_SWAP_GROUP.equals(channelUID.getGroupId())) {
-                    final VirtualMemory swap = systeminfo.getSwapSpecifications();
-                    updateState(channelUID, getChannelState(channelUID, swap.getSwapTotal() - swap.getSwapUsed(),
-                            swap.getSwapUsed(), swap.getSwapTotal()));
-                } else {
-                    updateState(channelUID, getInfoForChannel(channelUID));
-                }
-            } else {
-                logger.debug("Unsupported command {} ! Supported commands: REFRESH", command);
-            }
-        } else {
-            logger.debug("Cannot handle command. Thing is not ONLINE.");
-        }
-    }
-
     private boolean isConfigurationKeyChanged(Configuration currentConfig, Configuration newConfig, String key) {
         Object currentValue = currentConfig.get(key);
         Object newValue = newConfig.get(key);
@@ -640,67 +677,6 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         }
 
         return !currentValue.equals(newValue);
-    }
-
-    @Override
-    public synchronized void thingUpdated(Thing thing) {
-        logger.trace("About to update thing");
-        boolean isChannelConfigChanged = false;
-
-        List<Channel> channels = thing.getChannels();
-
-        for (Channel channel : channels) {
-            ChannelUID channelUID = channel.getUID();
-            Configuration newChannelConfig = channel.getConfiguration();
-            Channel oldChannel = this.thing.getChannel(channelUID.getId());
-
-            if (oldChannel == null) {
-                logger.warn("Channel with UID {} cannot be updated, as it cannot be found!", channelUID);
-                continue;
-            }
-            Configuration currentChannelConfig = oldChannel.getConfiguration();
-
-            if (isConfigurationKeyChanged(currentChannelConfig, newChannelConfig, PRIORITY_PARAMETER)) {
-                isChannelConfigChanged = true;
-
-                handleChannelConfigurationChange(oldChannel, newChannelConfig, PRIORITY_PARAMETER);
-
-                String newPriority = (String) newChannelConfig.get(PRIORITY_PARAMETER);
-                changeChannelPriority(channelUID, newPriority);
-            }
-
-            if (isConfigurationKeyChanged(currentChannelConfig, newChannelConfig, PID_PARAMETER)) {
-                isChannelConfigChanged = true;
-                handleChannelConfigurationChange(oldChannel, newChannelConfig, PID_PARAMETER);
-            }
-        }
-
-        if (!(isInitialized() && isChannelConfigChanged)) {
-            super.thingUpdated(thing);
-        }
-    }
-
-    public void changeChannelPriority(final ChannelUID channelUID, final String priority) {
-        mediumPriorityChannels.remove(channelUID);
-        lowPriorityChannels.remove(channelUID);
-        highPriorityChannels.remove(channelUID);
-        switch (priority) {
-            case "High": {
-                highPriorityChannels.add(channelUID);
-                break;
-            }
-            case "Medium": {
-                mediumPriorityChannels.add(channelUID);
-                break;
-            }
-            case "Low": {
-                lowPriorityChannels.add(channelUID);
-                break;
-            }
-            default: {
-                logger.debug("Invalid priority configuration parameter. Channel will not be updated!");
-            }
-        }
     }
 
     private void handleChannelConfigurationChange(final Channel channel, final Configuration newConfig,
@@ -722,41 +698,5 @@ public class SystemInfoComputerHandler extends BaseBridgeHandler {
         logger.trace("Storing channel configurations");
         thingTypeProvider.storeChannelsConfig(thing);
         super.changeThingType(thingTypeUID, configuration);
-    }
-
-    @Override
-    public void dispose() {
-        ScheduledFuture<?> highPriorityTasks = this.highPriorityTasks;
-        if (highPriorityTasks != null) {
-            logger.debug("High priority tasks will not be run anymore");
-            highPriorityTasks.cancel(true);
-            this.highPriorityTasks = null;
-        }
-
-        ScheduledFuture<?> mediumPriorityTasks = this.mediumPriorityTasks;
-        if (mediumPriorityTasks != null) {
-            logger.debug("Medium priority tasks will not be run anymore");
-            mediumPriorityTasks.cancel(true);
-            this.mediumPriorityTasks = null;
-        }
-    }
-
-    private State getChannelState(final ChannelUID channelUID, long available, long used, long total) {
-        return (total <= 0) || (total < available) || (total < used) ? UnDefType.UNDEF
-                : switch (channelUID.getIdWithoutGroup()) {
-                    case CHANNEL_AVAILABLE -> new QuantityType<>(available, Units.BYTE);
-                    case CHANNEL_AVAILABLE_PERCENT ->
-                        new QuantityType<>(round((double) available / (double) total), Units.PERCENT);
-                    case CHANNEL_TOTAL -> new QuantityType<>(total, Units.BYTE);
-                    case CHANNEL_USED -> new QuantityType<>(used, Units.BYTE);
-                    case CHANNEL_USED_PERCENT ->
-                        new QuantityType<>(round((double) used / (double) total), Units.PERCENT);
-                    default -> UnDefType.UNDEF;
-                };
-    }
-
-    private BigDecimal round(final double quotient) {
-        final BigDecimal result = BigDecimal.valueOf(quotient * 100.0);
-        return result.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.HALF_UP);
     }
 }

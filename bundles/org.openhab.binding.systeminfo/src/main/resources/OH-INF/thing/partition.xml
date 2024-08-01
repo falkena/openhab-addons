@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="systeminfo"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+	<thing-type id="partition">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="drive"/>
+		</supported-bridge-type-refs>
+		<label>Partition</label>
+		<description>Information about partitions and volumes</description>
+
+		<channel-groups>
+			<channel-group id="partition" typeId="partition"/>
+			<channel-group id="volume0" typeId="volume"/>
+			<channel-group id="volume1" typeId="volume"/>
+			<channel-group id="volume2" typeId="volume"/>
+			<channel-group id="volume3" typeId="volume"/>
+			<channel-group id="volume4" typeId="volume"/>
+			<channel-group id="volume5" typeId="volume"/>
+			<channel-group id="volume6" typeId="volume"/>
+			<channel-group id="volume7" typeId="volume"/>
+			<channel-group id="volume8" typeId="volume"/>
+			<channel-group id="volume9" typeId="volume"/>
+		</channel-groups>
+
+		<properties>
+			<property name="identification">Not available</property>
+		</properties>
+		<representation-property>identification</representation-property>
+
+		<config-description-ref uri="thing-type:systeminfo:partition"/>
+	</thing-type>
+
+	<channel-group-type id="partition">
+		<label>Partition</label>
+		<description>Partition information</description>
+		<!--
+			this.identification = identification;
+			this.type = type;
+			this.uuid = uuid;
+			this.size = size;
+			this.major = major;
+			this.minor = minor;
+			this.mountPoint = mountPoint;
+		-->
+		<channels>
+			<channel id="name" typeId="name">
+				<label>Partition Name</label>
+				<description>The name of the partition</description>
+			</channel>
+			<channel id="description" typeId="description">
+				<label>Partition Description</label>
+				<description>The description of the partition</description>
+			</channel>
+			<channel id="type" typeId="type">
+				<label>Partition Type</label>
+				<description>The type of the partition</description>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="volume">
+		<label>Volume</label>
+		<description>Logical volume information</description>
+		<channels>
+			<channel id="name" typeId="name">
+				<label>Volume Name</label>
+				<description>The name of the volume</description>
+			</channel>
+			<channel id="description" typeId="description">
+				<label>Volume Description</label>
+				<description>The description of the volume</description>
+			</channel>
+			<channel id="total" typeId="total"/>
+			<channel id="available" typeId="memory_bytes">
+				<label>Volume Available</label>
+				<description>Available volume size in bytes</description>
+			</channel>
+			<channel id="availablePercent" typeId="percent">
+				<label>Volume Available</label>
+				<description>Available volume size in percent</description>
+			</channel>
+			<channel id="used" typeId="memory_bytes">
+				<label>Volume Used</label>
+				<description>Used volume size in bytes</description>
+			</channel>
+			<channel id="usedPercent" typeId="percent">
+				<label>Volume Used</label>
+				<description>Used volume size in percent</description>
+			</channel>
+			<channel id="type" typeId="type">
+				<label>Volume Type</label>
+				<description>The type of the volume</description>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-type id="type" advanced="true">
+		<item-type>String</item-type>
+		<label>Type</label>
+		<description>The type of partition/volume</description>
+		<state readOnly="true" pattern="%s"/>
+		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
+	</channel-type>
+
+</thing:thing-descriptions>

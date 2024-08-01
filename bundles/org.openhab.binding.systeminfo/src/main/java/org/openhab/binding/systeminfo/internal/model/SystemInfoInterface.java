@@ -31,6 +31,7 @@ import oshi.hardware.GlobalMemory;
 import oshi.hardware.HWDiskStore;
 import oshi.hardware.NetworkIF;
 import oshi.hardware.VirtualMemory;
+import oshi.software.os.OSFileStore;
 
 /**
  * {@link SystemInfoInterface} defines the methods needed to provide this binding with the required system information.
@@ -147,74 +148,19 @@ public interface SystemInfoInterface {
      */
     DecimalType getCpuThreads();
 
-    // Storage info
-    /**
-     * Returns the total space of the logical storage volume.
-     *
-     * @param deviceIndex - the index of the logical volume
-     * @return storage size
-     * @throws DeviceNotFoundException
-     */
-    QuantityType<DataAmount> getStorageTotal(int deviceIndex) throws DeviceNotFoundException;
+    // File storage info
 
     /**
-     * Returns the available storage space on the logical storage volume
+     * Returns the number of file storages.
      *
-     * @param deviceIndex - the index of the logical volume
-     * @return storage size
-     * @throws DeviceNotFoundException
+     * @return file storage count
      */
-    QuantityType<DataAmount> getStorageAvailable(int deviceIndex) throws DeviceNotFoundException;
+    int getFileStorageCount();
 
     /**
-     * Gets the used storage space on the logical storage volume
-     *
-     * @param deviceIndex - the index of the logical volume
-     * @return storage size
-     * @throws DeviceNotFoundException
+     * Gets the list of the file storages
      */
-    QuantityType<DataAmount> getStorageUsed(int deviceIndex) throws DeviceNotFoundException;
-
-    /**
-     * Gets the percent of available storage on the logical volume
-     *
-     * @param deviceIndex - the index of the logical volume
-     * @return percent of available storage or null
-     * @throws DeviceNotFoundException
-     */
-    @Nullable
-    PercentType getStorageAvailablePercent(int deviceIndex) throws DeviceNotFoundException;
-
-    /**
-     * Gets the percent of used storage on the logical volume
-     *
-     * @param deviceIndex - the index of the logical volume
-     * @return percent of used storage or null
-     * @throws DeviceNotFoundException
-     */
-    @Nullable
-    PercentType getStorageUsedPercent(int deviceIndex) throws DeviceNotFoundException;
-
-    /**
-     * Gets the name of the logical storage volume
-     *
-     * @throws DeviceNotFoundException
-     */
-    StringType getStorageName(int deviceIndex) throws DeviceNotFoundException;
-
-    /**
-     * Gets the type of the logical storage volume (e.g. NTFS, FAT32)
-     *
-     * @throws DeviceNotFoundException
-     */
-    StringType getStorageType(int deviceIndex) throws DeviceNotFoundException;
-
-    /**
-     * Gets the description of the logical storage volume
-     *
-     * @throws DeviceNotFoundException
-     */
-    StringType getStorageDescription(int deviceIndex) throws DeviceNotFoundException;
+    List<OSFileStore> getFileStorageList();
 
     // Hardware drive info
 
