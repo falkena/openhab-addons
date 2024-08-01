@@ -24,7 +24,6 @@ import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.binding.BaseThingHandler;
-import org.openhab.core.thing.binding.BridgeHandler;
 import org.openhab.core.types.RefreshType;
 
 /**
@@ -74,12 +73,9 @@ public abstract class SystemInfoDeviceHandler extends BaseThingHandler {
 
     private void changeChannelPriority(final ChannelUID channelUID, final Object priority) {
         final Bridge bridge = getBridge();
-        if ((bridge != null) && (priority instanceof String)) {
-            final BridgeHandler handler = bridge.getHandler();
-            if (handler instanceof SystemInfoComputerHandler bridgeHandler) {
-                bridgeHandler.changeChannelPriority(channelUID, (String) priority);
-                handleCommand(channelUID, RefreshType.REFRESH);
-            }
+        if ((bridge != null) && (bridge.getHandler() instanceof SystemInfoBridgeScheduler handler)) {
+            handler.changeChannelPriority(channelUID, priority);
+            handleCommand(channelUID, RefreshType.REFRESH);
         }
     }
 }

@@ -115,8 +115,6 @@ In the list below, you can find, how are channel group and channels id`s related
   - **channel** `available, total, used, availablePercent, usedPercent`
 - **group** `swap`
   - **channel** `available, total, used, availablePercent, usedPercent`
-- **group** `storage` (deviceIndex)
-  - **channel** `available, total, used, availablePercent, usedPercent, name, description, type`
 - **group** `display` (deviceIndex)
   - **channel** `information`
 - **group** `battery` (deviceIndex)
@@ -134,7 +132,7 @@ The groups marked with "(deviceIndex)" may have device index attached to the Cha
 
 - channel ::= channel_group & (deviceIndex) & # channel_id
 - deviceIndex ::= number >= 0
-- (e.g. _storage1#available_)
+- (e.g. _display1#available_)
 
 The channels marked with "(deviceIndex)" may have a device index attached to the Channel.
 
@@ -173,7 +171,6 @@ The table shows more detailed information about each channel type:
 | used               | Used size                                                        | Number:DataAmount   | High             | False    |
 | usedPercent        | Used size in %                                                   | Number:Dimensionless| High             | False    |
 | description        | Description of the device                                        | String              | Low              | True     |
-| type               | Storage type                                                     | String              | Low              | True     |
 | cpuTemp            | CPU Temperature in degrees Celsius                               | Number:Temperature  | High             | True     |
 | cpuVoltage         | CPU Voltage                                                      | Number:ElectricPotential| Medium       | True     |
 | fanSpeed           | Fan speed in rpm                                                 | Number              | Medium           | True     |
@@ -211,6 +208,31 @@ The table shows more detailed information about each channel type:
 | receivedBytes      | Number of bytes received over network adapter                    | Number:DataAmount   | High             | False    |
 | sent               | Number of packets sent over network adapter                      | Number              | Medium           | True     |
 | sentBytes          | Number of bytes sent over network adapter                        | Number:DataAmount   | High             | False    |
+
+### Partition
+
+Each partition may contain multiple volumes:
+The table shows more detailed information about each channel type in `partition` group:
+
+| Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
+|--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
+| name               | Partition name                                                   | String              | Low              | False    |
+| description        | Partition identification                                         | String              | Low              | True     |
+| type               | Partition type                                                   | String              | Low              | True     |
+
+Each partition may contain multiple volumes, which are organized in `volume<index>` (e.g. `volume0`, `volume1`, ...) groups:
+
+| Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
+|--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
+| name               | Volume name                                                      | String              | Low              | False    |
+| description        | Volume description                                               | String              | Low              | True     |
+| type               | Volume type                                                      | String              | Low              | True     |
+| available          | Available size                                                   | Number:DataAmount   | High             | False    |
+| availablePercent   | Available size in %                                              | Number:Dimensionless| High             | False    |
+| total              | Total size                                                       | Number:DataAmount   | Low              | False    |
+| used               | Used size                                                        | Number:DataAmount   | High             | False    |
+| usedPercent        | Used size in %                                                   | Number:Dimensionless| High             | False    |
+| type               | Volume type                                                      | String              | Low              | True     |
 
 ## Channel configuration
 
@@ -258,6 +280,9 @@ Things:
 Bridge systeminfo:computer:work "Computer" @ "System" [ interval_high=3, interval_medium=60 ]
 {
    Bridge drive harddrive "Hard drive" @ "System" [ index=0 ]
+   {
+      Thing partition partition "Partition" @ "Hard drive" [ index=0 ]
+   }
    Thing network adapter "Network adapter" @ "System" [ name="eth0" ]
 }
 ```
@@ -297,15 +322,15 @@ Number Network_PacketsSent         "Sent [%d]"           <flowpipe>      { chann
 Number:DataAmount Network_Received "Received [%d B]"     <returnpipe>    { channel="systeminfo:network:adapter:network#receivedBytes" }
 Number Network_PacketsReceived     "Received [%d]"       <returnpipe>    { channel="systeminfo:network:adapter:network#received" }
 
-/* Storage information*/
-String Storage_Name                "Name"                <none>          { channel="systeminfo:computer:work:storage#name" }
-String Storage_Type                "Type"                <none>          { channel="systeminfo:computer:work:storage#type" }
-String Storage_Description         "Description"         <none>          { channel="systeminfo:computer:work:storage#description" }
-Number:DataAmount Storage_Available "Available"          <none>          { channel="systeminfo:computer:work:storage#available" }
-Number:DataAmount Storage_Used     "Used"                <none>          { channel="systeminfo:computer:work:storage#used" }
-Number:DataAmount Storage_Total    "Total"               <none>          { channel="systeminfo:computer:work:storage#total" }
-Number:Dimensionless Storage_Available_Percent "Available (%)" <none>    { channel="systeminfo:computer:work:storage#availablePercent" }
-Number:Dimensionless Storage_Used_Percent "Used (%)"     <none>          { channel="systeminfo:computer:work:storage#usedPercent" }
+/* Partition and volume information*/
+String Storage_Name                "Name"                <none>          { channel="systeminfo:partition:harddrive:partition:partition#name" }
+String Storage_Description         "Description"         <none>          { channel="systeminfo:partition:harddrive:partition:partition#description" }
+String Storage_Type                "Type"                <none>          { channel="systeminfo:partition:harddrive:partition:partition#type" }
+Number:DataAmount Storage_Available "Available"          <none>          { channel="systeminfo:partition:harddrive:partition:volume0#available" }
+Number:Dimensionless Storage_Available_Percent "Available (%)" <none>    { channel="systeminfo:partition:harddrive:partition:volume0#availablePercent" }
+Number:DataAmount Storage_Total    "Total"               <none>          { channel="systeminfo:partition:harddrive:partition:volume0#total" }
+Number:DataAmount Storage_Used     "Used"                <none>          { channel="systeminfo:partition:harddrive:partition:volume0#used" }
+Number:Dimensionless Storage_Used_Percent "Used (%)"     <none>          { channel="systeminfo:partition:harddrive:partition:volume0#usedPercent" }
 
 /* Memory information*/
 Number:DataAmount Memory_Available "Available"           <none>          { channel="systeminfo:computer:work:memory#available" }

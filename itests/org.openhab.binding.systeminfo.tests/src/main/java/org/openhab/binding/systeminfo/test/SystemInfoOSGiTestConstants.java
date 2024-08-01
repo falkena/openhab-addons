@@ -38,4 +38,6 @@ public class SystemInfoOSGiTestConstants {
 
     public static final ChannelTypeUID CHANNEL_TYPE_IP = new ChannelTypeUID(BINDING_ID, "ip");
     public static final ChannelTypeUID CHANNEL_TYPE_MAC = new ChannelTypeUID(BINDING_ID, "mac");
+
+    public static final ChannelTypeUID CHANNEL_TYPE_TYPE = new ChannelTypeUID(BINDING_ID, "type");
 }
