@@ -14,7 +14,6 @@
 		<channel-groups>
 			<channel-group id="cpu" typeId="cpuGroup"/>
 			<channel-group id="memory" typeId="memory"/>
-			<channel-group id="storage" typeId="storageGroup"/>
 			<channel-group id="swap" typeId="swap"/>
 			<channel-group id="heap" typeId="heap"/>
 			<channel-group id="sensors" typeId="sensorsGroup"/>

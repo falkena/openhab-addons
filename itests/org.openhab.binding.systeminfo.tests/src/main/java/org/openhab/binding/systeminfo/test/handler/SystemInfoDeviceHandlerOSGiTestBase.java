@@ -86,7 +86,7 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
         }
 
         final ThingBuilder thingBuilder = ThingBuilder.create(thingTypeUID, thingUID);
-        thingBuilder.withBridge(bridge.getBridgeUID()).withConfiguration(thingConfig);
+        thingBuilder.withBridge(bridge.getUID()).withConfiguration(thingConfig);
 
         final ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
         channelBuilder.withType(channelTypeUID).withKind(ChannelKind.STATE);
@@ -100,13 +100,11 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
         assertThat(thing, is(notNullValue()));
         managedThingProvider.add(thing);
 
-        waitForAssert(() -> {
-            final ThingHandler handler = thing.getHandler();
-            if (handler == null) {
-                throw new AssertionError("Device handler is null");
-            }
-            handler.initialize();
-        });
+        final ThingHandler handler = thing.getHandler();
+        if (handler == null) {
+            throw new AssertionError("Device handler is null");
+        }
+        handler.initialize();
 
         waitForAssert(() -> {
             final ThingStatusInfo statusInfo = thing.getStatusInfo();

@@ -88,33 +88,6 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-group-type id="storageGroup">
-		<label>Storage</label>
-		<description>Logical storage information</description>
-		<channels>
-			<channel id="name" typeId="name"/>
-			<channel id="description" typeId="description"/>
-			<channel id="total" typeId="total"/>
-			<channel id="available" typeId="memory_bytes">
-				<label>Available Storage</label>
-				<description>Available storage size in bytes</description>
-			</channel>
-			<channel id="availablePercent" typeId="percent">
-				<label>Available Storage</label>
-				<description>Available storage size in percent</description>
-			</channel>
-			<channel id="used" typeId="memory_bytes">
-				<label>Used Storage</label>
-				<description>Used storage size in bytes</description>
-			</channel>
-			<channel id="usedPercent" typeId="percent">
-				<label>Used Storage</label>
-				<description>Used storage size in percent</description>
-			</channel>
-			<channel id="type" typeId="type"/>
-		</channels>
-	</channel-group-type>
-
 	<channel-group-type id="displayGroup">
 		<label>Display</label>
 		<description>Display parameters</description>
@@ -273,14 +246,6 @@
 		<description>Name of the device (process)</description>
 		<state readOnly="true" pattern="%s"/>
 		<config-description-ref uri="channel-type:systeminfo:lowpriority_process"/>
-	</channel-type>
-
-	<channel-type id="type" advanced="true">
-		<item-type>String</item-type>
-		<label>Type</label>
-		<description>Storage type</description>
-		<state readOnly="true" pattern="%s"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
 	</channel-type>
 
 	<channel-type id="cpuTemp" advanced="true">
