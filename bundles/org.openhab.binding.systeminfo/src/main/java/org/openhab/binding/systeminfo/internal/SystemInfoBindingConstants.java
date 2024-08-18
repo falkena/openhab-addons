@@ -35,6 +35,7 @@ public class SystemInfoBindingConstants {
 
     public static final ThingTypeUID BRIDGE_TYPE_DRIVE = new ThingTypeUID(BINDING_ID, "drive");
     public static final ThingTypeUID THING_TYPE_NETWORK = new ThingTypeUID(BINDING_ID, "network");
+    public static final ThingTypeUID THING_TYPE_PARTITION = new ThingTypeUID(BINDING_ID, "partition");
 
     // Thing properties
     /**
@@ -46,6 +47,8 @@ public class SystemInfoBindingConstants {
      * Number of CPU physical cores
      */
     public static final String PROPERTY_CPU_PHYSICAL_CORES = "CPU Physical Cores";
+
+    public static final String PROPERTY_IDENTIFICATION = "identification";
 
     public static final String PROPERTY_HOSTNAME = "hostname";
     public static final String PROPERTY_HOSTNAME_DEFAULT = "unknown";
@@ -76,6 +79,11 @@ public class SystemInfoBindingConstants {
      * Common name channel
      */
     public static final String CHANNEL_NAME = "name";
+
+    /**
+     * Type of the logical device, is used in partition and volume
+     */
+    public static final String CHANNEL_TYPE = "type";
 
     /**
      * Size of the available memory, is used in physical, heap and swap memory channels
@@ -173,59 +181,19 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_MEMORY_GROUP = "memory";
 
     /**
+     * Name of the channel group type for partition information
+     */
+    public static final String CHANNEL_PARTITION_GROUP = "partition";
+
+    /**
+     * Name of the channel group type for volume information
+     */
+    public static final String CHANNEL_VOLUME_GROUP = "volume";
+
+    /**
      * Name of the channel group for swap information
      */
     public static final String CHANNEL_SWAP_GROUP = "swap";
-
-    /**
-     * Name of the channel group type for storage information
-     */
-    public static final String CHANNEL_GROUP_TYPE_STORAGE = "storageGroup";
-
-    /**
-     * Name of the channel group for storage information
-     */
-    public static final String CHANNEL_GROUP_STORAGE = "storage";
-
-    /**
-     * Name of the logical volume storage
-     */
-    public static final String CHANNEL_STORAGE_NAME = "storage#name";
-
-    /**
-     * Logical storage volume type -(e.g. NTFS, FAT32 ..)
-     */
-    public static final String CHANNEL_STORAGE_TYPE = "storage#type";
-
-    /**
-     * Description of the logical volume storage
-     */
-    public static final String CHANNEL_STORAGE_DESCRIPTION = "storage#description";
-
-    /**
-     * Size of the available storage space
-     */
-    public static final String CHANNEL_STORAGE_AVAILABLE = "storage#available";
-
-    /**
-     * Size of the used storage space
-     */
-    public static final String CHANNEL_STORAGE_USED = "storage#used";
-
-    /**
-     * Total storage space
-     */
-    public static final String CHANNEL_STORAGE_TOTAL = "storage#total";
-
-    /**
-     * Percents of the available storage space
-     */
-    public static final String CHANNEL_STORAGE_AVAILABLE_PERCENT = "storage#availablePercent";
-
-    /**
-     * Percents of the used storage space
-     */
-    public static final String CHANNEL_STORAGE_USED_PERCENT = "storage#usedPercent";
 
     /**
      * Name of the channel group type for sensors information

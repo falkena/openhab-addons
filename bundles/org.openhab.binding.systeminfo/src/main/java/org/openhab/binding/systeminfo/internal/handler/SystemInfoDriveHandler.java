@@ -23,11 +23,14 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 import static org.openhab.core.thing.Thing.PROPERTY_SERIAL_NUMBER;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.systeminfo.internal.config.SystemInfoDriveConfig;
+import org.openhab.binding.systeminfo.internal.discovery.SystemInfoPartitionDiscoveryService;
 import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
@@ -39,8 +42,7 @@ import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
-import org.openhab.core.thing.binding.BaseBridgeHandler;
-import org.openhab.core.thing.binding.BridgeHandler;
+import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
@@ -54,7 +56,7 @@ import oshi.hardware.HWDiskStore;
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public class SystemInfoDriveHandler extends BaseBridgeHandler {
+public class SystemInfoDriveHandler extends SystemInfoBridgeScheduler {
     private final Logger logger = LoggerFactory.getLogger(SystemInfoDriveHandler.class);
 
     private @Nullable HWDiskStore drive;
@@ -74,17 +76,8 @@ public class SystemInfoDriveHandler extends BaseBridgeHandler {
     }
 
     @Override
-    public void thingUpdated(Thing thing) {
-        for (final Channel newChannel : thing.getChannels()) {
-            final Channel oldChannel = getThing().getChannel(newChannel.getUID());
-            final Object newPriority = newChannel.getConfiguration().get(PRIORITY_PARAMETER);
-            if ((oldChannel != null) && (newPriority != null)) {
-                if (!newPriority.equals(oldChannel.getConfiguration().get(PRIORITY_PARAMETER))) {
-                    changeChannelPriority(newChannel.getUID(), newPriority);
-                }
-            }
-        }
-        super.thingUpdated(thing);
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return List.of(SystemInfoPartitionDiscoveryService.class);
     }
 
     @Override
@@ -116,6 +109,20 @@ public class SystemInfoDriveHandler extends BaseBridgeHandler {
     public void dispose() {
         drive = null;
         super.dispose();
+    }
+
+    @Override
+    public void thingUpdated(Thing thing) {
+        for (final Channel newChannel : thing.getChannels()) {
+            final Channel oldChannel = getThing().getChannel(newChannel.getUID());
+            final Object newPriority = newChannel.getConfiguration().get(PRIORITY_PARAMETER);
+            if ((oldChannel != null) && (newPriority != null)) {
+                if (!newPriority.equals(oldChannel.getConfiguration().get(PRIORITY_PARAMETER))) {
+                    changeChannelPriority(newChannel.getUID(), newPriority);
+                }
+            }
+        }
+        super.thingUpdated(thing);
     }
 
     @Override
@@ -153,14 +160,16 @@ public class SystemInfoDriveHandler extends BaseBridgeHandler {
         }
     }
 
-    private void changeChannelPriority(final ChannelUID channelUID, final Object priority) {
+    public @Nullable HWDiskStore getDrive() {
+        return drive;
+    }
+
+    @Override
+    public void changeChannelPriority(final ChannelUID channelUID, final Object priority) {
         final Bridge bridge = getBridge();
-        if ((bridge != null) && (priority instanceof String)) {
-            final BridgeHandler handler = bridge.getHandler();
-            if (handler instanceof SystemInfoComputerHandler bridgeHandler) {
-                bridgeHandler.changeChannelPriority(channelUID, (String) priority);
-                handleCommand(channelUID, RefreshType.REFRESH);
-            }
+        if ((bridge != null) && (bridge.getHandler() instanceof SystemInfoComputerHandler handler)) {
+            handler.changeChannelPriority(channelUID, priority);
+            handleCommand(channelUID, RefreshType.REFRESH);
         }
     }
 }
