@@ -186,6 +186,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
         final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_DRIVE, DEFAULT_TEST_THING_NAME);
         final BridgeBuilder bridgeBuilder = BridgeBuilder.create(BRIDGE_TYPE_DRIVE, thingUID);
+        bridgeBuilder.withConfiguration(bridgeConfiguration);
         bridgeBuilder.withBridge(systemInfoBridge.getBridgeUID());
 
         final ChannelUID channelUID = new ChannelUID(thingUID, channelID);
@@ -202,16 +203,23 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
         managedThingProvider.add(bridge);
 
         final BridgeHandler handler = bridge.getHandler();
-        assertThat(handler, is(notNullValue()));
+        if (handler == null) {
+            throw new AssertionError("Drive handler is null");
+        }
         assertThat(handler, is(instanceOf(SystemInfoDriveHandler.class)));
         handler.initialize();
 
         waitForAssert(() -> {
-            final ThingStatusInfo statusInfo = bridge.getStatusInfo();
+            final Thing registered = handler.getThing();
+            final ThingStatusInfo statusInfo = registered.getStatusInfo();
             assertThat(String.format("Thing status detail is %s with description %s", statusInfo.getStatusDetail(),
-                    statusInfo.getDescription()), bridge.getStatus(), is(equalTo(ThingStatus.ONLINE)));
+                    statusInfo.getDescription()), registered.getStatus(), is(equalTo(ThingStatus.ONLINE)));
         });
-        this.bridge = bridge;
+
+        final Thing registeredBridge = handler.getThing();
+        assertThat(registeredBridge, is(notNullValue()));
+        assertThat(registeredBridge, is(instanceOf(Bridge.class)));
+        this.bridge = (Bridge) registeredBridge;
 
         initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);
     }
