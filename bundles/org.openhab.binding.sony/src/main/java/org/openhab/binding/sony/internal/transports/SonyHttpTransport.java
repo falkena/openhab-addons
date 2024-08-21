@@ -15,6 +15,7 @@ package org.openhab.binding.sony.internal.transports;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -90,10 +91,11 @@ public class SonyHttpTransport extends AbstractSonyTransport {
             final TransportOption... options) {
         Objects.requireNonNull(payload, "payload cannot be null");
 
-        final TransportOptionAutoAuth oldAutoAuth = getOptions(TransportOptionAutoAuth.class).stream().findFirst()
-                .orElse(TransportOptionAutoAuth.FALSE);
-        final TransportOptionAutoAuth newAutoAuth = getOptions(TransportOptionAutoAuth.class, options).stream()
-                .findFirst().orElse(oldAutoAuth);
+        final List<TransportOptionAutoAuth> oldOptions = getOptions(TransportOptionAutoAuth.class);
+        final TransportOptionAutoAuth oldAutoAuth = !oldOptions.isEmpty() ? oldOptions.get(0)
+                : TransportOptionAutoAuth.FALSE;
+        final List<TransportOptionAutoAuth> newOptions = getOptions(TransportOptionAutoAuth.class);
+        final TransportOptionAutoAuth newAutoAuth = !newOptions.isEmpty() ? newOptions.get(0) : oldAutoAuth;
 
         try {
             if (oldAutoAuth != newAutoAuth) {

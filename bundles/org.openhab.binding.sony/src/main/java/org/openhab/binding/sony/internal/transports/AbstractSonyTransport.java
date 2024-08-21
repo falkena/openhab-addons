@@ -21,6 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.sony.internal.net.Header;
 import org.openhab.binding.sony.internal.scalarweb.models.ScalarWebEvent;
@@ -133,10 +134,10 @@ public abstract class AbstractSonyTransport implements SonyTransport {
      * @return a non-null, possibly empty list of matching options
      */
     @SuppressWarnings("unchecked")
-    protected <O extends TransportOption> List<O> getOptions(final Class<O> clazz, final TransportOption... options) {
-        Objects.requireNonNull(clazz, "clazz cannot be null");
+    protected <@NonNull T extends TransportOption> List<T> getOptions(final Class<T> clazz,
+            final TransportOption... options) {
         return Stream.concat(Arrays.stream(options), this.options.stream())
-                .filter(obj -> obj.getClass().isAssignableFrom(clazz)).map(obj -> (O) obj).collect(Collectors.toList());
+                .filter(obj -> obj.getClass().isAssignableFrom(clazz)).map(obj -> (T) obj).toList();
     }
 
     /**
@@ -146,8 +147,7 @@ public abstract class AbstractSonyTransport implements SonyTransport {
      * @param options the local options to also check
      * @return true if found, false otherwise
      */
-    protected <O extends TransportOption> boolean hasOption(final Class<O> clazz, final TransportOption... options) {
-        Objects.requireNonNull(clazz, "clazz cannot be null");
+    protected <T extends TransportOption> boolean hasOption(final Class<T> clazz, final TransportOption... options) {
         return !getOptions(clazz, options).isEmpty();
     }
 

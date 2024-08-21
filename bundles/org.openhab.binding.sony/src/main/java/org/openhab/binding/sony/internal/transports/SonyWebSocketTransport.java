@@ -204,7 +204,6 @@ public class SonyWebSocketTransport extends AbstractSonyTransport {
     /**
      * The following class provides the callback method to handle websocket events
      */
-    @NonNullByDefault
     @WebSocket
     public class WebSocketCallback {
         /**
@@ -231,7 +230,7 @@ public class SonyWebSocketTransport extends AbstractSonyTransport {
         @OnWebSocketMessage
         public void onMessage(final @Nullable String message) {
             logger.trace("websocket.onMessage({})", message);
-            if (message == null || message.isEmpty()) {
+            if ((message == null) || message.isEmpty()) {
                 logger.debug("Received an empty message - ignoring");
             } else {
                 try {
