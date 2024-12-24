@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_MEMORY_BYTES;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_BYTES;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_PERCENT;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_TOTAL;
 
@@ -288,8 +288,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
                 SystemInfoMockedGlobalMemory.TEST_MEMORY_AVAILABLE, Units.BYTE);
 
-        initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_MEMORY_BYTES,
-                "Number:DataAmount");
+        initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -320,7 +319,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_USED,
                 Units.BYTE);
 
-        initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_MEMORY_BYTES, "Number:DataAmount");
+        initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -342,8 +341,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
                 SystemInfoMockedVirtualMemory.TEST_SWAP_AVAILABLE, Units.BYTE);
 
-        initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_MEMORY_BYTES,
-                "Number:DataAmount");
+        initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -374,7 +372,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_USED,
                 Units.BYTE);
 
-        initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_MEMORY_BYTES, "Number:DataAmount");
+        initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
