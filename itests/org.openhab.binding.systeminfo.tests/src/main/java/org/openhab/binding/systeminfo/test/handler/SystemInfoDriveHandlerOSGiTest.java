@@ -30,8 +30,8 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_NAME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.DEVICE_INDEX_PARAMETER;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PRIORITY_PARAMETER;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_IO_BYTES;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_IO_COUNT;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_BYTES;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_COUNT;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_MODEL;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_NAME;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_SERIAL;
@@ -134,7 +134,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
     public void assertChannelReadsIsUpdated() {
         final DecimalType mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_READS);
 
-        initializeThingWithChannel(CHANNEL_DRIVE_READS, CHANNEL_TYPE_IO_COUNT, "Number");
+        initializeThingWithChannel(CHANNEL_DRIVE_READS, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -143,7 +143,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
                 SystemInfoMockedHWDiskStore.TEST_DRIVE_READ_BYTES, Units.BYTE);
 
-        initializeThingWithChannel(CHANNEL_DRIVE_READ_BYTES, CHANNEL_TYPE_IO_BYTES, "Number:DataAmount");
+        initializeThingWithChannel(CHANNEL_DRIVE_READ_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -159,7 +159,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
     public void assertChannelWritesIsUpdated() {
         final DecimalType mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITES);
 
-        initializeThingWithChannel(CHANNEL_DRIVE_WRITES, CHANNEL_TYPE_IO_COUNT, "Number");
+        initializeThingWithChannel(CHANNEL_DRIVE_WRITES, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -168,7 +168,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
                 SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITE_BYTES, Units.BYTE);
 
-        initializeThingWithChannel(CHANNEL_DRIVE_WRITE_BYTES, CHANNEL_TYPE_IO_BYTES, "Number:DataAmount");
+        initializeThingWithChannel(CHANNEL_DRIVE_WRITE_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
