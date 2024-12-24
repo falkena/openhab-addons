@@ -17,19 +17,19 @@
 			</channel>
 			<channel id="model" typeId="model"/>
 			<channel id="serial" typeId="serial"/>
-			<channel id="reads" typeId="io_count">
+			<channel id="reads" typeId="count">
 				<label>Reads Count</label>
 				<description>The number of reads from the drive</description>
 			</channel>
-			<channel id="readBytes" typeId="io_bytes">
+			<channel id="readBytes" typeId="bytes">
 				<label>Read Bytes</label>
 				<description>The number of bytes read from the disk</description>
 			</channel>
-			<channel id="writes" typeId="io_count">
+			<channel id="writes" typeId="count">
 				<label>Writes Count</label>
 				<description>The number of writes to the drive</description>
 			</channel>
-			<channel id="writeBytes" typeId="io_bytes">
+			<channel id="writeBytes" typeId="bytes">
 				<label>Written Bytes</label>
 				<description>The number of bytes written to the disk</description>
 			</channel>
