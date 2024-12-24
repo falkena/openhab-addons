@@ -28,9 +28,9 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_NETWORK_SENT_BYTES;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.DEVICE_NAME_PARAMETER;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_NETWORK;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_BYTES;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_COUNT;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_DESCRIPTION;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_IO_BYTES;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_IO_COUNT;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_IP;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_MAC;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_NAME;
@@ -110,7 +110,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
     public void assertChannelReceivedIsUpdated() {
         final DecimalType mockedValue = new DecimalType(SystemInfoMockedNetworkInterface.TEST_NETWORK_RECEIVED);
 
-        initializeThingWithChannel(CHANNEL_NETWORK_RECEIVED, CHANNEL_TYPE_IO_COUNT, "Number");
+        initializeThingWithChannel(CHANNEL_NETWORK_RECEIVED, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -119,7 +119,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
                 SystemInfoMockedNetworkInterface.TEST_NETWORK_RECEIVED_BYTES, Units.BYTE);
 
-        initializeThingWithChannel(CHANNEL_NETWORK_RECEIVED_BYTES, CHANNEL_TYPE_IO_BYTES, "Number:DataAmount");
+        initializeThingWithChannel(CHANNEL_NETWORK_RECEIVED_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -127,7 +127,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
     public void assertChannelSentIsUpdated() {
         final DecimalType mockedValue = new DecimalType(SystemInfoMockedNetworkInterface.TEST_NETWORK_SENT);
 
-        initializeThingWithChannel(CHANNEL_NETWORK_SENT, CHANNEL_TYPE_IO_COUNT, "Number");
+        initializeThingWithChannel(CHANNEL_NETWORK_SENT, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -136,7 +136,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
                 SystemInfoMockedNetworkInterface.TEST_NETWORK_SENT_BYTES, Units.BYTE);
 
-        initializeThingWithChannel(CHANNEL_NETWORK_SENT_BYTES, CHANNEL_TYPE_IO_BYTES, "Number:DataAmount");
+        initializeThingWithChannel(CHANNEL_NETWORK_SENT_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
