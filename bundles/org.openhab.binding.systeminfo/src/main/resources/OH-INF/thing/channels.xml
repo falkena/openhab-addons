@@ -15,7 +15,7 @@
 				<label>Total Memory</label>
 				<description>Total main memory size in bytes</description>
 			</channel>
-			<channel id="available" typeId="memory_bytes">
+			<channel id="available" typeId="bytes">
 				<label>Available Memory</label>
 				<description>Available main memory size in bytes</description>
 			</channel>
@@ -23,7 +23,7 @@
 				<label>Available Memory</label>
 				<description>Available main memory size in percent</description>
 			</channel>
-			<channel id="used" typeId="memory_bytes">
+			<channel id="used" typeId="bytes">
 				<label>Used Memory</label>
 				<description>Used main memory size in bytes</description>
 			</channel>
@@ -42,7 +42,7 @@
 				<label>Total Heap</label>
 				<description>Total heap size in bytes</description>
 			</channel>
-			<channel id="available" typeId="memory_bytes">
+			<channel id="available" typeId="bytes">
 				<label>Available Heap</label>
 				<description>How much data is available on the Java heap</description>
 			</channel>
@@ -50,7 +50,7 @@
 				<label>Available Heap</label>
 				<description>How much heap in percent is available</description>
 			</channel>
-			<channel id="used" typeId="memory_bytes">
+			<channel id="used" typeId="bytes">
 				<label>Used Heap</label>
 				<description>How much data is used from the Java heap</description>
 			</channel>
@@ -69,7 +69,7 @@
 				<label>Total Swap</label>
 				<description>Total swap size in bytes</description>
 			</channel>
-			<channel id="available" typeId="memory_bytes">
+			<channel id="available" typeId="bytes">
 				<label>Available Swap</label>
 				<description>Available swap size in bytes</description>
 			</channel>
@@ -77,7 +77,7 @@
 				<label>Available Swap</label>
 				<description>Available swap size in percent</description>
 			</channel>
-			<channel id="used" typeId="memory_bytes">
+			<channel id="used" typeId="bytes">
 				<label>Used Swap</label>
 				<description>Used main memory size in bytes</description>
 			</channel>
@@ -157,15 +157,7 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-type id="description" advanced="true">
-		<item-type>String</item-type>
-		<label>Description</label>
-		<description>Description of the device</description>
-		<state readOnly="true" pattern="%s"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
-	</channel-type>
-
-	<channel-type id="io_bytes" advanced="false">
+	<channel-type id="bytes" advanced="false">
 		<item-type>Number:DataAmount</item-type>
 		<label>Read/Written Bytes</label>
 		<description>Bytes read/written</description>
@@ -173,7 +165,7 @@
 		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
 	</channel-type>
 
-	<channel-type id="io_count" advanced="true">
+	<channel-type id="count" advanced="true">
 		<item-type>Number</item-type>
 		<label>Reads/Writes Count</label>
 		<description>The number of reads/writes</description>
@@ -181,12 +173,12 @@
 		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
 	</channel-type>
 
-	<channel-type id="memory_bytes" advanced="false">
-		<item-type>Number:DataAmount</item-type>
-		<label>Available/Used Bytes</label>
-		<description>Bytes available/used</description>
-		<state readOnly="true" pattern="%d B"/>
-		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
+	<channel-type id="description" advanced="true">
+		<item-type>String</item-type>
+		<label>Description</label>
+		<description>Description of the device</description>
+		<state readOnly="true" pattern="%s"/>
+		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
 	</channel-type>
 
 	<channel-type id="name">
