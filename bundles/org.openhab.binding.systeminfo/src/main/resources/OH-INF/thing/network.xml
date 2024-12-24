@@ -20,19 +20,19 @@
 			</channel>
 			<channel id="ip" typeId="ip"/>
 			<channel id="mac" typeId="mac"/>
-			<channel id="received" typeId="io_count">
+			<channel id="received" typeId="count">
 				<label>Packets Received</label>
 				<description>Number of packets received</description>
 			</channel>
-			<channel id="receivedBytes" typeId="io_bytes">
+			<channel id="receivedBytes" typeId="bytes">
 				<label>Data Received</label>
 				<description>The number of bytes received over interface</description>
 			</channel>
-			<channel id="sent" typeId="io_count">
+			<channel id="sent" typeId="count">
 				<label>Packets Sent</label>
 				<description>Number of packets sent</description>
 			</channel>
-			<channel id="sentBytes" typeId="io_bytes">
+			<channel id="sentBytes" typeId="bytes">
 				<label>Data Sent</label>
 				<description>The number of bytes sent over interface</description>
 			</channel>

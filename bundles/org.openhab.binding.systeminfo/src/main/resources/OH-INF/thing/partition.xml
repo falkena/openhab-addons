@@ -73,7 +73,7 @@
 				<description>The description of the volume</description>
 			</channel>
 			<channel id="total" typeId="total"/>
-			<channel id="available" typeId="memory_bytes">
+			<channel id="available" typeId="bytes">
 				<label>Volume Available</label>
 				<description>Available volume size in bytes</description>
 			</channel>
@@ -81,7 +81,7 @@
 				<label>Volume Available</label>
 				<description>Available volume size in percent</description>
 			</channel>
-			<channel id="used" typeId="memory_bytes">
+			<channel id="used" typeId="bytes">
 				<label>Volume Used</label>
 				<description>Used volume size in bytes</description>
 			</channel>
