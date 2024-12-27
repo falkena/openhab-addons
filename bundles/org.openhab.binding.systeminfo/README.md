@@ -109,6 +109,8 @@ In the list below, you can find, how are channel group and channels id`s related
 
 **thing** `computer`
 
+- **group** `cpu`
+  - **channel** `name, description, temperature, maxFrequency, voltage, frequency` (deviceIndex)
 - **group** `heap`
   - **channel** `available, total, used, availablePercent, usedPercent`
 - **group** `memory`
@@ -119,10 +121,10 @@ In the list below, you can find, how are channel group and channels id`s related
   - **channel** `information`
 - **group** `battery` (deviceIndex)
   - **channel** `name, remainingCapacity, remainingTime`
-- **group** `cpu`
-  - **channel** `name, description, maxfreq, freq` (deviceIndex)`, load, load1, load5, load15, uptime, threads`
 - **group** `sensors`
   - **channel** `cpuTemp, cpuVoltage, fanSpeed` (deviceIndex)
+- **group** `system`
+  - **channel** `load, load1, load5, load15, uptime, threads`
 - **group** `currentProcess`
   - **channel** `load, used, name, threads, path`
 - **group** `process` (pid)
@@ -153,30 +155,30 @@ this index is not existing, the binding will display an error message on the con
 
 The table shows more detailed information about each channel type:
 
-| Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
-|--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
-| load               | CPU Load (total or by process) in %                              | Number:Dimensionless| High             | False    |
-| load1              | Load for the last 1 minute                                       | Number              | Medium           | True     |
-| load5              | Load for the last 5 minutes                                      | Number              | Medium           | True     |
-| load15             | Load for the last 15 minutes                                     | Number              | Medium           | True     |
-| threads            | Number of threads currently running or for the process           | Number              | Medium           | True     |
-| maxfreq            | CPU maximum frequency                                            | Number:Frequency    | Low              | True     |
-| freq               | Logical processor frequency                                      | Number:Frequency    | High             | True     |
-| path               | The full path of the process                                     | String              | Low              | False    |
-| uptime             | System uptime (time after start) in minutes                      | Number:Time         | Medium           | True     |
-| name               | Name of the device or process                                    | String              | Low              | False    |
-| available          | Available size                                                   | Number:DataAmount   | High             | False    |
-| availablePercent   | Available size in %                                              | Number:Dimensionless| High             | False    |
-| total              | Total size                                                       | Number:DataAmount   | Low              | False    |
-| used               | Used size                                                        | Number:DataAmount   | High             | False    |
-| usedPercent        | Used size in %                                                   | Number:Dimensionless| High             | False    |
-| description        | Description of the device                                        | String              | Low              | True     |
-| cpuTemp            | CPU Temperature in degrees Celsius                               | Number:Temperature  | High             | True     |
-| cpuVoltage         | CPU Voltage                                                      | Number:ElectricPotential| Medium       | True     |
-| fanSpeed           | Fan speed in rpm                                                 | Number              | Medium           | True     |
-| remainingTime      | Remaining time in minutes                                        | Number:Time         | Medium           | False    |
-| remainingCapacity  | Remaining capacity in %                                          | Number:Dimensionless| Medium           | False    |
-| information        | Product, manufacturer, SN, width and height of the display in cm | String              | Low              | True     |
+| Channel ID         | Channel Description                                              | Supported item type     | Default priority | Advanced |
+|--------------------|------------------------------------------------------------------|-------------------------|------------------|----------|
+| maxFrequency       | CPU maximum frequency                                            | Number:Frequency        | Low              | True     |
+| frequency          | Logical processor frequency                                      | Number:Frequency        | High             | True     |
+| path               | The full path of the process                                     | String                  | Low              | False    |
+| name               | Name of the device or process                                    | String                  | Low              | False    |
+| description        | Description of the device                                        | String                  | Low              | True     |
+| temperature        | CPU Temperature in degrees Celsius                               | Number:Temperature      | High             | True     |
+| voltage            | CPU Voltage                                                      | Number:ElectricPotential| Medium       | True     |
+| available          | Available size                                                   | Number:DataAmount       | High             | False    |
+| availablePercent   | Available size in %                                              | Number:Dimensionless    | High             | False    |
+| total              | Total size                                                       | Number:DataAmount       | Low              | False    |
+| used               | Used size                                                        | Number:DataAmount       | High             | False    |
+| usedPercent        | Used size in %                                                   | Number:Dimensionless    | High             | False    |
+| fanSpeed           | Fan speed in rpm                                                 | Number                  | Medium           | True     |
+| remainingTime      | Remaining time in minutes                                        | Number:Time             | Medium           | False    |
+| remainingCapacity  | Remaining capacity in %                                          | Number:Dimensionless    | Medium           | False    |
+| information        | Product, manufacturer, SN, width and height of the display in cm | String                  | Low              | True     |
+| load               | System Load (total or by process) in %                           | Number:Dimensionless    | High             | False    |
+| load1              | System Load for the last 1 minute                                | Number                  | Medium           | True     |
+| load5              | System Load for the last 5 minutes                               | Number                  | Medium           | True     |
+| load15             | System Load for the last 15 minutes                              | Number                  | Medium           | True     |
+| threads            | Number of threads currently running or for the process           | Number                  | Medium           | True     |
+| uptime             | System uptime (time after start) in minutes                      | Number:Time             | Medium           | True     |
 
 ### Drive
 
@@ -294,14 +296,10 @@ Items:
 /* CPU information*/
 String CPU_Name                    "Name"                <none>          { channel="systeminfo:computer:work:cpu#name" }
 String CPU_Description             "Description"         <none>          { channel="systeminfo:computer:work:cpu#description" }
-Number:Frequency CPU_MaxFreq       "CPU Max Frequency"   <none>          { channel="systeminfo:computer:work:cpu#maxfreq" }
-Number:Frequency CPU_Freq          "CPU Frequency"       <none>          { channel="systeminfo:computer:work:cpu#freq" }
-Number:Dimensionless CPU_Load      "CPU Load"            <none>          { channel="systeminfo:computer:work:cpu#load" }
-Number CPU_Load1                   "Load (1 min)"        <none>          { channel="systeminfo:computer:work:cpu#load1" }
-Number CPU_Load5                   "Load (5 min)"        <none>          { channel="systeminfo:computer:work:cpu#load5" }
-Number CPU_Load15                  "Load (15 min)"       <none>          { channel="systeminfo:computer:work:cpu#load15" }
-Number CPU_Threads                 "Threads"             <none>          { channel="systeminfo:computer:work:cpu#threads" }
-Number:Time CPU_Uptime             "Uptime"              <time>          { channel="systeminfo:computer:work:cpu#uptime" }
+Number:Temperature Sensor_CPUTemp  "CPU Temperature"     <temperature>   { channel="systeminfo:computer:work:cpu#temperature" }
+Number:Frequency CPU_MaxFreq       "CPU Max Frequency"   <none>          { channel="systeminfo:computer:work:cpu#maxFrequency" }
+Number:Frequency CPU_Freq          "CPU Frequency"       <none>          { channel="systeminfo:computer:work:cpu#frequency" }
+Number:ElectricPotential Sensor_CPUVoltage "CPU Voltage" <energy>        { channel="systeminfo:computer:work:cpu#voltage" }
 
 /* Drive information*/
 String Drive_Name                  "Name"                <none>          { channel="systeminfo:drive:harddrive:name" }
@@ -339,6 +337,14 @@ Number:DataAmount Memory_Total     "Total"               <none>          { chann
 Number:Dimensionless Memory_Available_Percent "Available (%)" <none>     { channel="systeminfo:computer:work:memory#availablePercent" }
 Number:Dimensionless Memory_Used_Percent "Used (%)"      <none>          { channel="systeminfo:computer:work:memory#usedPercent" }
 
+/* System information*/
+Number:Dimensionless System_Load   "System Load"         <none>          { channel="systeminfo:computer:work:system#load" }
+Number System_Load1                "Load (1 min)"        <none>          { channel="systeminfo:computer:work:system#load1" }
+Number System_Load5                "Load (5 min)"        <none>          { channel="systeminfo:computer:work:system#load5" }
+Number System_Load15               "Load (15 min)"       <none>          { channel="systeminfo:computer:work:system#load15" }
+Number System_Threads              "Threads"             <none>          { channel="systeminfo:computer:work:system#threads" }
+Number:Time System_Uptime          "Uptime"              <time>          { channel="systeminfo:computer:work:system#uptime" }
+
 /* Swap memory information*/
 Number:DataAmount Swap_Available   "Available"           <none>          { channel="systeminfo:computer:work:swap#available" }
 Number:DataAmount Swap_Used        "Used"                <none>          { channel="systeminfo:computer:work:swap#used" }
@@ -355,8 +361,6 @@ Number:Time Battery_RemainingTime  "Remaining Time"      <batterylevel>  { chann
 String Display_Description         "Display description" <screen>        { channel="systeminfo:computer:work:display#information" }
 
 /* Sensors information*/
-Number:Temperature Sensor_CPUTemp  "CPU Temperature"     <temperature>   { channel="systeminfo:computer:work:sensors#cpuTemp" }
-Number:ElectricPotential Sensor_CPUVoltage "CPU Voltage" <energy>        { channel="systeminfo:computer:work:sensors#cpuVoltage" }
 Number Sensor_FanSpeed             "Fan speed"           <fan>           { channel="systeminfo:computer:work:sensors#fanSpeed" }
 
 /* Current process information*/
