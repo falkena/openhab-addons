@@ -14,9 +14,6 @@ package org.openhab.binding.systeminfo.internal.model;
 
 import java.util.List;
 
-import javax.measure.quantity.ElectricPotential;
-import javax.measure.quantity.Frequency;
-import javax.measure.quantity.Temperature;
 import javax.measure.quantity.Time;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -27,11 +24,15 @@ import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.ComputerSystem;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.HWDiskStore;
 import oshi.hardware.NetworkIF;
+import oshi.hardware.Sensors;
 import oshi.hardware.VirtualMemory;
 import oshi.software.os.OSFileStore;
+import oshi.software.os.OperatingSystem;
 
 /**
  * {@link SystemInfoInterface} defines the methods needed to provide this binding with the required system information.
@@ -69,84 +70,18 @@ public interface SystemInfoInterface {
     StringType getOsVersion();
 
     // CPU info
-    /**
-     * Get the name of the CPU
-     */
-    StringType getCpuName();
 
     /**
-     * Get description about the CPU e.g (model, family, vendor, serial number, identifier, architecture(32bit or
-     * 64bit))
+     * Returns the CPU specification.
      */
-    StringType getCpuDescription();
+    CentralProcessor getCPUSpecification();
 
     /**
-     * Get the number of logical CPUs/cores available for processing.
+     * Returns the CPU identifier.
      */
-    DecimalType getCpuLogicalCores();
-
-    /**
-     * Get the number of physical CPUs/cores available for processing.
-     */
-    DecimalType getCpuPhysicalCores();
-
-    /**
-     * Get the maximum CPU frequency of the processor.
-     */
-    @Nullable
-    QuantityType<Frequency> getCpuMaxFreq();
-
-    /**
-     * Get the current CPU frequency of a logical processor.
-     */
-    @Nullable
-    QuantityType<Frequency> getCpuFreq(int logicalProcessorIndex);
-
-    /**
-     * Returns the system cpu load.
-     *
-     * @return the system cpu load between 0 and 100% or null, if no information is available
-     */
-    @Nullable
-    PercentType getSystemCpuLoad();
-
-    /**
-     * Returns the system load average for the last minute.
-     *
-     * @return the load as a number of processes or null, if no information is available
-     */
-    @Nullable
-    DecimalType getCpuLoad1();
-
-    /**
-     * Returns the system load average for the last 5 minutes.
-     *
-     * @return the load as number of processes or null, if no information is available
-     */
-    @Nullable
-    DecimalType getCpuLoad5();
-
-    /**
-     * Returns the system load average for the last 15 minutes.
-     *
-     * @return the load as number of processes or null, if no information is available
-     */
-    @Nullable
-    DecimalType getCpuLoad15();
-
-    /**
-     * Get the System uptime (time since boot).
-     *
-     * @return time since boot
-     */
-    QuantityType<Time> getCpuUptime();
-
-    /**
-     * Get the number of threads currently running
-     *
-     * @return number of threads
-     */
-    DecimalType getCpuThreads();
+    default CentralProcessor.ProcessorIdentifier getCPUIdentifier() {
+        return getCPUSpecification().getProcessorIdentifier();
+    }
 
     // File storage info
 
@@ -155,7 +90,9 @@ public interface SystemInfoInterface {
      *
      * @return file storage count
      */
-    int getFileStorageCount();
+    default int getFileStorageCount() {
+        return getFileStorageList().size();
+    }
 
     /**
      * Gets the list of the file storages
@@ -169,7 +106,9 @@ public interface SystemInfoInterface {
      *
      * @return drive count
      */
-    int getHardDriveCount();
+    default int getHardDriveCount() {
+        return getHardDriveList().size();
+    }
 
     /**
      * Gets the list of the physical storage drives
@@ -199,12 +138,31 @@ public interface SystemInfoInterface {
      *
      * @return network interface count
      */
-    int getNetworkInterfaceCount();
+    default int getNetworkInterfaceCount() {
+        return getNetworkInterfaceList().size();
+    }
 
     /**
      * Gets the list of the network interfaces
      */
     List<NetworkIF> getNetworkInterfaceList();
+
+    // System info
+
+    /**
+     * Gets the information about operating system
+     */
+    OperatingSystem getOperatingSystem();
+
+    /**
+     * Gets the system sensors
+     */
+    Sensors getSensors();
+
+    /**
+     * Gets the basic information about system
+     */
+    ComputerSystem getSystem();
 
     // Display info
     /**
@@ -216,22 +174,6 @@ public interface SystemInfoInterface {
     StringType getDisplayInformation(int deviceIndex) throws DeviceNotFoundException;
 
     // Sensors info
-    /**
-     * Get the information from the CPU temperature sensors.
-     *
-     * @return Temperature if available, null otherwise.
-     */
-    @Nullable
-    QuantityType<Temperature> getSensorsCpuTemperature();
-
-    /**
-     * Get the information for the CPU voltage.
-     *
-     * @return Voltage if available, null otherwise.
-     */
-    @Nullable
-    QuantityType<ElectricPotential> getSensorsCpuVoltage();
-
     /**
      * Get fan speed
      *
@@ -330,13 +272,6 @@ public interface SystemInfoInterface {
      * @return display count
      */
     int getDisplayCount();
-
-    /**
-     * Returns the number of storages.
-     *
-     * @return storage count
-     */
-    int getFileOSStoreCount();
 
     /**
      * Returns the number of power sources/batteries.

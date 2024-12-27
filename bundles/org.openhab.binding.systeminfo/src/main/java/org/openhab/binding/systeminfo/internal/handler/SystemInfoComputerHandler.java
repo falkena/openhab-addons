@@ -16,21 +16,17 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_BATTERY_NAME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_CAPACITY;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_TIME;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_DESCRIPTION;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_FREQ;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD_1;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD_15;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD_5;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_MAXFREQ;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_NAME;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_THREADS;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_UPTIME;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_FREQUENCY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_GROUP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_MAXFREQUENCY;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_TEMPERATURE;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_VOLTAGE;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_LOAD;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_MEMORY;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_NAME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_PATH;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CURRENT_PROCESS_THREADS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DESCRIPTION;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_DISPLAY_INFORMATION;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_BATTERY;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_CURRENT_PROCESS;
@@ -40,15 +36,21 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_GROUP_TYPE_DISPLAY;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_HEAP_GROUP;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_MEMORY_GROUP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_NAME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_LOAD;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_MEMORY;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_NAME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_PATH;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_PROCESS_THREADS;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SENOSRS_CPU_VOLTAGE;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SENSORS_CPU_TEMPERATURE;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SENSORS_FAN_SPEED;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SWAP_GROUP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_GROUP;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_LOAD;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_LOAD_1;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_LOAD_15;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_LOAD_5;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_THREADS;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_UPTIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PID_PARAMETER;
@@ -61,6 +63,7 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_OS_MANUFACTURER;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PROPERTY_OS_VERSION;
 import static org.openhab.binding.systeminfo.internal.handler.SystemInfoHandlerUtilities.getChannelState;
+import static org.openhab.binding.systeminfo.internal.handler.SystemInfoHandlerUtilities.round;
 
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -83,8 +86,9 @@ import org.openhab.core.cache.ExpiringCache;
 import org.openhab.core.cache.ExpiringCacheMap;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.DecimalType;
-import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
+import org.openhab.core.library.types.StringType;
+import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
@@ -105,6 +109,7 @@ import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.VirtualMemory;
 
@@ -139,20 +144,24 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
      * same process is tracked as current process and as a channel with pid parameter, or when the task interval is set
      * too low.
      */
-    private static final int MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS = 2000;
-    private ExpiringCache<PercentType> cpuLoadCache = new ExpiringCache<>(MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS,
-            () -> getSystemCpuLoad());
+    private static final long LOAD_REFRESH_INTERVAL_MS = 2000;
+    private final ExpiringCache<@Nullable BigDecimal> cpuLoad;
+
     private ExpiringCacheMap<Integer, @Nullable DecimalType> processLoadCache = new ExpiringCacheMap<>(
-            MIN_PROCESS_LOAD_REFRESH_INTERVAL_MS);
+            LOAD_REFRESH_INTERVAL_MS);
 
     private final Logger logger = LoggerFactory.getLogger(SystemInfoComputerHandler.class);
 
-    public SystemInfoComputerHandler(final Bridge bridge, final SystemInfoInterface systeminfo,
+    public SystemInfoComputerHandler(final Bridge bridge, final SystemInfoInterface systemInfo,
             final SystemInfoThingTypeProvider thingTypeProvider, final ThingRegistry thingRegistry) {
         super(bridge);
-        this.systeminfo = systeminfo;
+        this.systeminfo = systemInfo;
         this.thingTypeProvider = thingTypeProvider;
         this.thingRegistry = thingRegistry;
+        cpuLoad = new ExpiringCache<>(LOAD_REFRESH_INTERVAL_MS, () -> {
+            final CentralProcessor cpu = systeminfo.getCPUSpecification();
+            return SystemInfoHandlerUtilities.getCPULoad(cpu);
+        });
     }
 
     @Override
@@ -267,18 +276,89 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
         if (thing.getStatus().equals(ThingStatus.ONLINE)) {
             if (command instanceof RefreshType) {
                 logger.debug("Refresh command received for channel {} !", channelUID);
-                if (CHANNEL_MEMORY_GROUP.equals(channelUID.getGroupId())) {
+                if (CHANNEL_CPU_GROUP.equals(channelUID.getGroupId())) {
+                    final State state = switch (channelUID.getIdWithoutGroup()) {
+                        case CHANNEL_CPU_MAXFREQUENCY -> {
+                            final long value = systeminfo.getCPUSpecification().getMaxFreq();
+                            yield value > 0 ? new QuantityType<>(value, Units.HERTZ) : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_CPU_TEMPERATURE -> {
+                            final BigDecimal value = round(systeminfo.getSensors().getCpuTemperature());
+                            yield value.signum() == 1 ? new QuantityType<>(value, SIUnits.CELSIUS) : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_CPU_VOLTAGE -> {
+                            final BigDecimal voltage = round(systeminfo.getSensors().getCpuVoltage());
+                            yield voltage.signum() == 1 ? new QuantityType<>(voltage, Units.VOLT) : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_DESCRIPTION -> {
+                            final CentralProcessor.ProcessorIdentifier identifier = systeminfo.getCPUIdentifier();
+                            final String format = "Model: %s %s,family: %s, vendor: %s, sn: %s, identifier: %s ";
+                            yield new StringType(String.format(format, identifier.getModel(),
+                                    identifier.isCpu64bit() ? "64 bit" : "32 bit", identifier.getFamily(),
+                                    identifier.getVendor(), systeminfo.getSystem().getSerialNumber(),
+                                    identifier.getIdentifier()));
+                        }
+                        case CHANNEL_NAME -> new StringType(systeminfo.getCPUIdentifier().getName());
+                        default -> UnDefType.UNDEF;
+                    };
+                    if (channelUID.getId().contains(CHANNEL_CPU_FREQUENCY)) {
+                        int deviceIndex = getDeviceIndex(channelUID);
+                        final long[] frequencies = systeminfo.getCPUSpecification().getCurrentFreq();
+                        if ((deviceIndex < frequencies.length) && (frequencies[deviceIndex] > 0)) {
+                            updateState(channelUID, new QuantityType<>(frequencies[deviceIndex], Units.HERTZ));
+                        } else {
+                            updateState(channelUID, UnDefType.UNDEF);
+                        }
+                    } else {
+                        updateState(channelUID, state);
+                    }
+                } else if (CHANNEL_MEMORY_GROUP.equals(channelUID.getGroupId())) {
                     final GlobalMemory memory = systeminfo.getMemorySpecifications();
-                    updateState(channelUID, getChannelState(channelUID, memory.getAvailable(),
-                            memory.getTotal() - memory.getAvailable(), memory.getTotal()));
+                    final long available = memory.getAvailable();
+                    final long total = memory.getTotal();
+                    updateState(channelUID, getChannelState(channelUID, available, total - available, total));
                 } else if (CHANNEL_HEAP_GROUP.equals(channelUID.getGroupId())) {
                     final Runtime runtime = Runtime.getRuntime();
-                    updateState(channelUID, getChannelState(channelUID, runtime.freeMemory(),
-                            runtime.totalMemory() - runtime.freeMemory(), runtime.totalMemory()));
+                    final long free = runtime.freeMemory();
+                    final long total = runtime.totalMemory();
+                    updateState(channelUID, getChannelState(channelUID, free, total - free, total));
                 } else if (CHANNEL_SWAP_GROUP.equals(channelUID.getGroupId())) {
                     final VirtualMemory swap = systeminfo.getSwapSpecifications();
-                    updateState(channelUID, getChannelState(channelUID, swap.getSwapTotal() - swap.getSwapUsed(),
-                            swap.getSwapUsed(), swap.getSwapTotal()));
+                    final long used = swap.getSwapUsed();
+                    final long total = swap.getSwapTotal();
+                    updateState(channelUID, getChannelState(channelUID, total - used, used, total));
+                } else if (CHANNEL_SYSTEM_GROUP.equals(channelUID.getGroupId())) {
+                    final State state = switch (channelUID.getIdWithoutGroup()) {
+                        case CHANNEL_SYSTEM_LOAD -> {
+                            final BigDecimal value = cpuLoad.getValue();
+                            yield value != null ? new QuantityType<>(value, Units.PERCENT) : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_SYSTEM_LOAD_1 -> {
+                            final double[] value = systeminfo.getCPUSpecification().getSystemLoadAverage(3);
+                            yield (value.length == 3) && (value[0] > 0) ? new DecimalType(round(value[0]))
+                                    : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_SYSTEM_LOAD_5 -> {
+                            final double[] value = systeminfo.getCPUSpecification().getSystemLoadAverage(3);
+                            yield (value.length == 3) && (value[1] > 0) ? new DecimalType(round(value[1]))
+                                    : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_SYSTEM_LOAD_15 -> {
+                            final double[] value = systeminfo.getCPUSpecification().getSystemLoadAverage(3);
+                            yield (value.length == 3) && (value[2] > 0) ? new DecimalType(round(value[2]))
+                                    : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_SYSTEM_THREADS -> {
+                            final int value = systeminfo.getOperatingSystem().getThreadCount();
+                            yield value > 0 ? new DecimalType(value) : UnDefType.UNDEF;
+                        }
+                        case CHANNEL_SYSTEM_UPTIME -> {
+                            final long value = systeminfo.getOperatingSystem().getSystemUptime();
+                            yield value > 0 ? new QuantityType<>(value, Units.SECOND) : UnDefType.UNDEF;
+                        }
+                        default -> UnDefType.UNDEF;
+                    };
+                    updateState(channelUID, state);
                 } else {
                     updateState(channelUID, getInfoForChannel(channelUID));
                 }
@@ -337,8 +417,9 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
     private boolean updateProperties() {
         Map<String, String> properties = editProperties();
         try {
-            properties.put(PROPERTY_CPU_LOGICAL_CORES, systeminfo.getCpuLogicalCores().toString());
-            properties.put(PROPERTY_CPU_PHYSICAL_CORES, systeminfo.getCpuPhysicalCores().toString());
+            final CentralProcessor cpu = systeminfo.getCPUSpecification();
+            properties.put(PROPERTY_CPU_LOGICAL_CORES, Integer.toString(cpu.getLogicalProcessorCount()));
+            properties.put(PROPERTY_CPU_PHYSICAL_CORES, Integer.toString(cpu.getPhysicalProcessorCount()));
             properties.put(PROPERTY_OS_FAMILY, systeminfo.getOsFamily().toString());
             properties.put(PROPERTY_OS_MANUFACTURER, systeminfo.getOsManufacturer().toString());
             properties.put(PROPERTY_OS_VERSION, systeminfo.getOsVersion().toString());
@@ -388,7 +469,9 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
 
         List<Channel> newChannels = new ArrayList<>();
         addChannels(CHANNEL_SENSORS_FAN_SPEED, systeminfo.getFanCount(), newChannels);
-        addChannels(CHANNEL_CPU_FREQ, systeminfo.getCpuLogicalCores().intValue(), newChannels);
+
+        final CentralProcessor cpu = systeminfo.getCPUSpecification();
+        addChannels(CHANNEL_CPU_FREQUENCY, cpu.getLogicalProcessorCount(), newChannels);
         if (!newChannels.isEmpty()) {
             logger.debug("Creating additional channels");
             newChannels.addAll(0, thing.getChannels());
@@ -490,11 +573,11 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
 
         // The channelGroup or channel may contain deviceIndex. It must be deleted from the channelID, because otherwise
         // the switch will not find the correct method below.
-        // All digits are deleted from the ID, except for CpuLoad channels.
-        if (!(CHANNEL_CPU_LOAD_1.equals(channelID) || CHANNEL_CPU_LOAD_5.equals(channelID)
-                || CHANNEL_CPU_LOAD_15.equals(channelID))) {
-            channelID = channelID.replaceAll("\\d+", "");
-        }
+        // All digits are deleted from the ID, except for system load channels.
+        channelID = switch (channelID) {
+            case CHANNEL_SYSTEM_LOAD_1, CHANNEL_SYSTEM_LOAD_5, CHANNEL_SYSTEM_LOAD_15 -> channelID;
+            default -> channelID.replaceAll("\\d+", "");
+        };
 
         try {
             switch (channelID) {
@@ -509,46 +592,6 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
                     break;
                 case CHANNEL_BATTERY_REMAINING_TIME:
                     state = systeminfo.getBatteryRemainingTime(deviceIndex);
-                    break;
-                case CHANNEL_SENSORS_CPU_TEMPERATURE:
-                    state = systeminfo.getSensorsCpuTemperature();
-                    break;
-                case CHANNEL_SENOSRS_CPU_VOLTAGE:
-                    state = systeminfo.getSensorsCpuVoltage();
-                    break;
-                case CHANNEL_SENSORS_FAN_SPEED:
-                    state = systeminfo.getSensorsFanSpeed(deviceIndex);
-                    break;
-                case CHANNEL_CPU_MAXFREQ:
-                    state = systeminfo.getCpuMaxFreq();
-                    break;
-                case CHANNEL_CPU_FREQ:
-                    state = systeminfo.getCpuFreq(deviceIndex);
-                    break;
-                case CHANNEL_CPU_LOAD:
-                    PercentType cpuLoad = cpuLoadCache.getValue();
-                    state = (cpuLoad != null) ? new QuantityType<>(cpuLoad, Units.PERCENT) : null;
-                    break;
-                case CHANNEL_CPU_LOAD_1:
-                    state = systeminfo.getCpuLoad1();
-                    break;
-                case CHANNEL_CPU_LOAD_5:
-                    state = systeminfo.getCpuLoad5();
-                    break;
-                case CHANNEL_CPU_LOAD_15:
-                    state = systeminfo.getCpuLoad15();
-                    break;
-                case CHANNEL_CPU_UPTIME:
-                    state = systeminfo.getCpuUptime();
-                    break;
-                case CHANNEL_CPU_THREADS:
-                    state = systeminfo.getCpuThreads();
-                    break;
-                case CHANNEL_CPU_DESCRIPTION:
-                    state = systeminfo.getCpuDescription();
-                    break;
-                case CHANNEL_CPU_NAME:
-                    state = systeminfo.getCpuName();
                     break;
                 case CHANNEL_PROCESS_LOAD:
                 case CHANNEL_CURRENT_PROCESS_LOAD:
@@ -572,20 +615,21 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
                 case CHANNEL_CURRENT_PROCESS_THREADS:
                     state = systeminfo.getProcessThreads(deviceIndex);
                     break;
+                case CHANNEL_SENSORS_FAN_SPEED:
+                    state = systeminfo.getSensorsFanSpeed(deviceIndex);
+                    break;
                 default:
                     logger.debug("Channel with unknown ID: {} !", channelID);
             }
-        } catch (DeviceNotFoundException e) {
-            logger.warn("No information for channel {} with device index: {}", channelID, deviceIndex);
-        } catch (Exception e) {
-            logger.debug("Unexpected error occurred while getting system information!", e);
+        } catch (DeviceNotFoundException exception) {
+            if (isLinked(channelUID)) {
+                logger.warn("No information for channel {} with device index: {}", channelID, deviceIndex);
+            }
+        } catch (Exception exception) {
+            logger.debug("Unexpected error occurred while getting system information!", exception);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/offline.unexpected-error");
         }
         return state != null ? state : UnDefType.UNDEF;
-    }
-
-    private @Nullable PercentType getSystemCpuLoad() {
-        return systeminfo.getSystemCpuLoad();
     }
 
     private @Nullable DecimalType getProcessCpuUsage(int pid) {
