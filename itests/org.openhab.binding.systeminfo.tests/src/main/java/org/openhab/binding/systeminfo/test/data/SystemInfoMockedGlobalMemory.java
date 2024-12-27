@@ -25,10 +25,6 @@ import oshi.hardware.VirtualMemory;
  */
 @NonNullByDefault
 public class SystemInfoMockedGlobalMemory implements GlobalMemory {
-    private final VirtualMemory virtualMemory = new SystemInfoMockedVirtualMemory();
-    private final PhysicalMemory physicalMemory = new PhysicalMemory(TEST_MEMORY_BANK_LABEL, TEST_MEMORY_BANK_CAPACITY,
-            TEST_MEMORY_BANK_CLOCK_SPEED, TEST_DRIVE_MANUFACTURER, TEST_MEMORY_BANK_TYPE);
-
     public static final long TEST_MEMORY_BANK_CAPACITY = 1024;
     public static final long TEST_MEMORY_BANK_CLOCK_SPEED = 10;
     public static final String TEST_MEMORY_BANK_LABEL = "Mocked Bank Label";
@@ -39,6 +35,10 @@ public class SystemInfoMockedGlobalMemory implements GlobalMemory {
     public static final long TEST_MEMORY_TOTAL = 2048;
     public static final long TEST_MEMORY_USED = TEST_MEMORY_TOTAL - TEST_MEMORY_AVAILABLE;
     public static final long TEST_MEMORY_PAGE_SIZE = 1024;
+
+    private final VirtualMemory virtualMemory = new SystemInfoMockedVirtualMemory();
+    private final PhysicalMemory physicalMemory = new PhysicalMemory(TEST_MEMORY_BANK_LABEL, TEST_MEMORY_BANK_CAPACITY,
+            TEST_MEMORY_BANK_CLOCK_SPEED, TEST_DRIVE_MANUFACTURER, TEST_MEMORY_BANK_TYPE);
 
     @Override
     public long getPageSize() {
