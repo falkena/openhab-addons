@@ -12,9 +12,9 @@
  */
 package org.openhab.binding.systeminfo.test.data;
 
-import static org.openhab.binding.systeminfo.test.data.SystemInfoMockedDiskStore.TEST_PARTITION_MOUNT;
-import static org.openhab.binding.systeminfo.test.data.SystemInfoMockedDiskStore.TEST_PARTITION_SIZE;
-import static org.openhab.binding.systeminfo.test.data.SystemInfoMockedDiskStore.TEST_PARTITION_UUID;
+import static org.openhab.binding.systeminfo.test.data.SystemInfoMockedHWDiskStore.TEST_PARTITION_MOUNT;
+import static org.openhab.binding.systeminfo.test.data.SystemInfoMockedHWDiskStore.TEST_PARTITION_SIZE;
+import static org.openhab.binding.systeminfo.test.data.SystemInfoMockedHWDiskStore.TEST_PARTITION_UUID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
@@ -24,8 +24,7 @@ import oshi.software.os.OSFileStore;
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public class SystemInfoMockedFileStore implements OSFileStore {
-
+public class SystemInfoMockedOSFileStore implements OSFileStore {
     public static final String TEST_STORE_DESCRIPTION = "Mocked Store Description";
     public static final String TEST_STORE_LABEL = "Mocked Store Label";
     public static final String TEST_STORE_LOGICAL_VOLUME = "Mocked Store Logical Volume";

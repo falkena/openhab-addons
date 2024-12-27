@@ -46,8 +46,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoDriveHandler;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoPartitionHandler;
-import org.openhab.binding.systeminfo.test.data.SystemInfoMockedDiskStore;
-import org.openhab.binding.systeminfo.test.data.SystemInfoMockedFileStore;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedHWDiskStore;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedOSFileStore;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.Bridge;
@@ -64,6 +64,7 @@ import org.openhab.core.thing.binding.builder.ThingBuilder;
 import org.openhab.core.thing.type.ChannelKind;
 import org.openhab.core.thing.type.ChannelTypeUID;
 
+import oshi.hardware.HWDiskStore;
 import oshi.software.os.OSFileStore;
 
 /**
@@ -78,8 +79,9 @@ public class SystemInfoPartitionHandlerOSGiTest extends SystemInfoDeviceHandlerO
 
     private @Nullable Bridge bridge;
     private @Nullable Thing thing;
-    private final SystemInfoMockedDiskStore disk = new SystemInfoMockedDiskStore();
-    private final List<OSFileStore> storage = List.of(new SystemInfoMockedFileStore());
+
+    private final HWDiskStore disk = new SystemInfoMockedHWDiskStore();
+    private final List<OSFileStore> storage = List.of(new SystemInfoMockedOSFileStore());
 
     @BeforeEach
     public void setUp() {
@@ -154,7 +156,7 @@ public class SystemInfoPartitionHandlerOSGiTest extends SystemInfoDeviceHandlerO
      */
     @Test
     public void assertChannelPartitionNameIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedDiskStore.TEST_PARTITION_NAME);
+        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_PARTITION_NAME);
 
         final String channelID = CHANNEL_PARTITION_GROUP + CHANNEL_GROUP_SEPARATOR + CHANNEL_NAME;
         initializeThingWithChannel(channelID, CHANNEL_TYPE_NAME, "String");
@@ -163,7 +165,7 @@ public class SystemInfoPartitionHandlerOSGiTest extends SystemInfoDeviceHandlerO
 
     @Test
     public void assertChannelPartitionDescriptionIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedDiskStore.TEST_PARTITION_IDENTIFICATION);
+        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_PARTITION_IDENTIFICATION);
 
         final String channelID = CHANNEL_PARTITION_GROUP + CHANNEL_GROUP_SEPARATOR + CHANNEL_DESCRIPTION;
         initializeThingWithChannel(channelID, CHANNEL_TYPE_DESCRIPTION, "String");
@@ -172,7 +174,7 @@ public class SystemInfoPartitionHandlerOSGiTest extends SystemInfoDeviceHandlerO
 
     @Test
     public void assertChannelPartitionTypeIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedDiskStore.TEST_PARTITION_TYPE);
+        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_PARTITION_TYPE);
 
         final String channelID = CHANNEL_PARTITION_GROUP + CHANNEL_GROUP_SEPARATOR + CHANNEL_TYPE;
         initializeThingWithChannel(channelID, CHANNEL_TYPE_TYPE, "String");
