@@ -100,8 +100,6 @@
 		<label>Sensor</label>
 		<description>Sensor parameters</description>
 		<channels>
-			<channel id="cpuTemp" typeId="cpuTemp"/>
-			<channel id="cpuVoltage" typeId="cpuVoltage"/>
 			<channel id="fanSpeed" typeId="fanSpeed"/>
 		</channels>
 	</channel-group-type>
@@ -116,19 +114,28 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-group-type id="cpuGroup">
+	<channel-group-type id="cpu">
 		<label>CPU</label>
 		<description>CPU parameters</description>
 		<channels>
 			<channel id="name" typeId="name"/>
 			<channel id="description" typeId="description"/>
-			<channel id="maxfreq" typeId="maxfreq"/>
-			<channel id="freq" typeId="freq"/>
+			<channel id="temperature" typeId="temperature"/>
+			<channel id="maxFrequency" typeId="maxFrequency"/>
+			<channel id="voltage" typeId="voltage"/>
+			<channel id="frequency" typeId="frequency"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="system">
+		<label>System</label>
+		<description>System information</description>
+		<channels>
+			<channel id="uptime" typeId="uptime"/>
 			<channel id="load" typeId="load"/>
 			<channel id="load1" typeId="loadAverage"/>
 			<channel id="load5" typeId="loadAverage"/>
 			<channel id="load15" typeId="loadAverage"/>
-			<channel id="uptime" typeId="uptime"/>
 			<channel id="threads" typeId="threads"/>
 		</channels>
 	</channel-group-type>
@@ -181,6 +188,38 @@
 		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
 	</channel-type>
 
+	<channel-type id="frequency" advanced="true">
+		<item-type>Number:Frequency</item-type>
+		<label>Current Frequency</label>
+		<description>Logical processor frequency</description>
+		<state readOnly="true" pattern="%.0f MHz"/>
+		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
+	</channel-type>
+
+	<channel-type id="maxFrequency" advanced="true">
+		<item-type>Number:Frequency</item-type>
+		<label>Maximum Frequency</label>
+		<description>CPU maximum frequency</description>
+		<state readOnly="true" pattern="%.0f MHz"/>
+		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
+	</channel-type>
+
+	<channel-type id="load">
+		<item-type>Number:Dimensionless</item-type>
+		<label>System Load</label>
+		<description>Current system load in percent</description>
+		<state readOnly="true" pattern="%.1f %%"/>
+		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
+	</channel-type>
+
+	<channel-type id="loadAverage" advanced="true">
+		<item-type>Number</item-type>
+		<label>Average System Load</label>
+		<description>Load as a number of processes for the last 1, 5 or 15 minutes</description>
+		<state readOnly="true" pattern="%.1f"/>
+		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
+	</channel-type>
+
 	<channel-type id="name">
 		<item-type>String</item-type>
 		<label>Name</label>
@@ -197,12 +236,44 @@
 		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
 	</channel-type>
 
+	<channel-type id="temperature" advanced="true">
+		<item-type>Number:Temperature</item-type>
+		<label>CPU Temperature</label>
+		<description>CPU temperature</description>
+		<state readOnly="true" pattern="%.1f °C"/>
+		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
+	</channel-type>
+
+	<channel-type id="threads" advanced="true">
+		<item-type>Number</item-type>
+		<label>Number of Threads</label>
+		<description>Total number of threads currently running</description>
+		<state readOnly="true" pattern="%d"/>
+		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
+	</channel-type>
+
 	<channel-type id="total">
 		<item-type>Number:DataAmount</item-type>
 		<label>Total</label>
 		<description>Total size</description>
 		<state readOnly="true" pattern="%d B"/>
 		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
+	</channel-type>
+
+	<channel-type id="voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>CPU Voltage</label>
+		<description>CPU voltage</description>
+		<state readOnly="true" pattern="%.1f V"/>
+		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
+	</channel-type>
+
+	<channel-type id="uptime">
+		<item-type>Number:Time</item-type>
+		<label>System Uptime</label>
+		<description>System uptime (time after start)</description>
+		<state readOnly="true" pattern="%d s"/>
+		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
 	</channel-type>
 
 	<!--
@@ -240,22 +311,6 @@
 		<config-description-ref uri="channel-type:systeminfo:lowpriority_process"/>
 	</channel-type>
 
-	<channel-type id="cpuTemp" advanced="true">
-		<item-type>Number:Temperature</item-type>
-		<label>CPU Temperature</label>
-		<description>CPU temperature</description>
-		<state readOnly="true" pattern="%.1f °C"/>
-		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
-	</channel-type>
-
-	<channel-type id="cpuVoltage" advanced="true">
-		<item-type>Number:ElectricPotential</item-type>
-		<label>CPU Voltage</label>
-		<description>CPU voltage</description>
-		<state readOnly="true" pattern="%.1f V"/>
-		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
-	</channel-type>
-
 	<channel-type id="fanSpeed" advanced="true">
 		<item-type>Number</item-type>
 		<label>Fan Speed</label>
@@ -280,60 +335,12 @@
 		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
 	</channel-type>
 
-	<channel-type id="maxfreq" advanced="true">
-		<item-type>Number:Frequency</item-type>
-		<label>Maximum Frequency</label>
-		<description>CPU maximum frequency</description>
-		<state readOnly="true" pattern="%.0f MHz"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
-	</channel-type>
-
-	<channel-type id="freq" advanced="true">
-		<item-type>Number:Frequency</item-type>
-		<label>Current Frequency</label>
-		<description>Logical processor frequency</description>
-		<state readOnly="true" pattern="%.0f MHz"/>
-		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
-	</channel-type>
-
-	<channel-type id="load">
-		<item-type>Number:Dimensionless</item-type>
-		<label>Load</label>
-		<description>Load in percent</description>
-		<state readOnly="true" pattern="%.1f %%"/>
-		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
-	</channel-type>
-
 	<channel-type id="load_process">
 		<item-type>Number:Dimensionless</item-type>
 		<label>Load</label>
 		<description>Load in percent</description>
 		<state readOnly="true" pattern="%.1f %%"/>
 		<config-description-ref uri="channel-type:systeminfo:highpriority_process"/>
-	</channel-type>
-
-	<channel-type id="loadAverage" advanced="true">
-		<item-type>Number</item-type>
-		<label>Load Average</label>
-		<description>Load as a number of processes for the last 1, 5 or 15 minutes</description>
-		<state readOnly="true" pattern="%.1f"/>
-		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
-	</channel-type>
-
-	<channel-type id="uptime" advanced="true">
-		<item-type>Number:Time</item-type>
-		<label>System Uptime</label>
-		<description>System uptime (time after start)</description>
-		<state readOnly="true" pattern="%.1f min"/>
-		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
-	</channel-type>
-
-	<channel-type id="threads" advanced="true">
-		<item-type>Number</item-type>
-		<label>Number of Threads</label>
-		<description>Total number of threads currently running</description>
-		<state readOnly="true" pattern="%d"/>
-		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
 	</channel-type>
 
 	<channel-type id="threads_process" advanced="true">

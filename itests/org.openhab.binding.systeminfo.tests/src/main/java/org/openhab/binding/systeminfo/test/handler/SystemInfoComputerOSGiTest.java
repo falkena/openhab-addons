@@ -16,13 +16,12 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_BYTES;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_PERCENT;
-import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.CHANNEL_TYPE_TOTAL;
+import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.*;
 
 import java.math.BigDecimal;
 
@@ -41,7 +40,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler;
 import org.openhab.binding.systeminfo.internal.model.DeviceNotFoundException;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedCentralProcessor;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedComputerSystem;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedGlobalMemory;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedOperatingSystem;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedSensors;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedVirtualMemory;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.dimension.DataAmount;
@@ -67,6 +70,12 @@ import org.openhab.core.thing.type.ChannelKind;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.UnDefType;
 
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.ComputerSystem;
+import oshi.hardware.GlobalMemory;
+import oshi.hardware.Sensors;
+import oshi.software.os.OperatingSystem;
+
 /**
  * OSGi tests for the {@link SystemInfoComputerHandler}
  *
@@ -80,7 +89,12 @@ import org.openhab.core.types.UnDefType;
 @ExtendWith(MockitoExtension.class)
 public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     private static final String TEST_ITEM_NAME = "computer";
-    private final SystemInfoMockedGlobalMemory memory = new SystemInfoMockedGlobalMemory();
+
+    private final ComputerSystem computer = new SystemInfoMockedComputerSystem();
+    private final CentralProcessor cpu = new SystemInfoMockedCentralProcessor();
+    private final GlobalMemory memory = new SystemInfoMockedGlobalMemory();
+    private final OperatingSystem system = new SystemInfoMockedOperatingSystem();
+    private final Sensors sensors = new SystemInfoMockedSensors();
 
     private void initializeThingWithChannelAndPID(String channelID, String acceptedItemType, int pid) {
         initializeThing(configuration, channelID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, pid);
@@ -109,8 +123,13 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @BeforeEach
     public void setUp() {
+        lenient().when(mockedSystemInfo.getSystem()).thenReturn(computer);
+        lenient().when(mockedSystemInfo.getCPUSpecification()).thenReturn(cpu);
+        lenient().when(mockedSystemInfo.getCPUIdentifier()).thenReturn(cpu.getProcessorIdentifier());
         lenient().when(mockedSystemInfo.getMemorySpecifications()).thenReturn(memory);
         lenient().when(mockedSystemInfo.getSwapSpecifications()).thenReturn(memory.getVirtualMemory());
+        lenient().when(mockedSystemInfo.getOperatingSystem()).thenReturn(system);
+        lenient().when(mockedSystemInfo.getSensors()).thenReturn(sensors);
     }
 
     @Test
@@ -139,7 +158,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
             assertThat("Invalid configuration is used", bridge.getStatus(), is(equalTo(ThingStatus.OFFLINE)));
             final ThingStatusInfo statusInfo = bridge.getStatusInfo();
             assertThat(statusInfo.getStatusDetail(), is(equalTo(ThingStatusDetail.HANDLER_INITIALIZING_ERROR)));
-            assertThat(statusInfo.getDescription(), is(equalTo("@text/offline.cannot-initialize")));
+            assertThat(statusInfo.getDescription(), allOf(notNullValue(), equalTo("@text/offline.cannot-initialize")));
         });
 
         systemInfoBridge = bridge;
@@ -174,113 +193,65 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     }
 
     @Test
-    public void assertChannelCpuMaxFreq() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_MAXFREQ;
-
-        QuantityType<Frequency> mockedCpuMaxFreqValue = new QuantityType<>(2500, Units.HERTZ);
-        when(mockedSystemInfo.getCpuMaxFreq()).thenReturn(mockedCpuMaxFreqValue);
-
-        initializeThingWithChannel(channnelID, "Number:Frequency");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuMaxFreqValue);
-    }
-
-    @Test
-    public void assertChannelCpuFreq() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_FREQ;
-
-        QuantityType<Frequency> mockedCpuFreqValue = new QuantityType<>(2500, Units.HERTZ);
-        when(mockedSystemInfo.getCpuFreq(0)).thenReturn(mockedCpuFreqValue);
-
-        initializeThingWithChannel(channnelID, "Number:Frequency");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuFreqValue);
-    }
-
-    @Test
-    public void assertChannelCpuLoadIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
-
-        PercentType mockedCpuLoadValue = new PercentType(9);
-        when(mockedSystemInfo.getSystemCpuLoad()).thenReturn(mockedCpuLoadValue);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoadValue);
-    }
-
-    @Test
-    public void assertChannelCpuLoad1IsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_1;
-
-        DecimalType mockedCpuLoad1Value = new DecimalType(1.1);
-        when(mockedSystemInfo.getCpuLoad1()).thenReturn(mockedCpuLoad1Value);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoad1Value);
-    }
-
-    @Test
-    public void assertChannelCpuLoad5IsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_5;
-
-        DecimalType mockedCpuLoad5Value = new DecimalType(5.5);
-        when(mockedSystemInfo.getCpuLoad5()).thenReturn(mockedCpuLoad5Value);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoad5Value);
-    }
-
-    @Test
-    public void assertChannelCpuLoad15IsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_LOAD_15;
-
-        DecimalType mockedCpuLoad15Value = new DecimalType(15.15);
-        when(mockedSystemInfo.getCpuLoad15()).thenReturn(mockedCpuLoad15Value);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuLoad15Value);
-    }
-
-    @Test
-    public void assertChannelCpuThreadsIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_THREADS;
-
-        DecimalType mockedCpuThreadsValue = new DecimalType(16);
-        when(mockedSystemInfo.getCpuThreads()).thenReturn(mockedCpuThreadsValue);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuThreadsValue);
-    }
-
-    @Test
-    public void assertChannelCpuUptimeIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_UPTIME;
-
-        QuantityType<Time> mockedCpuUptimeValue = new QuantityType<>(100, Units.MINUTE);
-        when(mockedSystemInfo.getCpuUptime()).thenReturn(mockedCpuUptimeValue);
-
-        initializeThingWithChannel(channnelID, "Number:Time");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuUptimeValue);
-    }
-
-    @Test
     public void assertChannelCpuDescriptionIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_DESCRIPTION;
+        final String format = "Model: %s %s,family: %s, vendor: %s, sn: %s, identifier: %s ";
+        final StringType mockedValue = new StringType(String.format(format,
+                SystemInfoMockedCentralProcessor.TEST_CPU_MODEL,
+                SystemInfoMockedCentralProcessor.TEST_CPU_IS_64_BIT ? "64 bit" : "32 bit",
+                SystemInfoMockedCentralProcessor.TEST_CPU_FAMILY, SystemInfoMockedCentralProcessor.TEST_CPU_VENDOR,
+                SystemInfoMockedComputerSystem.TEST_SYSTEM_SERIAL,
+                mockedSystemInfo.getCPUIdentifier().getIdentifier()));
 
-        StringType mockedCpuDescriptionValue = new StringType("Mocked Cpu Descr");
-        when(mockedSystemInfo.getCpuDescription()).thenReturn(mockedCpuDescriptionValue);
+        initializeBridgeWithChannel(CHANNEL_DESCRIPTION, CHANNEL_CPU_GROUP, CHANNEL_TYPE_NAME, "String");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
 
-        initializeThingWithChannel(channnelID, "String");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuDescriptionValue);
+    @Test
+    public void assertChannelCpuFrequency() {
+        final QuantityType<Frequency> mockedValue = new QuantityType<>(
+                SystemInfoMockedCentralProcessor.TEST_LOGICAL_CPU_FREQUENCY, Units.HERTZ);
+
+        initializeBridgeWithChannel(CHANNEL_CPU_FREQUENCY, CHANNEL_CPU_GROUP, CHANNEL_TYPE_FREQUENCY,
+                "Number:Frequency");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelCpuMaxFrequencyIsUpdated() {
+        final QuantityType<Frequency> mockedValue = new QuantityType<>(
+                SystemInfoMockedCentralProcessor.TEST_CPU_MAX_FREQUENCY, Units.HERTZ);
+
+        initializeBridgeWithChannel(CHANNEL_CPU_MAXFREQUENCY, CHANNEL_CPU_GROUP, CHANNEL_TYPE_MAX_FREQUENCY,
+                "Number:Frequency");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelCpuNameIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_CPU_NAME;
+        final StringType mockedValue = new StringType(SystemInfoMockedCentralProcessor.TEST_CPU_NAME);
 
-        StringType mockedCpuNameValue = new StringType("Mocked Cpu Name");
-        when(mockedSystemInfo.getCpuName()).thenReturn(mockedCpuNameValue);
+        initializeBridgeWithChannel(CHANNEL_NAME, CHANNEL_CPU_GROUP, CHANNEL_TYPE_NAME, "String");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
 
-        initializeThingWithChannel(channnelID, "String");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedCpuNameValue);
+    @Test
+    public void assertChannelCpuTemperatureIsUpdated() {
+        final QuantityType<Temperature> mockedValue = new QuantityType<>(SystemInfoMockedSensors.TEST_CPU_TEMPERATURE,
+                SIUnits.CELSIUS);
+
+        initializeBridgeWithChannel(CHANNEL_CPU_TEMPERATURE, CHANNEL_CPU_GROUP, CHANNEL_TYPE_TEMPERATURE,
+                "Number:Temperature");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelCpuVoltageIsUpdated() {
+        final QuantityType<ElectricPotential> mockedValue = new QuantityType<>(SystemInfoMockedSensors.TEST_CPU_VOLTAGE,
+                Units.VOLT);
+
+        initializeBridgeWithChannel(CHANNEL_CPU_VOLTAGE, CHANNEL_CPU_GROUP, CHANNEL_TYPE_VOLTAGE,
+                "Number:ElectricPotential");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
@@ -337,6 +308,57 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     }
 
     @Test
+    public void assertChannelSystemLoadIsUpdated() {
+        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
+                SystemInfoMockedCentralProcessor.TEST_CPU_LOAD, Units.PERCENT);
+
+        initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD,
+                "Number:Dimensionless");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSystemLoad1IsUpdated() {
+        final DecimalType mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD1);
+
+        initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD_1, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD_AVERAGE, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSystemLoad5IsUpdated() {
+        final DecimalType mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD5);
+
+        initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD_5, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD_AVERAGE, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSystemLoad15IsUpdated() {
+        final DecimalType mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD15);
+
+        initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD_15, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD_AVERAGE, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSystemThreadsIsUpdated() {
+        final DecimalType mockedValue = new DecimalType(SystemInfoMockedOperatingSystem.TEST_SYSTEM_THREAD_COUNT);
+
+        initializeBridgeWithChannel(CHANNEL_SYSTEM_THREADS, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_THREADS, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
+    public void assertChannelSystemUptimeIsUpdated() {
+        final QuantityType<Time> mockedValue = new QuantityType<>(SystemInfoMockedOperatingSystem.TEST_SYSTEM_UPTIME,
+                Units.SECOND);
+
+        initializeBridgeWithChannel(CHANNEL_SYSTEM_UPTIME, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_UPTIME, "Number:Time");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
+    }
+
+    @Test
     public void assertChannelSwapAvailableIsUpdated() {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
                 SystemInfoMockedVirtualMemory.TEST_SWAP_AVAILABLE, Units.BYTE);
@@ -387,30 +409,6 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         initializeBridgeWithChannel(CHANNEL_USED_PERCENT, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_PERCENT,
                 "Number:Dimensionless");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
-    }
-
-    // Re-enable this previously disabled test, as it is not relying on hardware anymore, but a mocked object
-    // There is a bug opened for this issue - https://github.com/dblock/oshi/issues/185
-    @Test
-    public void assertChannelSensorsCpuTempIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SENSORS_CPU_TEMPERATURE;
-
-        QuantityType<Temperature> mockedSensorsCpuTemperatureValue = new QuantityType<>(60, SIUnits.CELSIUS);
-        when(mockedSystemInfo.getSensorsCpuTemperature()).thenReturn(mockedSensorsCpuTemperatureValue);
-
-        initializeThingWithChannel(channnelID, "Number:Temperature");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSensorsCpuTemperatureValue);
-    }
-
-    @Test
-    public void assertChannelSensorsCpuVoltageIsUpdated() {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SENOSRS_CPU_VOLTAGE;
-
-        QuantityType<ElectricPotential> mockedSensorsCpuVoltageValue = new QuantityType<>(1000, Units.VOLT);
-        when(mockedSystemInfo.getSensorsCpuVoltage()).thenReturn(mockedSensorsCpuVoltageValue);
-
-        initializeThingWithChannel(channnelID, "Number:ElectricPotential");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSensorsCpuVoltageValue);
     }
 
     @Test

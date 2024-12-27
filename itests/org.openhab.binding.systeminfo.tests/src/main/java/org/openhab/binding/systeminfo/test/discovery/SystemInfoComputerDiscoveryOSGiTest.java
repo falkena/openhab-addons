@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER;
 import static org.openhab.binding.systeminfo.internal.discovery.SystemInfoComputerDiscoveryService.DEFAULT_THING_ID;
@@ -40,11 +41,11 @@ import org.openhab.binding.systeminfo.internal.SystemInfoHandlerFactory;
 import org.openhab.binding.systeminfo.internal.discovery.SystemInfoComputerDiscoveryService;
 import org.openhab.binding.systeminfo.internal.model.OSHISystemInfo;
 import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedCentralProcessor;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryService;
 import org.openhab.core.config.discovery.inbox.Inbox;
 import org.openhab.core.config.discovery.inbox.InboxPredicates;
-import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.test.java.JavaOSGiTest;
 import org.openhab.core.test.storage.VolatileStorageService;
@@ -52,6 +53,8 @@ import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingRegistry;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
+
+import oshi.hardware.CentralProcessor;
 
 /**
  * @author Alexander Falkenstern - Initial contribution
@@ -65,6 +68,8 @@ public class SystemInfoComputerDiscoveryOSGiTest extends JavaOSGiTest {
 
     private @Nullable ThingRegistry thingRegistry;
     private @Nullable VolatileStorageService storageService;
+
+    private final CentralProcessor cpu = new SystemInfoMockedCentralProcessor();
 
     static class SystemInfoDiscoveryServiceMock extends SystemInfoComputerDiscoveryService {
         String hostname;
@@ -99,14 +104,12 @@ public class SystemInfoComputerDiscoveryOSGiTest extends JavaOSGiTest {
         this.storageService = storageService;
 
         // Fill required properties, that thing can go online
-        when(mockedSystemInfo.getCpuLogicalCores()).thenReturn(new DecimalType(1));
-        when(mockedSystemInfo.getCpuPhysicalCores()).thenReturn(new DecimalType(1));
+        lenient().when(mockedSystemInfo.getCPUSpecification()).thenReturn(cpu);
         when(mockedSystemInfo.getOsFamily()).thenReturn(new StringType("Mock OS"));
         when(mockedSystemInfo.getOsManufacturer()).thenReturn(new StringType("Mock OS Manufacturer"));
         when(mockedSystemInfo.getOsVersion()).thenReturn(new StringType("Mock OS Version"));
 
         // Populate values for channel configuration, that thing can go online
-        when(mockedSystemInfo.getFileOSStoreCount()).thenReturn(1);
         when(mockedSystemInfo.getDisplayCount()).thenReturn(1);
         when(mockedSystemInfo.getPowerSourceCount()).thenReturn(1);
 

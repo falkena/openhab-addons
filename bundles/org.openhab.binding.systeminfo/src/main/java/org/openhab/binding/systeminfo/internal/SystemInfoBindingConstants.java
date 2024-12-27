@@ -111,6 +111,26 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_USED_PERCENT = "usedPercent";
 
     /**
+     * Frequency of the CPU
+     */
+    public static final String CHANNEL_CPU_FREQUENCY = "frequency";
+
+    /**
+     * Maximum frequency of the CPU
+     */
+    public static final String CHANNEL_CPU_MAXFREQUENCY = "maxFrequency";
+
+    /**
+     * Temperature of the CPU measured from the sensors.
+     */
+    public static final String CHANNEL_CPU_TEMPERATURE = "temperature";
+
+    /**
+     * Voltage of the CPU core.
+     */
+    public static final String CHANNEL_CPU_VOLTAGE = "voltage";
+
+    /**
      * Physical storage drive model
      */
     public static final String CHANNEL_DRIVE_MODEL = "model";
@@ -171,6 +191,41 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_NETWORK_SENT_BYTES = "sentBytes";
 
     /**
+     * Average recent system load
+     */
+    public static final String CHANNEL_SYSTEM_LOAD = "load";
+
+    /**
+     * Average system load for the last minute
+     */
+    public static final String CHANNEL_SYSTEM_LOAD_1 = "load1";
+
+    /**
+     * Average system load for the last 5 minutes
+     */
+    public static final String CHANNEL_SYSTEM_LOAD_5 = "load5";
+
+    /**
+     * Average system load for the last 15 minutes
+     */
+    public static final String CHANNEL_SYSTEM_LOAD_15 = "load15";
+
+    /**
+     * System running threads count
+     */
+    public static final String CHANNEL_SYSTEM_THREADS = "threads";
+
+    /**
+     * System uptime in minutes
+     */
+    public static final String CHANNEL_SYSTEM_UPTIME = "uptime";
+
+    /**
+     * Name of the channel group for CPU information
+     */
+    public static final String CHANNEL_CPU_GROUP = "cpu";
+
+    /**
      * Name of the channel group for heap information
      */
     public static final String CHANNEL_HEAP_GROUP = "heap";
@@ -186,6 +241,11 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_PARTITION_GROUP = "partition";
 
     /**
+     * Name of the channel group for CPU information
+     */
+    public static final String CHANNEL_SYSTEM_GROUP = "system";
+
+    /**
      * Name of the channel group type for volume information
      */
     public static final String CHANNEL_VOLUME_GROUP = "volume";
@@ -195,6 +255,7 @@ public class SystemInfoBindingConstants {
      */
     public static final String CHANNEL_SWAP_GROUP = "swap";
 
+    // Old definitions
     /**
      * Name of the channel group type for sensors information
      */
@@ -204,16 +265,6 @@ public class SystemInfoBindingConstants {
      * Name of the channel group for sensors information
      */
     public static final String CHANNEL_GROUP_SENSORS = "sensors";
-
-    /**
-     * Temperature of the CPU measured from the sensors.
-     */
-    public static final String CHANNEL_SENSORS_CPU_TEMPERATURE = "sensors#cpuTemp";
-
-    /**
-     * Voltage of the CPU core.
-     */
-    public static final String CHANNEL_SENOSRS_CPU_VOLTAGE = "sensors#cpuVoltage";
 
     /**
      * Fan speed
@@ -244,66 +295,6 @@ public class SystemInfoBindingConstants {
      * Estimated remaining time of the battery
      */
     public static final String CHANNEL_BATTERY_REMAINING_TIME = "battery#remainingTime";
-
-    /**
-     * Name of the channel group type for CPU information
-     */
-    public static final String CHANNEL_GROUP_TYPE_CPU = "cpuGroup";
-
-    /**
-     * Name of the channel group for CPU information
-     */
-    public static final String CHANNEL_GROUP_CPU = "cpu";
-
-    /**
-     * Detailed description about the CPU
-     */
-    public static final String CHANNEL_CPU_DESCRIPTION = "cpu#description";
-
-    /**
-     * Maximum frequency of the CPU
-     */
-    public static final String CHANNEL_CPU_MAXFREQ = "cpu#maxfreq";
-
-    /**
-     * Frequency of the CPU
-     */
-    public static final String CHANNEL_CPU_FREQ = "cpu#freq";
-
-    /**
-     * Average recent CPU load
-     */
-    public static final String CHANNEL_CPU_LOAD = "cpu#load";
-
-    /**
-     * Average CPU load for the last minute
-     */
-    public static final String CHANNEL_CPU_LOAD_1 = "cpu#load1";
-
-    /**
-     * Average CPU load for the last 5 minutes
-     */
-    public static final String CHANNEL_CPU_LOAD_5 = "cpu#load5";
-
-    /**
-     * Average CPU load for the last 15 minutes
-     */
-    public static final String CHANNEL_CPU_LOAD_15 = "cpu#load15";
-
-    /**
-     * CPU name
-     */
-    public static final String CHANNEL_CPU_NAME = "cpu#name";
-
-    /**
-     * CPU uptime in minutes
-     */
-    public static final String CHANNEL_CPU_UPTIME = "cpu#uptime";
-
-    /**
-     * CPU running threads count
-     */
-    public static final String CHANNEL_CPU_THREADS = "cpu#threads";
 
     /**
      * Name of the channel group type for display information
