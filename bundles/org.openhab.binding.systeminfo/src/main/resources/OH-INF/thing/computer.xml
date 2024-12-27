@@ -12,10 +12,11 @@
 		<description>The computer operating system and hardware information</description>
 		<semantic-equipment-tag>Computer</semantic-equipment-tag>
 		<channel-groups>
-			<channel-group id="cpu" typeId="cpuGroup"/>
+			<channel-group id="cpu" typeId="cpu"/>
 			<channel-group id="memory" typeId="memory"/>
 			<channel-group id="swap" typeId="swap"/>
 			<channel-group id="heap" typeId="heap"/>
+			<channel-group id="system" typeId="system"/>
 			<channel-group id="sensors" typeId="sensorsGroup"/>
 			<channel-group id="currentProcess" typeId="currentProcessGroup"/>
 			<channel-group id="process" typeId="processGroup"/>
