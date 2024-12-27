@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoDriveHandler;
-import org.openhab.binding.systeminfo.test.data.SystemInfoMockedDiskStore;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedHWDiskStore;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
@@ -81,7 +81,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
     private static final String TEST_ITEM_NAME = "drive";
 
     private @Nullable Bridge bridge;
-    private final SystemInfoMockedDiskStore disk = new SystemInfoMockedDiskStore();
+    private final HWDiskStore disk = new SystemInfoMockedHWDiskStore();
 
     @BeforeEach
     public void setUp() {
@@ -116,7 +116,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelNameIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedDiskStore.TEST_DRIVE_NAME);
+        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_NAME);
 
         initializeThingWithChannel(CHANNEL_NAME, CHANNEL_TYPE_NAME, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -124,7 +124,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelModelIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedDiskStore.TEST_DRIVE_MODEL);
+        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_MODEL);
 
         initializeThingWithChannel(CHANNEL_DRIVE_MODEL, CHANNEL_TYPE_MODEL, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -132,7 +132,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelReadsIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedDiskStore.TEST_DRIVE_READS);
+        final DecimalType mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_READS);
 
         initializeThingWithChannel(CHANNEL_DRIVE_READS, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -140,8 +140,8 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelReadBytesIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedDiskStore.TEST_DRIVE_READ_BYTES,
-                Units.BYTE);
+        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
+                SystemInfoMockedHWDiskStore.TEST_DRIVE_READ_BYTES, Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_DRIVE_READ_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -149,7 +149,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelSerialIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedDiskStore.TEST_DRIVE_SERIAL);
+        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_SERIAL);
 
         initializeThingWithChannel(CHANNEL_DRIVE_SERIAL, CHANNEL_TYPE_SERIAL, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -157,7 +157,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelWritesIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedDiskStore.TEST_DRIVE_WRITES);
+        final DecimalType mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITES);
 
         initializeThingWithChannel(CHANNEL_DRIVE_WRITES, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -166,7 +166,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
     @Test
     public void assertChannelWriteBytesIsUpdated() {
         final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedDiskStore.TEST_DRIVE_WRITE_BYTES, Units.BYTE);
+                SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITE_BYTES, Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_DRIVE_WRITE_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);

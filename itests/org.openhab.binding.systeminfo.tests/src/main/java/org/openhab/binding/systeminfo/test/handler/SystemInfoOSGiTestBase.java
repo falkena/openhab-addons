@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Mockito.lenient;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BINDING_ID;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_CPU_LOAD;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_LOAD;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.LOW_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME;
@@ -41,6 +41,7 @@ import org.openhab.binding.systeminfo.internal.SystemInfoHandlerFactory;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler;
 import org.openhab.binding.systeminfo.internal.model.OSHISystemInfo;
 import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
+import org.openhab.binding.systeminfo.test.data.SystemInfoMockedCentralProcessor;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.i18n.UnitProvider;
 import org.openhab.core.items.Item;
@@ -48,7 +49,6 @@ import org.openhab.core.items.ItemNotFoundException;
 import org.openhab.core.items.ItemRegistry;
 import org.openhab.core.library.items.NumberItem;
 import org.openhab.core.library.items.StringItem;
-import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.test.java.JavaOSGiTest;
 import org.openhab.core.test.storage.VolatileStorageService;
@@ -71,6 +71,8 @@ import org.openhab.core.thing.link.ManagedItemChannelLinkProvider;
 import org.openhab.core.thing.type.ChannelKind;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.State;
+
+import oshi.hardware.CentralProcessor;
 
 /**
  * Basis class for OSGi tests
@@ -100,7 +102,7 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
     protected static final String DEFAULT_TEST_THING_NAME = "work";
     protected static final String DEFAULT_CHANNEL_TEST_PRIORITY = "High";
     protected static final int DEFAULT_CHANNEL_PID = -1;
-    protected static final String DEFAULT_TEST_CHANNEL_ID = CHANNEL_CPU_LOAD;
+    protected static final String DEFAULT_TEST_CHANNEL_ID = CHANNEL_SYSTEM_LOAD;
     protected static final int DEFAULT_DEVICE_INDEX = 0;
 
     /**
@@ -127,6 +129,8 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
     ));
     // spotless:on
 
+    private final CentralProcessor cpu = new SystemInfoMockedCentralProcessor();
+
     @BeforeEach
     public void initialize() {
         VolatileStorageService storageService = this.storageService;
@@ -138,15 +142,13 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
         this.storageService = storageService;
 
         // Preparing the mock with OS properties, that are used in the initialize method of SystemInfoHandler
-        lenient().when(mockedSystemInfo.getCpuLogicalCores()).thenReturn(new DecimalType(1));
-        lenient().when(mockedSystemInfo.getCpuPhysicalCores()).thenReturn(new DecimalType(1));
+        lenient().when(mockedSystemInfo.getCPUSpecification()).thenReturn(cpu);
         lenient().when(mockedSystemInfo.getOsFamily()).thenReturn(new StringType("Mock OS"));
         lenient().when(mockedSystemInfo.getOsManufacturer()).thenReturn(new StringType("Mock OS Manufacturer"));
         lenient().when(mockedSystemInfo.getOsVersion()).thenReturn(new StringType("Mock Os Version"));
 
         // Following mock method returns will make sure the thing does not get recreated with extra channels
         lenient().when(mockedSystemInfo.getDisplayCount()).thenReturn(1);
-        lenient().when(mockedSystemInfo.getFileOSStoreCount()).thenReturn(1);
         lenient().when(mockedSystemInfo.getPowerSourceCount()).thenReturn(1);
         lenient().when(mockedSystemInfo.getFanCount()).thenReturn(1);
 
@@ -304,13 +306,16 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
         assertThat(handler, is(instanceOf(SystemInfoComputerHandler.class)));
         handler.initialize();
 
+        final Thing thing = handler.getThing();
+        assertThat(thing, is(instanceOf(Bridge.class)));
+
         waitForAssert(() -> {
-            final ThingStatusInfo statusInfo = bridge.getStatusInfo();
+            final ThingStatusInfo statusInfo = thing.getStatusInfo();
             assertThat(String.format("Bridge status detail is %s with description %s", statusInfo.getStatusDetail(),
-                    statusInfo.getDescription()), bridge.getStatus(), is(equalTo(ThingStatus.ONLINE)));
+                    statusInfo.getDescription()), thing.getStatus(), is(equalTo(ThingStatus.ONLINE)));
         });
 
-        systemInfoBridge = bridge;
+        systemInfoBridge = (Bridge) thing;
     }
 
     protected void initializeItem(ChannelUID channelUID, String itemName, String acceptedItemType) {
