@@ -18,14 +18,25 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public class SystemInfoDeviceIndexConfig extends SystemInfoBaseConfig {
-    private Integer index = -1;
+public class SystemInfoProcessConfig extends SystemInfoBaseConfig {
+    private String name = CURRENT_PROCESS;
+    private Integer pid = -1;
 
-    public Integer getIndex() {
-        return index;
+    public static final String CURRENT_PROCESS = "OpenHab";
+
+    public Integer getProcessID() {
+        return pid;
     }
 
-    public void setIndex(final Integer index) {
-        this.index = index;
+    public void setProcessID(final Integer pid) {
+        this.pid = pid;
+    }
+
+    public String getProcessName() {
+        return name;
+    }
+
+    public void setProcessName(final String name) {
+        this.name = name;
     }
 }

@@ -14,15 +14,12 @@ package org.openhab.binding.systeminfo.internal.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.measure.quantity.Time;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
@@ -44,7 +41,6 @@ import oshi.hardware.PowerSource;
 import oshi.hardware.Sensors;
 import oshi.hardware.VirtualMemory;
 import oshi.software.os.OSFileStore;
-import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 import oshi.util.EdidUtil;
 
@@ -84,9 +80,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     private @NonNullByDefault({}) List<Display> displays;
     private @NonNullByDefault({}) List<PowerSource> powerSources;
     private @NonNullByDefault({}) List<HWDiskStore> drives;
-
-    // Map containing previous process state to calculate load by process
-    private Map<Integer, OSProcess> processTicks = new HashMap<>();
 
     public static final int PRECISION_AFTER_DECIMAL_SIGN = 1;
 
@@ -130,14 +123,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
             throw new DeviceNotFoundException("Device with index: " + index + " can not be found!");
         }
         return devices[index];
-    }
-
-    private OSProcess getProcess(int pid) throws DeviceNotFoundException {
-        OSProcess process = operatingSystem.getProcess(pid);
-        if (process == null) {
-            throw new DeviceNotFoundException("Error while getting information for process with PID " + pid);
-        }
-        return process;
     }
 
     @Override
@@ -256,10 +241,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
         return computerSystem;
     }
 
-    private long getSizeInMB(long sizeInBytes) {
-        return Math.round(sizeInBytes / (1024D * 1024));
-    }
-
     private BigDecimal getPercentsValue(double decimalFraction) {
         final BigDecimal result = new BigDecimal(decimalFraction * 100);
         return result.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.HALF_UP);
@@ -268,70 +249,6 @@ public class OSHISystemInfo implements SystemInfoInterface {
     private BigDecimal getTimeInMinutes(double timeInSeconds) {
         final BigDecimal timeInMinutes = new BigDecimal(timeInSeconds / 60);
         return timeInMinutes.setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.UP);
-    }
-
-    @Override
-    public int getCurrentProcessID() {
-        return operatingSystem.getProcessId();
-    }
-
-    @Override
-    public @Nullable StringType getProcessName(int pid) throws DeviceNotFoundException {
-        if (pid > 0) {
-            OSProcess process = getProcess(pid);
-            String name = process.getName();
-            return new StringType(name);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public @Nullable DecimalType getProcessCpuUsage(int pid) throws DeviceNotFoundException {
-        if (pid > 0) {
-            OSProcess process = getProcess(pid);
-            DecimalType load = (processTicks.containsKey(pid))
-                    ? new DecimalType(getPercentsValue(process.getProcessCpuLoadBetweenTicks(processTicks.get(pid))))
-                    : null;
-            processTicks.put(pid, process);
-            return load;
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public @Nullable QuantityType<DataAmount> getProcessMemoryUsage(int pid) throws DeviceNotFoundException {
-        if (pid > 0) {
-            OSProcess process = getProcess(pid);
-            long memortInBytes = process.getResidentSetSize();
-            long memoryInMB = getSizeInMB(memortInBytes);
-            return new QuantityType<>(memoryInMB, Units.MEBIBYTE);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public @Nullable StringType getProcessPath(int pid) throws DeviceNotFoundException {
-        if (pid > 0) {
-            OSProcess process = getProcess(pid);
-            String path = process.getPath();
-            return new StringType(path);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public @Nullable DecimalType getProcessThreads(int pid) throws DeviceNotFoundException {
-        if (pid > 0) {
-            OSProcess process = getProcess(pid);
-            int threadCount = process.getThreadCount();
-            return new DecimalType(threadCount);
-        } else {
-            return null;
-        }
     }
 
     @Override

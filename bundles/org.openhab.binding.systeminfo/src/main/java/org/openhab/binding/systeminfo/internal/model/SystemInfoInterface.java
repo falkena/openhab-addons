@@ -18,7 +18,6 @@ import javax.measure.quantity.Time;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
@@ -211,60 +210,6 @@ public interface SystemInfoInterface {
      * @throws DeviceNotFoundException
      */
     StringType getBatteryName(int deviceIndex) throws DeviceNotFoundException;
-
-    /**
-     * Get PID of process executing this code
-     *
-     * @return current process ID
-     */
-    int getCurrentProcessID();
-
-    /**
-     * Returns the name of the process
-     *
-     * @param pid - the PID of the process
-     * @throws DeviceNotFoundException - thrown if process with this PID can not be found
-     */
-    @Nullable
-    StringType getProcessName(int pid) throws DeviceNotFoundException;
-
-    /**
-     * Returns the CPU usage of the process
-     *
-     * @param pid - the PID of the process
-     * @return - percentage value, can be above 100% if process uses multiple cores
-     * @throws DeviceNotFoundException - thrown if process with this PID can not be found
-     */
-    @Nullable
-    DecimalType getProcessCpuUsage(int pid) throws DeviceNotFoundException;
-
-    /**
-     * Returns the size of RAM memory only usage of the process
-     *
-     * @param pid - the PID of the process
-     * @return memory size
-     * @throws DeviceNotFoundException thrown if process with this PID can not be found
-     */
-    @Nullable
-    QuantityType<DataAmount> getProcessMemoryUsage(int pid) throws DeviceNotFoundException;
-
-    /**
-     * Returns the full path of the executing process.
-     *
-     * @param pid - the PID of the process
-     * @throws DeviceNotFoundException - thrown if process with this PID can not be found
-     */
-    @Nullable
-    StringType getProcessPath(int pid) throws DeviceNotFoundException;
-
-    /**
-     * Returns the number of threads in this process.
-     *
-     * @param pid - the PID of the process
-     * @throws DeviceNotFoundException - thrown if process with this PID can not be found
-     */
-    @Nullable
-    DecimalType getProcessThreads(int pid) throws DeviceNotFoundException;
 
     /**
      * Returns the number of displays.
