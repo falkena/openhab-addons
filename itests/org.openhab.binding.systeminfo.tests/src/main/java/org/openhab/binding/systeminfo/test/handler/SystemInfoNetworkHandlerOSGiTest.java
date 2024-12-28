@@ -14,7 +14,6 @@ package org.openhab.binding.systeminfo.test.handler;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Mockito.lenient;
@@ -169,7 +168,6 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
                 channelTypeUID, acceptedItemType);
 
         final ThingHandler handler = thing.getHandler();
-        assertThat(handler, is(notNullValue()));
         assertThat(handler, is(instanceOf(SystemInfoNetworkHandler.class)));
 
         initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);

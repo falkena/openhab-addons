@@ -60,6 +60,7 @@ class SystemInfoHandlerUtilities {
             result = getPercent(cpu.getSystemCpuLoadBetweenTicks(cpuTicks));
         }
         SystemInfoHandlerUtilities.cpuTicks = cpu.getSystemCpuLoadTicks();
+
         return result;
     }
 
@@ -67,11 +68,11 @@ class SystemInfoHandlerUtilities {
         return BigDecimal.valueOf(value).setScale(PRECISION_AFTER_DECIMAL_SIGN, RoundingMode.HALF_UP);
     }
 
-    private static BigDecimal getPercent(final double nominator, final double denominator) {
+    public static BigDecimal getPercent(final double nominator, final double denominator) {
         return getPercent(nominator / denominator);
     }
 
-    private static BigDecimal getPercent(final double quotient) {
+    public static BigDecimal getPercent(final double quotient) {
         return round(quotient * 100.0);
     }
 }

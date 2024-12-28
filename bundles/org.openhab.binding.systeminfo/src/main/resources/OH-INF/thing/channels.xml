@@ -4,8 +4,10 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- This file contains channel specific information and describes how the different channel types should be rendered. Each
-		channel is assigned a default priority configuration. For more info about priorities see OH-INF/config/channelConfig.xml -->
+	<!-- This file contains channel specific information and describes how the different channel types should be
+		rendered. Eachcchannel is assigned a default priority configuration. For more info about priorities see
+		OH-INF/config/channelConfig.xml
+	-->
 
 	<channel-group-type id="memory">
 		<label>Physical Memory</label>
@@ -140,30 +142,6 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-group-type id="currentProcessGroup">
-		<label>Current Process</label>
-		<description>Current process information</description>
-		<channels>
-			<channel id="load" typeId="load_process"/>
-			<channel id="used" typeId="used_process"/>
-			<channel id="name" typeId="name_process"/>
-			<channel id="threads" typeId="threads_process"/>
-			<channel id="path" typeId="path_process"/>
-		</channels>
-	</channel-group-type>
-
-	<channel-group-type id="processGroup">
-		<label>Process</label>
-		<description>System process information</description>
-		<channels>
-			<channel id="load" typeId="load_process"/>
-			<channel id="used" typeId="used_process"/>
-			<channel id="name" typeId="name_process"/>
-			<channel id="threads" typeId="threads_process"/>
-			<channel id="path" typeId="path_process"/>
-		</channels>
-	</channel-group-type>
-
 	<channel-type id="bytes" advanced="false">
 		<item-type>Number:DataAmount</item-type>
 		<label>Read/Written Bytes</label>
@@ -196,14 +174,6 @@
 		<config-description-ref uri="channel-type:systeminfo:highpriority"/>
 	</channel-type>
 
-	<channel-type id="maxFrequency" advanced="true">
-		<item-type>Number:Frequency</item-type>
-		<label>Maximum Frequency</label>
-		<description>CPU maximum frequency</description>
-		<state readOnly="true" pattern="%.0f MHz"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
-	</channel-type>
-
 	<channel-type id="load">
 		<item-type>Number:Dimensionless</item-type>
 		<label>System Load</label>
@@ -220,10 +190,18 @@
 		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
 	</channel-type>
 
+	<channel-type id="maxFrequency" advanced="true">
+		<item-type>Number:Frequency</item-type>
+		<label>Maximum Frequency</label>
+		<description>CPU maximum frequency</description>
+		<state readOnly="true" pattern="%.0f MHz"/>
+		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
+	</channel-type>
+
 	<channel-type id="name">
 		<item-type>String</item-type>
 		<label>Name</label>
-		<description>Name of the device (process)</description>
+		<description>Name of the device</description>
 		<state readOnly="true" pattern="%s"/>
 		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
 	</channel-type>
@@ -279,38 +257,6 @@
 	<!--
 		Old definitions
 	-->
-	<channel-type id="path">
-		<item-type>String</item-type>
-		<label>Path</label>
-		<description>The full path</description>
-		<state readOnly="true" pattern="%s"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
-	</channel-type>
-
-	<channel-type id="path_process">
-		<item-type>String</item-type>
-		<label>Path</label>
-		<description>The full path</description>
-		<state readOnly="true" pattern="%s"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority_process"/>
-	</channel-type>
-
-	<channel-type id="used_process">
-		<item-type>Number:DataAmount</item-type>
-		<label>Used</label>
-		<description>Used size</description>
-		<state readOnly="true" pattern="%.0f MiB"/>
-		<config-description-ref uri="channel-type:systeminfo:highpriority_process"/>
-	</channel-type>
-
-	<channel-type id="name_process">
-		<item-type>String</item-type>
-		<label>Name</label>
-		<description>Name of the device (process)</description>
-		<state readOnly="true" pattern="%s"/>
-		<config-description-ref uri="channel-type:systeminfo:lowpriority_process"/>
-	</channel-type>
-
 	<channel-type id="fanSpeed" advanced="true">
 		<item-type>Number</item-type>
 		<label>Fan Speed</label>
@@ -333,22 +279,6 @@
 		<description>Remaining capacity in percent</description>
 		<state readOnly="true" pattern="%.1f %%"/>
 		<config-description-ref uri="channel-type:systeminfo:mediumpriority"/>
-	</channel-type>
-
-	<channel-type id="load_process">
-		<item-type>Number:Dimensionless</item-type>
-		<label>Load</label>
-		<description>Load in percent</description>
-		<state readOnly="true" pattern="%.1f %%"/>
-		<config-description-ref uri="channel-type:systeminfo:highpriority_process"/>
-	</channel-type>
-
-	<channel-type id="threads_process" advanced="true">
-		<item-type>Number</item-type>
-		<label>Number of Threads</label>
-		<description>Number of threads for process currently running</description>
-		<state readOnly="true" pattern="%d"/>
-		<config-description-ref uri="channel-type:systeminfo:mediumpriority_process"/>
 	</channel-type>
 
 	<channel-type id="information" advanced="true">
