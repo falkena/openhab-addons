@@ -24,14 +24,14 @@ import oshi.hardware.NetworkIF;
  */
 @NonNullByDefault
 public class SystemInfoMockedNetworkInterface implements NetworkIF {
-    public static final String TEST_NETWORK_NAME = "Mocked Adapter Name";
     public static final String TEST_NETWORK_DESCRIPTION = "Mocked Adapter Description";
+    public static final String TEST_NETWORK_IP = "192.168.1.0";
+    public static final String TEST_NETWORK_MAC = "00-11-22-33-44-55";
+    public static final String TEST_NETWORK_NAME = "Mocked Adapter Name";
     public static final long TEST_NETWORK_RECEIVED = 0;
     public static final long TEST_NETWORK_RECEIVED_BYTES = 512;
     public static final long TEST_NETWORK_SENT = 1024;
     public static final long TEST_NETWORK_SENT_BYTES = 512;
-    public static final String TEST_NETWORK_IP = "192.168.1.0";
-    public static final String TEST_NETWORK_MAC = "00-11-22-33-44-55";
 
     @Override
     public String getName() {

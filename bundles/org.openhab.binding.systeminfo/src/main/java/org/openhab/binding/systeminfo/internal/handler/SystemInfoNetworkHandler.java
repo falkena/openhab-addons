@@ -49,7 +49,7 @@ import oshi.hardware.NetworkIF;
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public class SystemInfoNetworkHandler extends SystemInfoDeviceHandler {
+public class SystemInfoNetworkHandler extends SystemInfoBaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SystemInfoNetworkHandler.class);
 
     private @Nullable NetworkIF adapter;

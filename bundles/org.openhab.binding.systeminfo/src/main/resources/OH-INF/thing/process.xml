@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="systeminfo"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+	<thing-type id="process">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="computer-impl"/>
+		</supported-bridge-type-refs>
+		<label>Partition</label>
+		<description>Information about partitions and volumes</description>
+
+		<channels>
+			<channel id="name" typeId="name">
+				<label>Adapter Name</label>
+				<description>The name of the process</description>
+			</channel>
+			<channel id="load" typeId="load">
+				<label>Process Load</label>
+				<description>Current system load caused by the process</description>
+			</channel>
+			<channel id="allocated" typeId="bytes">
+				<label>Allocated Memory</label>
+				<description>The full memory allocated by the process</description>
+			</channel>
+			<channel id="used" typeId="bytes">
+				<label>Used Memory</label>
+				<description>The main memory used by the process</description>
+			</channel>
+			<channel id="threads" typeId="threads">
+				<label>Used Memory</label>
+				<description>Number of threads running by the process</description>
+			</channel>
+			<channel id="path" typeId="path"/>
+		</channels>
+
+		<config-description-ref uri="thing-type:systeminfo:process"/>
+	</thing-type>
+
+	<channel-type id="path">
+		<item-type>String</item-type>
+		<label>Process Path</label>
+		<description>The full path of the process</description>
+		<state readOnly="true" pattern="%s"/>
+		<config-description-ref uri="channel-type:systeminfo:lowpriority"/>
+	</channel-type>
+
+</thing:thing-descriptions>

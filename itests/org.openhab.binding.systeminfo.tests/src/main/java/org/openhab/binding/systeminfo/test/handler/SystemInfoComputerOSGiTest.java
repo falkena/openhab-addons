@@ -96,18 +96,6 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     private final OperatingSystem system = new SystemInfoMockedOperatingSystem();
     private final Sensors sensors = new SystemInfoMockedSensors();
 
-    private void initializeThingWithChannelAndPID(String channelID, String acceptedItemType, int pid) {
-        initializeThing(configuration, channelID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, pid);
-
-        final Bridge bridge = systemInfoBridge;
-        if (bridge == null) {
-            throw new AssertionError("Bridge is null");
-        }
-
-        final ChannelUID channelUID = new ChannelUID(bridge.getUID(), channelID);
-        initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);
-    }
-
     @Override
     protected void initializeThingWithChannel(String channelID, String acceptedItemType) {
         super.initializeThingWithChannel(channelID, acceptedItemType);
@@ -170,7 +158,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final String acceptedItemType = "Number";
         final String priority = "Medium";
 
-        initializeThing(configuration, channelID, acceptedItemType, priority, DEFAULT_CHANNEL_PID);
+        initializeThing(configuration, channelID, acceptedItemType, priority);
 
         final Bridge bridge = systemInfoBridge;
         if (bridge == null) {
@@ -312,8 +300,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
                 SystemInfoMockedCentralProcessor.TEST_CPU_LOAD, Units.PERCENT);
 
-        initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD,
-                "Number:Dimensionless");
+        initializeBridgeWithChannel(CHANNEL_LOAD, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD, "Number:Dimensionless");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -345,7 +332,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     public void assertChannelSystemThreadsIsUpdated() {
         final DecimalType mockedValue = new DecimalType(SystemInfoMockedOperatingSystem.TEST_SYSTEM_THREAD_COUNT);
 
-        initializeBridgeWithChannel(CHANNEL_SYSTEM_THREADS, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_THREADS, "Number");
+        initializeBridgeWithChannel(CHANNEL_THREADS, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_THREADS, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
@@ -465,76 +452,6 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
         initializeThingWithChannel(channnelID, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedDisplayInfo);
-    }
-
-    @Test
-    public void assertChannelProcessThreadsIsUpdatedWithPIDse() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_THREADS;
-
-        // The pid of the System idle process in Windows
-        int pid = 0;
-
-        DecimalType mockedProcessThreadsCount = new DecimalType(4);
-        when(mockedSystemInfo.getProcessThreads(pid)).thenReturn(mockedProcessThreadsCount);
-
-        initializeThingWithChannelAndPID(channnelID, "Number", pid);
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedProcessThreadsCount);
-    }
-
-    @Test
-    public void assertChannelProcessPathIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_PATH;
-
-        // The pid of the System idle process in Windows
-        int pid = 0;
-
-        StringType mockedProcessPath = new StringType("C:\\Users\\MockedUser\\Process");
-        when(mockedSystemInfo.getProcessPath(pid)).thenReturn(mockedProcessPath);
-
-        initializeThingWithChannelAndPID(channnelID, "String", pid);
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedProcessPath);
-    }
-
-    @Test
-    public void assertChannelProcessNameIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_NAME;
-
-        // The pid of the System idle process in Windows
-        int pid = 0;
-
-        StringType mockedProcessName = new StringType("MockedProcess.exe");
-        when(mockedSystemInfo.getProcessName(pid)).thenReturn(mockedProcessName);
-
-        initializeThingWithChannelAndPID(channnelID, "String", pid);
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedProcessName);
-    }
-
-    @Test
-    public void assertChannelProcessMemoryIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_MEMORY;
-
-        // The pid of the System idle process in Windows
-        int pid = 0;
-
-        QuantityType<DataAmount> mockedProcessMemory = new QuantityType<>(450, Units.MEBIBYTE);
-        when(mockedSystemInfo.getProcessMemoryUsage(pid)).thenReturn(mockedProcessMemory);
-
-        initializeThingWithChannelAndPID(channnelID, "Number:DataAmount", pid);
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedProcessMemory);
-    }
-
-    @Test
-    public void assertChannelProcessLoadIsUpdatedWithPIDset() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_PROCESS_LOAD;
-
-        // The pid of the System idle process in Windows
-        int pid = 0;
-
-        DecimalType mockedProcessLoad = new DecimalType(3);
-        when(mockedSystemInfo.getProcessCpuUsage(pid)).thenReturn(mockedProcessLoad);
-
-        initializeThingWithChannelAndPID(channnelID, "Number", pid);
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedProcessLoad);
     }
 
     @Test

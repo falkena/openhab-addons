@@ -78,7 +78,7 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
     protected Thing initializeThingWithChannel(final ThingUID thingUID, final ThingTypeUID thingTypeUID,
             final Configuration thingConfig, final ChannelUID channelUID, final ChannelTypeUID channelTypeUID,
             final String acceptedItemType) {
-        initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
+        initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY);
 
         final Bridge bridge = systemInfoBridge;
         if (bridge == null) {

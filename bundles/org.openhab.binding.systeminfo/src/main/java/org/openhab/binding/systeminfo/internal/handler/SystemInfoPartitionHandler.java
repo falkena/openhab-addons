@@ -64,7 +64,7 @@ import oshi.software.os.OSFileStore;
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public class SystemInfoPartitionHandler extends SystemInfoDeviceHandler {
+public class SystemInfoPartitionHandler extends SystemInfoBaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SystemInfoPartitionHandler.class);
 
     private @Nullable HWPartition partition;

@@ -174,7 +174,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     private void initializeThingWithChannel(final String channelID, final ChannelTypeUID channelTypeUID,
             final String acceptedItemType) {
-        initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
+        initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY);
 
         final Bridge systemInfoBridge = this.systemInfoBridge;
         if (systemInfoBridge == null) {

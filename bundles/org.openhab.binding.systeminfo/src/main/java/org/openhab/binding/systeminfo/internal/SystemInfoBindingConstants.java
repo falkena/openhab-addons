@@ -36,6 +36,7 @@ public class SystemInfoBindingConstants {
     public static final ThingTypeUID BRIDGE_TYPE_DRIVE = new ThingTypeUID(BINDING_ID, "drive");
     public static final ThingTypeUID THING_TYPE_NETWORK = new ThingTypeUID(BINDING_ID, "network");
     public static final ThingTypeUID THING_TYPE_PARTITION = new ThingTypeUID(BINDING_ID, "partition");
+    public static final ThingTypeUID THING_TYPE_PROCESS = new ThingTypeUID(BINDING_ID, "process");
 
     // Thing properties
     /**
@@ -81,12 +82,27 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_NAME = "name";
 
     /**
+     * Recent system load
+     */
+    public static final String CHANNEL_LOAD = "load";
+
+    /**
      * Type of the logical device, is used in partition and volume
      */
     public static final String CHANNEL_TYPE = "type";
 
     /**
-     * Size of the available memory, is used in physical, heap and swap memory channels
+     * Running threads count
+     */
+    public static final String CHANNEL_THREADS = "threads";
+
+    /**
+     * Size of the allocated memory, is used in process memory channels
+     */
+    public static final String CHANNEL_ALLOCATED = "allocated";
+
+    /**
+     * Size of the available memory, is used in physical, heap, and swap memory channels
      */
     public static final String CHANNEL_AVAILABLE = "available";
 
@@ -101,7 +117,7 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_TOTAL = "total";
 
     /**
-     * Size of the used memory, is used in physical, heap and swap memory channels
+     * Size of the used memory, is used in physical, heap, swap and process memory channels
      */
     public static final String CHANNEL_USED = "used";
 
@@ -191,11 +207,6 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_NETWORK_SENT_BYTES = "sentBytes";
 
     /**
-     * Average recent system load
-     */
-    public static final String CHANNEL_SYSTEM_LOAD = "load";
-
-    /**
      * Average system load for the last minute
      */
     public static final String CHANNEL_SYSTEM_LOAD_1 = "load1";
@@ -209,11 +220,6 @@ public class SystemInfoBindingConstants {
      * Average system load for the last 15 minutes
      */
     public static final String CHANNEL_SYSTEM_LOAD_15 = "load15";
-
-    /**
-     * System running threads count
-     */
-    public static final String CHANNEL_SYSTEM_THREADS = "threads";
 
     /**
      * System uptime in minutes
@@ -312,76 +318,9 @@ public class SystemInfoBindingConstants {
     public static final String CHANNEL_DISPLAY_INFORMATION = "display#information";
 
     /**
-     * Name of the channel group type for process information
-     */
-    public static final String CHANNEL_GROUP_TYPE_CURRENT_PROCESS = "currentProcessGroup";
-
-    /**
-     * Name of the channel group for process information
-     */
-    public static final String CHANNEL_GROUP_CURRENT_PROCESS = "currentProcess";
-
-    /**
-     * CPU load used from a process
-     */
-
-    public static final String CHANNEL_CURRENT_PROCESS_LOAD = "currentProcess#load";
-
-    /**
-     * Size of memory used from a process in MB
-     */
-    public static final String CHANNEL_CURRENT_PROCESS_MEMORY = "currentProcess#used";
-
-    /**
-     * Name of the process
-     */
-    public static final String CHANNEL_CURRENT_PROCESS_NAME = "currentProcess#name";
-
-    /**
-     * Number of threads, used form the process
-     */
-    public static final String CHANNEL_CURRENT_PROCESS_THREADS = "currentProcess#threads";
-
-    /**
      * The full path of the process
      */
-    public static final String CHANNEL_CURRENT_PROCESS_PATH = "currentProcess#path";
-
-    /**
-     * Name of the channel group type for process information
-     */
-    public static final String CHANNEL_GROUP_TYPE_PROCESS = "processGroup";
-
-    /**
-     * Name of the channel group for process information
-     */
-    public static final String CHANNEL_GROUP_PROCESS = "process";
-
-    /**
-     * CPU load used from a process
-     */
-
-    public static final String CHANNEL_PROCESS_LOAD = "process#load";
-
-    /**
-     * Size of memory used from a process in MB
-     */
-    public static final String CHANNEL_PROCESS_MEMORY = "process#used";
-
-    /**
-     * Name of the process
-     */
-    public static final String CHANNEL_PROCESS_NAME = "process#name";
-
-    /**
-     * Number of threads, used form the process
-     */
-    public static final String CHANNEL_PROCESS_THREADS = "process#threads";
-
-    /**
-     * The full path of the process
-     */
-    public static final String CHANNEL_PROCESS_PATH = "process#path";
+    public static final String CHANNEL_PROCESS_PATH = "path";
 
     // Thing configuraion
     /**
@@ -410,11 +349,7 @@ public class SystemInfoBindingConstants {
      */
     public static final String PRIORITY_PARAMETER = "priority";
 
-    /**
-     * Name of the channel configuration parameter pid
-     *
-     */
-    public static final String PID_PARAMETER = "pid";
-
+    // Misc configurations
     public static final int PRECISION_AFTER_DECIMAL_SIGN = 1;
+    public static final long CACHE_REFRESH_INTERVAL_MS = 2000;
 }

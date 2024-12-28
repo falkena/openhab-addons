@@ -87,12 +87,25 @@ cards available on the system. The thing has one configuration parameter:
 
 - **name** - The name of network adapter. There is no default value available.
 
-For example, on single Windows computer several network adapters could be installed with names
+For example, on single Linux computer several network adapters could be installed with names
 eth0, wlan0 and so on.
 
 The thing has the following property:
 
 - `macAddress` - The MAC address of the network card
+
+### Process Things
+
+The configuration pattern for **process** things is:
+
+```
+Thing systeminfo:process:<ProcessId> [ name=<name> ]
+```
+
+The configuration of the thing gives the user the possibility to identify multiple processes
+running on the system. The thing has one configuration parameter:
+
+- **name** - The name of the process. Default value is **OpenHab**, which means current process.
 
 ## Discovery
 
@@ -125,10 +138,6 @@ In the list below, you can find, how are channel group and channels id`s related
   - **channel** `cpuTemp, cpuVoltage, fanSpeed` (deviceIndex)
 - **group** `system`
   - **channel** `load, load1, load5, load15, uptime, threads`
-- **group** `currentProcess`
-  - **channel** `load, used, name, threads, path`
-- **group** `process` (pid)
-  - **channel** `load, used, name, threads, path`
 
 The groups marked with "(deviceIndex)" may have device index attached to the Channel Group.
 
@@ -159,11 +168,10 @@ The table shows more detailed information about each channel type:
 |--------------------|------------------------------------------------------------------|-------------------------|------------------|----------|
 | maxFrequency       | CPU maximum frequency                                            | Number:Frequency        | Low              | True     |
 | frequency          | Logical processor frequency                                      | Number:Frequency        | High             | True     |
-| path               | The full path of the process                                     | String                  | Low              | False    |
-| name               | Name of the device or process                                    | String                  | Low              | False    |
+| name               | Name of the device                                               | String                  | Low              | False    |
 | description        | Description of the device                                        | String                  | Low              | True     |
 | temperature        | CPU Temperature in degrees Celsius                               | Number:Temperature      | High             | True     |
-| voltage            | CPU Voltage                                                      | Number:ElectricPotential| Medium       | True     |
+| voltage            | CPU Voltage                                                      | Number:ElectricPotential| Medium           | True     |
 | available          | Available size                                                   | Number:DataAmount       | High             | False    |
 | availablePercent   | Available size in %                                              | Number:Dimensionless    | High             | False    |
 | total              | Total size                                                       | Number:DataAmount       | Low              | False    |
@@ -173,11 +181,11 @@ The table shows more detailed information about each channel type:
 | remainingTime      | Remaining time in minutes                                        | Number:Time             | Medium           | False    |
 | remainingCapacity  | Remaining capacity in %                                          | Number:Dimensionless    | Medium           | False    |
 | information        | Product, manufacturer, SN, width and height of the display in cm | String                  | Low              | True     |
-| load               | System Load (total or by process) in %                           | Number:Dimensionless    | High             | False    |
-| load1              | System Load for the last 1 minute                                | Number                  | Medium           | True     |
-| load5              | System Load for the last 5 minutes                               | Number                  | Medium           | True     |
-| load15             | System Load for the last 15 minutes                              | Number                  | Medium           | True     |
-| threads            | Number of threads currently running or for the process           | Number                  | Medium           | True     |
+| load               | System load in %                                                 | Number:Dimensionless    | High             | False    |
+| load1              | System load for the last 1 minute                                | Number                  | Medium           | True     |
+| load5              | System load for the last 5 minutes                               | Number                  | Medium           | True     |
+| load15             | System load for the last 15 minutes                              | Number                  | Medium           | True     |
+| threads            | Number of threads currently running on the system                | Number                  | Medium           | True     |
 | uptime             | System uptime (time after start) in minutes                      | Number:Time             | Medium           | True     |
 
 ### Drive
@@ -198,8 +206,6 @@ The table shows more detailed information about each channel type:
 
 The table shows more detailed information about each channel type:
 
-| Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
-|--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
 | Channel ID         | Channel Description                                              | Supported item type | Default priority | Advanced |
 |--------------------|------------------------------------------------------------------|---------------------|------------------|----------|
 | name               | The name of the network adapter                                  | String              | Low              | False    |
@@ -235,6 +241,19 @@ Each partition may contain multiple volumes, which are organized in `volume<inde
 | used               | Used size                                                        | Number:DataAmount   | High             | False    |
 | usedPercent        | Used size in %                                                   | Number:Dimensionless| High             | False    |
 | type               | Volume type                                                      | String              | Low              | True     |
+
+### Process
+
+The table shows more detailed information about each channel type:
+
+| Channel ID         | Channel Description                            | Supported item type | Default priority | Advanced |
+|--------------------|------------------------------------------------|---------------------|------------------|----------|
+| allocated          | Memory allocated by proccess, including swap   | Number:DataAmount   | High             | False    |
+| load               | System load caused by process in %             | Number:Dimensionless| High             | False    |
+| name               | Name of the process                            | String              | Low              | False    |
+| threads            | Number of threads currently running by process | Number              | Medium           | True     |
+| used               | Memory used by proccess, excluding swap        | Number:DataAmount   | High             | False    |
+| path               | The full path of the process                   | String              | Low              | False    |
 
 ## Channel configuration
 

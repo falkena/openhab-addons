@@ -18,6 +18,7 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_DRIVE;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_NETWORK;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_PARTITION;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.THING_TYPE_PROCESS;
 
 import java.util.Set;
 
@@ -27,6 +28,7 @@ import org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoDriveHandler;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoNetworkHandler;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoPartitionHandler;
+import org.openhab.binding.systeminfo.internal.handler.SystemInfoProcessHandler;
 import org.openhab.binding.systeminfo.internal.model.SystemInfoInterface;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -56,7 +58,7 @@ public class SystemInfoHandlerFactory extends BaseThingHandlerFactory {
     private final ThingRegistry thingRegistry;
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(BRIDGE_TYPE_DRIVE, THING_TYPE_NETWORK,
-            THING_TYPE_PARTITION);
+            THING_TYPE_PARTITION, THING_TYPE_PROCESS);
 
     @Activate
     public SystemInfoHandlerFactory(final @Reference SystemInfoThingTypeProvider thingTypeProvider,
@@ -93,6 +95,8 @@ public class SystemInfoHandlerFactory extends BaseThingHandlerFactory {
                 return new SystemInfoNetworkHandler(thing, systemInfo);
             } else if (THING_TYPE_PARTITION.equals(thingTypeUID)) {
                 return new SystemInfoPartitionHandler(thing, systemInfo);
+            } else if (THING_TYPE_PROCESS.equals(thingTypeUID)) {
+                return new SystemInfoProcessHandler(thing, systemInfo);
             }
         }
 

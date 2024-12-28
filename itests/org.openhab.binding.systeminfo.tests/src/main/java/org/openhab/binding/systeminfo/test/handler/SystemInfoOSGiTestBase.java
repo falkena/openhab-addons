@@ -22,14 +22,12 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Mockito.lenient;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BINDING_ID;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.BRIDGE_TYPE_COMPUTER;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_SYSTEM_LOAD;
+import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_LOAD;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.HIGH_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.LOW_PRIORITY_REFRESH_TIME;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.MEDIUM_PRIORITY_REFRESH_TIME;
-import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PID_PARAMETER;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PRIORITY_PARAMETER;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -101,8 +99,7 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
 
     protected static final String DEFAULT_TEST_THING_NAME = "work";
     protected static final String DEFAULT_CHANNEL_TEST_PRIORITY = "High";
-    protected static final int DEFAULT_CHANNEL_PID = -1;
-    protected static final String DEFAULT_TEST_CHANNEL_ID = CHANNEL_SYSTEM_LOAD;
+    protected static final String DEFAULT_TEST_CHANNEL_ID = CHANNEL_LOAD;
     protected static final int DEFAULT_DEVICE_INDEX = 0;
 
     /**
@@ -261,11 +258,11 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
     }
 
     protected void initializeThingWithChannel(String channelID, String acceptedItemType) {
-        initializeThing(configuration, channelID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
+        initializeThing(configuration, channelID, acceptedItemType, DEFAULT_CHANNEL_TEST_PRIORITY);
     }
 
     protected void initializeThing(Configuration thingConfiguration, @Nullable String channelID,
-            String acceptedItemType, String priority, int pid) {
+            String acceptedItemType, String priority) {
         final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_COMPUTER, DEFAULT_TEST_THING_NAME);
 
         final BridgeBuilder builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
@@ -273,20 +270,13 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
 
         if (channelID != null) {
             final ChannelUID channelUID = new ChannelUID(thingUID, channelID);
-            String channelTypeId = channelUID.getIdWithoutGroup();
-            if ("load1".equals(channelTypeId) || "load5".equals(channelTypeId) || "load15".equals(channelTypeId)) {
-                channelTypeId = "loadAverage";
-            } else if ("process".equalsIgnoreCase(channelUID.getGroupId())) {
-                channelTypeId = channelTypeId + "_process";
-            }
 
             ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
-            channelBuilder.withType(new ChannelTypeUID(BINDING_ID, channelTypeId));
+            channelBuilder.withType(new ChannelTypeUID(BINDING_ID, channelUID.getIdWithoutGroup()));
             channelBuilder.withKind(ChannelKind.STATE);
 
             Configuration channelConfiguration = new Configuration();
             channelConfiguration.put(PRIORITY_PARAMETER, priority);
-            channelConfiguration.put(PID_PARAMETER, new BigDecimal(pid));
             channelBuilder.withConfiguration(channelConfiguration);
             builder.withChannel(channelBuilder.build());
         }
