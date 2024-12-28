@@ -18,8 +18,6 @@
 			<channel-group id="heap" typeId="heap"/>
 			<channel-group id="system" typeId="system"/>
 			<channel-group id="sensors" typeId="sensorsGroup"/>
-			<channel-group id="currentProcess" typeId="currentProcessGroup"/>
-			<channel-group id="process" typeId="processGroup"/>
 			<channel-group id="display" typeId="displayGroup"/>
 			<channel-group id="battery" typeId="batteryGroup"/>
 		</channel-groups>

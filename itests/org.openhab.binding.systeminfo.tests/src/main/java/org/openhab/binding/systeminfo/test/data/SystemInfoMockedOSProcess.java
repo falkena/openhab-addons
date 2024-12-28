@@ -26,23 +26,34 @@ import oshi.software.os.OSThread;
  */
 @NonNullByDefault
 public class SystemInfoMockedOSProcess implements OSProcess {
+    public static final String TEST_PROCESS_COMMAND_LINE = "Mocked Process Command Line";
     public static final int TEST_PROCESS_ID = 100;
+    public static final long TEST_PROCESS_KERNEL_TIME = 1200;
+    public static final String TEST_PROCESS_NAME = "Mocked Process Name";
     public static final int TEST_PROCESS_PARENT_ID = 215;
+    public static final String TEST_PROCESS_PATH = "Mocked Process Path";
+    public static final long TEST_PROCESS_RESIDENT_MEMORY = 1024;
     public static final State TEST_PROCESS_STATE = State.ZOMBIE;
+    public static final int TEST_PROCESS_THREAD_COUNT = 10;
+    public static final long TEST_PROCESS_VIRTUAL_MEMORY = 5 * TEST_PROCESS_RESIDENT_MEMORY;
+    public static final long TEST_PROCESS_USER_TIME = 2400;
+
+    public static final double TEST_PROCESS_LOAD = 63.5;
+    public static final long TEST_PROCESS_UP_TIME = TEST_PROCESS_KERNEL_TIME + 2 * TEST_PROCESS_USER_TIME;
 
     @Override
     public String getName() {
-        return "";
+        return TEST_PROCESS_NAME;
     }
 
     @Override
     public String getPath() {
-        return "";
+        return TEST_PROCESS_PATH;
     }
 
     @Override
     public String getCommandLine() {
-        return "";
+        return TEST_PROCESS_COMMAND_LINE;
     }
 
     @Override
@@ -99,7 +110,7 @@ public class SystemInfoMockedOSProcess implements OSProcess {
 
     @Override
     public int getThreadCount() {
-        return 0;
+        return TEST_PROCESS_THREAD_COUNT;
     }
 
     @Override
@@ -109,27 +120,27 @@ public class SystemInfoMockedOSProcess implements OSProcess {
 
     @Override
     public long getVirtualSize() {
-        return 0;
+        return TEST_PROCESS_VIRTUAL_MEMORY;
     }
 
     @Override
     public long getResidentSetSize() {
-        return 0;
+        return TEST_PROCESS_RESIDENT_MEMORY;
     }
 
     @Override
     public long getKernelTime() {
-        return 0;
+        return TEST_PROCESS_KERNEL_TIME;
     }
 
     @Override
     public long getUserTime() {
-        return 0;
+        return TEST_PROCESS_USER_TIME;
     }
 
     @Override
     public long getUpTime() {
-        return 0;
+        return TEST_PROCESS_UP_TIME;
     }
 
     @Override
@@ -168,8 +179,8 @@ public class SystemInfoMockedOSProcess implements OSProcess {
     }
 
     @Override
-    public double getProcessCpuLoadBetweenTicks(@Nullable OSProcess proc) {
-        return 0;
+    public double getProcessCpuLoadBetweenTicks(@Nullable OSProcess process) {
+        return TEST_PROCESS_LOAD / 100.0;
     }
 
     @Override
@@ -184,7 +195,7 @@ public class SystemInfoMockedOSProcess implements OSProcess {
 
     @Override
     public boolean updateAttributes() {
-        return false;
+        return true;
     }
 
     @Override

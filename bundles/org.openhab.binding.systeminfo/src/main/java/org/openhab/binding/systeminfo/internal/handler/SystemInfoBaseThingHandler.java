@@ -30,11 +30,11 @@ import org.openhab.core.types.RefreshType;
  * @author Alexander Falkenstern - Initial contribution
  */
 @NonNullByDefault
-public abstract class SystemInfoDeviceHandler extends BaseThingHandler {
+public abstract class SystemInfoBaseThingHandler extends BaseThingHandler {
 
     protected final SystemInfoInterface systemInfo;
 
-    public SystemInfoDeviceHandler(Thing thing, SystemInfoInterface systemInfo) {
+    public SystemInfoBaseThingHandler(Thing thing, SystemInfoInterface systemInfo) {
         super(thing);
         this.systemInfo = systemInfo;
     }
