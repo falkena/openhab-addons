@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.PRIORITY_PARAMETER;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -78,7 +79,7 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
     protected Thing initializeThingWithChannel(final ThingUID thingUID, final ThingTypeUID thingTypeUID,
             final Configuration thingConfig, final ChannelUID channelUID, final ChannelTypeUID channelTypeUID,
             final String acceptedItemType) {
-        initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY, DEFAULT_CHANNEL_PID);
+        initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY);
 
         final Bridge bridge = systemInfoBridge;
         if (bridge == null) {
@@ -106,12 +107,16 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
         }
         handler.initialize();
 
+        final Thing createdThing = handler.getThing();
+        assertThat(createdThing, is(instanceOf(Thing.class)));
+
         waitForAssert(() -> {
-            final ThingStatusInfo statusInfo = thing.getStatusInfo();
+            final ThingStatusInfo statusInfo = createdThing.getStatusInfo();
             assertThat(String.format("Thing status detail is %s with description %s", statusInfo.getStatusDetail(),
-                    statusInfo.getDescription()), thing.getStatus(), is(equalTo(ThingStatus.ONLINE)));
+                    statusInfo.getDescription()), createdThing.getStatus(), is(equalTo(ThingStatus.ONLINE)));
         });
-        this.thing = thing;
-        return thing;
+
+        this.thing = createdThing;
+        return createdThing;
     }
 }
