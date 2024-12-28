@@ -12,13 +12,18 @@
  */
 package org.openhab.binding.systeminfo.test.data;
 
-import static org.openhab.binding.systeminfo.test.data.SystemInfoMockedOSProcess.TEST_PROCESS_ID;
+import static org.openhab.binding.systeminfo.internal.config.SystemInfoProcessConfig.CURRENT_PROCESS;
+import static oshi.software.os.OperatingSystem.ProcessFiltering.ALL_PROCESSES;
+import static oshi.software.os.OperatingSystem.ProcessSorting.NO_SORTING;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 
 import oshi.software.os.FileSystem;
 import oshi.software.os.InternetProtocolStats;
@@ -38,15 +43,25 @@ public class SystemInfoMockedOperatingSystem implements OperatingSystem {
 
     public static final String TEST_SYSTEM_FAMILY = "Mocked Operating System Family";
     public static final String TEST_SYSTEM_MANUFACTURER = "Mocked Operating System Manufacturer";
+    public static final int TEST_SYSTEM_CURRENT_PROCESS_ID = 0;
     public static final int TEST_SYSTEM_THREAD_COUNT = 16;
     public static final int TEST_SYSTEM_THREAD_ID = 1;
     public static final long TEST_SYSTEM_UPTIME = 3600;
 
-    public static final int TEST_SYSTEM_PROCESS_ID = TEST_PROCESS_ID;
-
     private final FileSystem fileSystem = new SystemInfoMockedFileSystem();
     private final NetworkParams networkParams = new SystemInfoMockedNetworkParams();
-    private final OSProcess process = new SystemInfoMockedOSProcess();
+    private final OSProcess defaultProcess = new SystemInfoMockedOSProcess();
+    private final OSProcess currentProcess = new SystemInfoMockedOSProcess() {
+        @Override
+        public String getName() {
+            return CURRENT_PROCESS;
+        }
+
+        @Override
+        public int getProcessID() {
+            return TEST_SYSTEM_CURRENT_PROCESS_ID;
+        }
+    };
     private final InternetProtocolStats internetStatistics = new SystemInfoMockedInternetProtocolStats();
     private final OSThread thread = new SystemInfoMockedOSThread();
     private final OSVersionInfo version = new OSVersionInfo(TEST_SYSTEM_VERSION, TEST_SYSTEM_CODE_NAME,
@@ -80,12 +95,16 @@ public class SystemInfoMockedOperatingSystem implements OperatingSystem {
     @Override
     @NonNullByDefault({})
     public List<OSProcess> getProcesses(Predicate<OSProcess> filter, Comparator<OSProcess> sort, int limit) {
-        return List.of();
+        final List<OSProcess> processes = List.of(currentProcess, defaultProcess);
+        Stream<OSProcess> stream = processes.stream().filter(filter == null ? ALL_PROCESSES : filter);
+        stream = stream.sorted(sort == null ? NO_SORTING : sort).limit(limit > 0 ? limit : Long.MAX_VALUE);
+        return stream.collect(Collectors.toList());
     }
 
     @Override
-    public OSProcess getProcess(int pid) {
-        return process;
+    public @Nullable OSProcess getProcess(int pid) {
+        final List<OSProcess> processes = getProcesses(process -> (process.getProcessID() == pid), NO_SORTING, 1);
+        return processes.isEmpty() ? null : processes.getFirst();
     }
 
     @Override
@@ -104,12 +123,12 @@ public class SystemInfoMockedOperatingSystem implements OperatingSystem {
 
     @Override
     public int getProcessId() {
-        return TEST_SYSTEM_PROCESS_ID;
+        return TEST_SYSTEM_CURRENT_PROCESS_ID;
     }
 
     @Override
     public int getProcessCount() {
-        return 0;
+        return getProcesses().size();
     }
 
     @Override
