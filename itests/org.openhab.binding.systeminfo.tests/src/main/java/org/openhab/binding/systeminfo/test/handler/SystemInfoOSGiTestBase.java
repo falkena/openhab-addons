@@ -270,9 +270,6 @@ public class SystemInfoOSGiTestBase extends JavaOSGiTest {
 
         final BridgeBuilder builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
         builder.withConfiguration(thingConfiguration);
-        // Make sure the thingTypeVersion matches the highest version in the update instructions of
-        // the binding to avoid new channels being added and the thing not initializing
-        builder.withProperties(Map.of("thingTypeVersion", "1"));
 
         if (channelID != null) {
             final ChannelUID channelUID = new ChannelUID(thingUID, channelID);

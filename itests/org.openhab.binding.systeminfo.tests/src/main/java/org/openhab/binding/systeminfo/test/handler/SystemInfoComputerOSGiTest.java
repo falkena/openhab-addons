@@ -23,7 +23,6 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.*;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 import javax.measure.quantity.Dimensionless;
 import javax.measure.quantity.ElectricPotential;
@@ -130,9 +129,6 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
         final BridgeBuilder builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
         builder.withConfiguration(configuration);
-        // Make sure the thingTypeVersion matches the highest version in the update instructions of
-        // the binding to avoid new channels being added and the thing not initializing
-        builder.withProperties(Map.of("thingTypeVersion", "1"));
 
         final Bridge bridge = builder.build();
         assertThat(bridge, is(notNullValue()));
@@ -514,10 +510,6 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
         final BridgeBuilder builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
         builder.withConfiguration(configuration);
-
-        // Make sure the thingTypeVersion matches the highest version in the update instructions of
-        // the binding to avoid new channels being added and the thing not initializing
-        builder.withProperties(Map.of("thingTypeVersion", "1"));
 
         final ChannelUID channelUID;
         if (groupID == null) {
