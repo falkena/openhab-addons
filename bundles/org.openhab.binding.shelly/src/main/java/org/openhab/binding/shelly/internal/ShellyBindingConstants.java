@@ -30,7 +30,6 @@ public class ShellyBindingConstants {
 
     public static final String VENDOR = "Shelly";
     public static final String BINDING_ID = "shelly";
-    public static final String SYSTEM_ID = "system";
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_SHELLY1, //
             THING_TYPE_SHELLY1L, //

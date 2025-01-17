@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -90,37 +89,30 @@ public class ShellyManagerPage {
     protected final ShellyManagerCache<String, FwArchList> firmwareArch = new ShellyManagerCache<>(15 * 60 * 1000);
 
     public static class ShellyMgrResponse {
-        public @Nullable Object data = "";
+        public @Nullable Object data;
         public String mimeType = "";
-        public String redirectUrl = "";
         public int code;
         public Map<String, String> headers = new HashMap<>();
 
         public ShellyMgrResponse() {
-            init("", HttpStatus.OK_200, "text/html", null);
+            this("", HttpStatus.OK_200);
         }
 
         public ShellyMgrResponse(Object data, int code) {
-            init(data, code, "text/html", null);
+            this(data, code, "text/html");
         }
 
         public ShellyMgrResponse(Object data, int code, String mimeType) {
-            init(data, code, mimeType, null);
+            this(data, code, mimeType, null);
         }
 
-        public ShellyMgrResponse(Object data, int code, String mimeType, Map<String, String> headers) {
-            init(data, code, mimeType, headers);
-        }
-
-        private void init(Object message, int code, String mimeType, @Nullable Map<String, String> headers) {
-            this.data = message;
+        public ShellyMgrResponse(Object data, int code, String mimeType, @Nullable Map<String, String> headers) {
+            this.data = data;
             this.code = code;
             this.mimeType = mimeType;
-            this.headers = headers != null ? headers : new TreeMap<>();
-        }
-
-        public void setRedirect(String redirectUrl) {
-            this.redirectUrl = redirectUrl;
+            if (headers != null) {
+                this.headers = headers;
+            }
         }
     }
 
@@ -166,9 +158,10 @@ public class ShellyManagerPage {
         String html = "";
         String file = BUNDLE_RESOURCE_SNIPLETS + "/" + template;
         logger.debug("Read HTML from {}", file);
-        ClassLoader cl = ShellyManagerInterface.class.getClassLoader();
-        if (cl != null) {
-            try (InputStream inputStream = cl.getResourceAsStream(file)) {
+
+        final ClassLoader loader = ShellyManagerInterface.class.getClassLoader();
+        if (loader != null) {
+            try (InputStream inputStream = loader.getResourceAsStream(file)) {
                 if (inputStream != null) {
                     html = new BufferedReader(new InputStreamReader(inputStream)).lines()
                             .collect(Collectors.joining("\n"));
@@ -214,9 +207,9 @@ public class ShellyManagerPage {
 
         for (Map.Entry<String, @Nullable Object> p : thing.getConfiguration().getProperties().entrySet()) {
             String key = p.getKey();
-            Object o = p.getValue();
-            if (o != null) {
-                properties.put(key, o.toString());
+            Object value = p.getValue();
+            if (value != null) {
+                properties.put(key, value.toString());
             }
         }
 
