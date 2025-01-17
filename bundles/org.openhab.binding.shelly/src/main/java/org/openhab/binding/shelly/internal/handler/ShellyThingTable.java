@@ -19,7 +19,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.shelly.internal.discovery.ShellyBasicDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
-import org.openhab.core.thing.ThingTypeUID;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -34,7 +33,7 @@ import org.osgi.service.component.annotations.Deactivate;
 @NonNullByDefault
 @Component(service = ShellyThingTable.class, configurationPolicy = ConfigurationPolicy.OPTIONAL)
 public class ShellyThingTable {
-    private Map<String, ShellyThingInterface> thingTable = new ConcurrentHashMap<>();
+    private final Map<String, ShellyThingInterface> thingTable = new ConcurrentHashMap<>();
     private @Nullable ShellyBasicDiscoveryService discoveryService;
 
     public void addThing(String key, ShellyThingInterface thing) {
@@ -45,25 +44,26 @@ public class ShellyThingTable {
     }
 
     public @Nullable ShellyThingInterface findThing(String key) {
-        ShellyThingInterface t = thingTable.get(key);
-        if (t != null) {
-            return t;
+        final ShellyThingInterface thing = thingTable.get(key);
+        if (thing != null) {
+            return thing;
         }
-        for (Map.Entry<String, ShellyThingInterface> entry : thingTable.entrySet()) {
-            t = entry.getValue();
-            if (t.checkRepresentation(key)) {
-                return t;
+
+        for (final ShellyThingInterface entry : thingTable.values()) {
+            if (entry.checkRepresentation(key)) {
+                return entry;
             }
         }
+
         return null;
     }
 
     public ShellyThingInterface getThing(String key) {
-        ShellyThingInterface t = findThing(key);
-        if (t == null) {
+        ShellyThingInterface thing = findThing(key);
+        if (thing == null) {
             throw new IllegalArgumentException();
         }
-        return t;
+        return thing;
     }
 
     public void removeThing(String key) {
@@ -81,37 +81,37 @@ public class ShellyThingTable {
     }
 
     public void startDiscoveryService(BundleContext bundleContext) {
+        ShellyBasicDiscoveryService discoveryService = this.discoveryService;
         if (discoveryService == null) {
-            ShellyBasicDiscoveryService discoveryService = this.discoveryService = new ShellyBasicDiscoveryService(
-                    bundleContext, this);
+            discoveryService = new ShellyBasicDiscoveryService(bundleContext, this);
             discoveryService.registerDeviceDiscoveryService();
+            this.discoveryService = discoveryService;
         }
     }
 
     public void startScan() {
-        for (Map.Entry<String, ShellyThingInterface> thing : thingTable.entrySet()) {
-            (thing.getValue()).startScan();
+        for (final ShellyThingInterface thing : thingTable.values()) {
+            thing.startScan();
         }
     }
 
     public void stopDiscoveryService() {
-        ShellyBasicDiscoveryService discoveryService = this.discoveryService;
+        final ShellyBasicDiscoveryService discoveryService = this.discoveryService;
         if (discoveryService != null) {
             discoveryService.unregisterDeviceDiscoveryService();
             this.discoveryService = null;
         }
     }
 
-    public void discoveredResult(ThingTypeUID uid, String model, String serviceName, String address,
-            Map<String, Object> properties) {
-        ShellyBasicDiscoveryService discoveryService = this.discoveryService;
+    public void discoveredResult(String model, String serviceName, String address, Map<String, Object> properties) {
+        final ShellyBasicDiscoveryService discoveryService = this.discoveryService;
         if (discoveryService != null) {
-            discoveryService.discoveredResult(uid, model, serviceName, address, properties);
+            discoveryService.discoveredResult(model, serviceName, address, properties);
         }
     }
 
     public void discoveredResult(DiscoveryResult result) {
-        ShellyBasicDiscoveryService discoveryService = this.discoveryService;
+        final ShellyBasicDiscoveryService discoveryService = this.discoveryService;
         if (discoveryService != null) {
             discoveryService.discoveredResult(result);
         }

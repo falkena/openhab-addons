@@ -64,7 +64,7 @@ public class Shelly2RpcSocket {
 
     private @Nullable Session session;
     private @Nullable Shelly2RpctInterface websocketHandler;
-    private WebSocketClient client = new WebSocketClient();
+    private final WebSocketClient client = new WebSocketClient();
     private @Nullable ShellyThingTable thingTable;
 
     public Shelly2RpcSocket() {
@@ -97,10 +97,10 @@ public class Shelly2RpcSocket {
     /**
      * Add listener for inbound messages implementing Shelly2RpctInterface
      *
-     * @param interfacehandler
+     * @param interfaceHandler
      */
-    public void addMessageHandler(Shelly2RpctInterface interfacehandler) {
-        this.websocketHandler = interfacehandler;
+    public void addMessageHandler(Shelly2RpctInterface interfaceHandler) {
+        this.websocketHandler = interfaceHandler;
     }
 
     /**
@@ -120,7 +120,6 @@ public class Shelly2RpcSocket {
             request.setHeader("Cache-Control", "no-cache");
 
             logger.debug("{}: Connect WebSocket, URI={}", thingName, uri);
-            client = new WebSocketClient();
             connectLatch = new CountDownLatch(1);
             client.start();
             client.setConnectTimeout(5000);

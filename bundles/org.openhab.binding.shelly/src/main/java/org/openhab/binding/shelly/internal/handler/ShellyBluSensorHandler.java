@@ -29,7 +29,6 @@ import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2NotifyE
 import org.openhab.binding.shelly.internal.config.ShellyBindingConfiguration;
 import org.openhab.binding.shelly.internal.provider.ShellyTranslationProvider;
 import org.openhab.core.thing.Thing;
-import org.openhab.core.thing.ThingTypeUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,31 +56,19 @@ public class ShellyBluSensorHandler extends ShellyBaseHandler {
     public static void addBluThing(String gateway, Shelly2NotifyEvent e, @Nullable ShellyThingTable thingTable) {
         String model = substringBefore(getString(e.data.name), "-").toUpperCase();
         String mac = e.data.addr.replaceAll(":", "");
-        String ttype = "";
         LOGGER.debug("{}: Create thing for new BLU device {}: {} / {}", gateway, e.data.name, model, mac);
-        ThingTypeUID tuid;
-        switch (model) {
-            case SHELLYDT_BLUBUTTON:
-                ttype = THING_TYPE_SHELLYBLUBUTTON_STR;
-                tuid = THING_TYPE_SHELLYBLUBUTTON;
-                break;
-            case SHELLYDT_BLUDW:
-                ttype = THING_TYPE_SHELLYBLUDW_STR;
-                tuid = THING_TYPE_SHELLYBLUDW;
-                break;
-            case SHELLYDT_BLUMOTION:
-                ttype = THING_TYPE_SHELLYBLUMOTION_STR;
-                tuid = THING_TYPE_SHELLYBLUMOTION;
-                break;
-            case SHELLYDT_BLUHT:
-                ttype = THING_TYPE_SHELLYBLUHT_STR;
-                tuid = THING_TYPE_SHELLYBLUHT;
-                break;
-            default:
-                LOGGER.debug("{}: Unsupported BLU device model {}, MAC={}", gateway, model, mac);
-                return;
-        }
+
         String serviceName = ShellyDeviceProfile.buildBluServiceName(getString(e.data.name), mac);
+        final String ttype = switch (model) {
+            case SHELLYDT_BLUBUTTON -> THING_TYPE_SHELLYBLUBUTTON_STR;
+            case SHELLYDT_BLUDW -> THING_TYPE_SHELLYBLUDW_STR;
+            case SHELLYDT_BLUMOTION -> THING_TYPE_SHELLYBLUMOTION_STR;
+            case SHELLYDT_BLUHT -> THING_TYPE_SHELLYBLUHT_STR;
+            default -> {
+                LOGGER.debug("{}: Unsupported BLU device model {}, MAC={}", gateway, model, mac);
+                yield "";
+            }
+        };
 
         Map<String, Object> properties = new TreeMap<>();
         addProperty(properties, PROPERTY_MODEL_ID, model);
@@ -93,7 +80,7 @@ public class ShellyBluSensorHandler extends ShellyBaseHandler {
         addProperty(properties, CONFIG_DEVICEADDRESS, mac);
 
         if (thingTable != null) {
-            thingTable.discoveredResult(tuid, model, serviceName, mac, properties);
+            thingTable.discoveredResult(model, serviceName, mac, properties);
         }
     }
 

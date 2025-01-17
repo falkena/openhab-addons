@@ -33,7 +33,6 @@ import org.openhab.binding.shelly.internal.config.ShellyBindingConfiguration;
 import org.openhab.binding.shelly.internal.provider.ShellyTranslationProvider;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.mdns.MDNSDiscoveryParticipant;
-import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.ThingUID;
@@ -63,8 +62,8 @@ public class ShellyDiscoveryParticipant implements MDNSDiscoveryParticipant {
 
     @Activate
     public ShellyDiscoveryParticipant(@Reference ConfigurationAdmin configurationAdmin,
-            @Reference HttpClientFactory httpClientFactory, @Reference LocaleProvider localeProvider,
-            @Reference ShellyTranslationProvider translationProvider, ComponentContext componentContext) {
+            @Reference HttpClientFactory httpClientFactory, @Reference ShellyTranslationProvider translationProvider,
+            ComponentContext componentContext) {
         logger.debug("Activating ShellyDiscovery service");
         this.configurationAdmin = configurationAdmin;
         this.messages = translationProvider;
