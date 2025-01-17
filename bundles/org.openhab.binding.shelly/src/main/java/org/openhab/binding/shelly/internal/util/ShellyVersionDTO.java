@@ -101,8 +101,9 @@ public class ShellyVersionDTO {
                 do {
                     number1 = tokenizer1.getNumber();
                     suffix1 = tokenizer1.getSuffix();
-                    if (number1 != 0 || suffix1.length() != 0) {
-                        // Version one is longer than number two, and non-zero
+
+                    // Version one is longer than number two, and non-zero
+                    if (number1 != 0 || !suffix1.isEmpty()) {
                         return 1;
                     }
                 } while (tokenizer1.moveNext());
@@ -125,32 +126,34 @@ public class ShellyVersionDTO {
                 return 1;
             }
 
-            boolean empty1 = suffix1.length() == 0;
-            boolean empty2 = suffix2.length() == 0;
-
-            if (empty1 && empty2) {
+            // No suffixes
+            if (suffix1.isEmpty() && suffix2.isEmpty()) {
                 continue;
-            } // No suffixes
-            if (empty1) {
+            }
+
+            // First suffix is empty (1.2 > 1.2b)
+            if (suffix1.isEmpty()) {
                 return 1;
-            } // First suffix is empty (1.2 > 1.2b)
-            if (empty2) {
+            }
+
+            // Second suffix is empty (1.2a < 1.2)
+            if (suffix2.isEmpty()) {
                 return -1;
-            } // Second suffix is empty (1.2a < 1.2)
+            }
 
             // Lexical comparison of suffixes
             int result = suffix1.compareTo(suffix2);
             if (result != 0) {
                 return result;
             }
-
         }
 
         while (tokenizer2.moveNext()) {
             number2 = tokenizer2.getNumber();
             suffix2 = tokenizer2.getSuffix();
-            if (number2 != 0 || suffix2.length() != 0) {
-                // Version one is longer than version two, and non-zero
+
+            // Version one is longer than version two, and non-zero
+            if (number2 != 0 || !suffix2.isEmpty()) {
                 return -1;
             }
         }
