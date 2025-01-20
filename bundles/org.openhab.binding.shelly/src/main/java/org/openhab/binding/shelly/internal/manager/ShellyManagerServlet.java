@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.shelly.internal.ShellyHandlerFactory;
 import org.openhab.binding.shelly.internal.api.ShellyApiException;
 import org.openhab.binding.shelly.internal.manager.ShellyManagerPage.ShellyMgrResponse;
@@ -84,64 +83,52 @@ public class ShellyManagerServlet extends HttpServlet {
         logger.debug("{} stopped", className);
     }
 
-    @SuppressWarnings("resource")
     @Override
-    protected void service(@Nullable HttpServletRequest request, @Nullable HttpServletResponse response)
-            throws ServletException, IOException, IllegalArgumentException {
-        if ((request == null) || (response == null)) {
-            logger.debug("request or resp must not be null!");
+    protected void service(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String ipAddress = request.getHeader("HTTP_X_FORWARDED_FOR");
+        if (ipAddress == null) {
+            ipAddress = request.getRemoteAddr();
+        }
+
+        Map<String, String[]> parameters = request.getParameterMap();
+        String path = getString(request.getRequestURI()).toLowerCase();
+        logger.debug("{}: {} Request from {}:{}{}?{}", className, request.getProtocol(), ipAddress,
+                request.getRemotePort(), path, parameters.toString());
+        if (!path.toLowerCase().startsWith(SERVLET_URI)) {
+            logger.warn("{} received unknown request: path = {}", className, path);
             return;
         }
 
-        String path = getString(request.getRequestURI()).toLowerCase();
-        String ipAddress = request.getHeader("HTTP_X_FORWARDED_FOR");
-        ShellyMgrResponse output = new ShellyMgrResponse();
-        PrintWriter print = null;
-        OutputStream bin = null;
         try {
-            if (ipAddress == null) {
-                ipAddress = request.getRemoteAddr();
-            }
-            Map<String, String[]> parameters = request.getParameterMap();
-            logger.debug("{}: {} Request from {}:{}{}?{}", className, request.getProtocol(), ipAddress,
-                    request.getRemotePort(), path, parameters.toString());
-            if (!path.toLowerCase().startsWith(SERVLET_URI)) {
-                logger.warn("{} received unknown request: path = {}", className, path);
-                return;
-            }
-
-            output = manager.generateContent(path, parameters);
+            final ShellyMgrResponse output = manager.generateContent(path, parameters);
             response.setContentType(output.mimeType);
             if ("text/html".equals(output.mimeType)) {
                 // Make sure it's UTF-8 encoded
                 response.setCharacterEncoding(UTF_8);
-                print = response.getWriter();
-                print.write((String) output.data);
+                try (final PrintWriter writer = response.getWriter()) {
+                    writer.write(output.toString());
+                } catch (IOException ignored) {
+                }
             } else {
-                // binary data
-                byte[] data = (byte[]) output.data;
+                final byte[] data = output.data;
                 if (data != null) {
                     response.setContentLength(data.length);
-                    bin = response.getOutputStream();
-                    bin.write(data, 0, data.length);
+                    try (final OutputStream writer = response.getOutputStream()) {
+                        writer.write(data, 0, data.length);
+                    } catch (IOException ignored) {
+                    }
                 }
             }
-        } catch (ShellyApiException | RuntimeException e) {
-            logger.debug("{}: Exception uri={}, parameters={}", className, path, request.getParameterMap().toString(),
-                    e);
+        } catch (ShellyApiException | RuntimeException exception) {
             response.setContentType("text/html");
-            print = response.getWriter();
-            print.write("Exception:" + e.toString() + "<br/>Check openhab.log for details."
-                    + "<p/><a href=\"/shelly/manager\">Return to Overview</a>");
-            logger.debug("{}: {}", className, output);
+            try (final PrintWriter writer = response.getWriter()) {
+                writer.write("Exception:" + exception + "<br/>Check openhab.log for details."
+                        + "<p/><a href=\"/shelly/manager\">Return to Overview</a>");
+            } catch (IOException ignored) {
+            }
+            logger.debug("{}: Exception uri={}, parameters={}", className, path, request.getParameterMap().toString());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        } finally {
-            if (print != null) {
-                print.close();
-            }
-            if (bin != null) {
-                bin.close();
-            }
         }
     }
 }
