@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,8 +90,8 @@ public class ShellyManagerPage {
     protected final ShellyManagerCache<String, FwArchList> firmwareArch = new ShellyManagerCache<>(15 * 60 * 1000);
 
     public static class ShellyMgrResponse {
-        public @Nullable Object data;
-        public String mimeType = "";
+        public byte @Nullable [] data;
+        public String mimeType;
         public int code;
         public Map<String, String> headers = new HashMap<>();
 
@@ -98,21 +99,35 @@ public class ShellyManagerPage {
             this("", HttpStatus.OK_200);
         }
 
-        public ShellyMgrResponse(Object data, int code) {
-            this(data, code, "text/html");
+        public ShellyMgrResponse(String data, int code) {
+            this(data.getBytes(StandardCharsets.UTF_8), code, "text/html");
         }
 
-        public ShellyMgrResponse(Object data, int code, String mimeType) {
+        public ShellyMgrResponse(byte @Nullable [] data, int code, String mimeType) {
             this(data, code, mimeType, null);
         }
 
-        public ShellyMgrResponse(Object data, int code, String mimeType, @Nullable Map<String, String> headers) {
+        public ShellyMgrResponse(byte @Nullable [] data, int code, String mimeType,
+                @Nullable Map<String, String> headers) {
             this.data = data;
             this.code = code;
             this.mimeType = mimeType;
             if (headers != null) {
                 this.headers = headers;
             }
+        }
+
+        @Override
+        public String toString() {
+            final byte[] data = this.data;
+            if (data != null) {
+                if ("text/html".equalsIgnoreCase(mimeType)) {
+                    return new String(data, StandardCharsets.UTF_8);
+                } else {
+                    return "Response contains binary data";
+                }
+            }
+            return "Response contains no valid data";
         }
     }
 

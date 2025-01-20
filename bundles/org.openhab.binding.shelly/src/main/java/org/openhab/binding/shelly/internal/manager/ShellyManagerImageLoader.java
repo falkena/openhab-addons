@@ -53,18 +53,23 @@ public class ShellyManagerImageLoader extends ShellyManagerPage {
     protected ShellyMgrResponse loadImage(String image) throws ShellyApiException {
         String file = IMAGE_PATH + image;
         logger.trace("Read Image from {}", file);
-        ClassLoader cl = ShellyManagerInterface.class.getClassLoader();
-        if (cl != null) {
-            try (InputStream inputStream = cl.getResourceAsStream(file)) {
+
+        final String errorMessage = String.format("Unable to read %s from bundle resources", image);
+        final ClassLoader loader = ShellyManagerInterface.class.getClassLoader();
+        if (loader != null) {
+            try (InputStream inputStream = loader.getResourceAsStream(file)) {
                 if (inputStream != null) {
-                    byte[] buf = new byte[inputStream.available()];
-                    inputStream.read(buf);
-                    return new ShellyMgrResponse(buf, HttpStatus.OK_200, "image/png");
+                    final byte[] buffer = new byte[inputStream.available()];
+                    if (inputStream.read(buffer) == buffer.length) {
+                        return new ShellyMgrResponse(buffer, HttpStatus.OK_200, "image/png");
+                    } else {
+                        return new ShellyMgrResponse(errorMessage, HttpStatus.PRECONDITION_FAILED_412);
+                    }
                 }
-            } catch (IOException | RuntimeException e) {
-                logger.debug("ShellyManager: Unable to read {} from bundle resources!", image, e);
+            } catch (IOException | RuntimeException ignored) {
+                logger.debug("ShellyManager: {}", errorMessage);
             }
         }
-        return new ShellyMgrResponse("Unable to read " + image + " from bundle resources!", HttpStatus.NOT_FOUND_404);
+        return new ShellyMgrResponse(errorMessage, HttpStatus.NOT_FOUND_404);
     }
 }
