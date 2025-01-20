@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,37 +91,43 @@ public class ShellyManagerPage {
     protected final ShellyManagerCache<String, FwArchList> firmwareArch;
 
     public static class ShellyMgrResponse {
-        public @Nullable Object data = "";
-        public String mimeType = "";
-        public String redirectUrl = "";
+        public byte @Nullable [] data;
+        public String mimeType;
+
         public int code;
         public Map<String, String> headers = new HashMap<>();
 
         public ShellyMgrResponse() {
-            init("", HttpStatus.OK_200, "text/html", null);
+            this("", HttpStatus.OK_200);
         }
 
-        public ShellyMgrResponse(Object data, int code) {
-            init(data, code, "text/html", null);
+        public ShellyMgrResponse(String data, int code) {
+            this(data.getBytes(StandardCharsets.UTF_8), code, "text/html");
         }
 
-        public ShellyMgrResponse(Object data, int code, String mimeType) {
-            init(data, code, mimeType, null);
+        public ShellyMgrResponse(byte @Nullable [] data, int code, String mimeType) {
+            this(data, code, mimeType, null);
         }
 
-        public ShellyMgrResponse(Object data, int code, String mimeType, Map<String, String> headers) {
-            init(data, code, mimeType, headers);
-        }
-
-        private void init(Object message, int code, String mimeType, @Nullable Map<String, String> headers) {
-            this.data = message;
+        public ShellyMgrResponse(byte @Nullable [] data, int code, String mimeType,
+                @Nullable Map<String, String> headers) {
+            this.data = data;
             this.code = code;
             this.mimeType = mimeType;
             this.headers = headers != null ? headers : new TreeMap<>();
         }
 
-        public void setRedirect(String redirectUrl) {
-            this.redirectUrl = redirectUrl;
+        @Override
+        public String toString() {
+            final byte[] data = this.data;
+            if (data != null) {
+                if ("text/html".equalsIgnoreCase(mimeType)) {
+                    return new String(data, StandardCharsets.UTF_8);
+                } else {
+                    return "Response contains binary data";
+                }
+            }
+            return "Response contains no valid data";
         }
     }
 
