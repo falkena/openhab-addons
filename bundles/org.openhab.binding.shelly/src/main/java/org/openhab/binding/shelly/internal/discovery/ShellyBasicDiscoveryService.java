@@ -116,8 +116,7 @@ public class ShellyBasicDiscoveryService extends AbstractDiscoveryService {
         unregisterDeviceDiscoveryService();
     }
 
-    public static @Nullable DiscoveryResult createResult(String hostname, String ipAddress,
-            ShellyBindingConfiguration bindingConfig, HttpClient httpClient) {
+    public static @Nullable DiscoveryResult createResult(String hostname, String ipAddress, HttpClient httpClient) {
         Logger logger = LoggerFactory.getLogger(ShellyBasicDiscoveryService.class);
 
         final ContentResponse response;
