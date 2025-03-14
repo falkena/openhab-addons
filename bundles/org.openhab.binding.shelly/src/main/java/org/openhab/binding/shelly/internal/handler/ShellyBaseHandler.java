@@ -608,13 +608,13 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
     }
 
     private void checkRangeExtender(ShellyDeviceProfile prf) {
-        if (getBool(prf.settings.rangeExtender) && config.enableRangeExtender && prf.status.rangeExtender != null
-                && prf.status.rangeExtender.apClients != null) {
+        final Shelly2ApiJsonDTO.Shelly2APClientList extender = prf.status.rangeExtender;
+        if (getBool(prf.settings.rangeExtender) && config.enableRangeExtender && (extender != null)
+                && extender.apClients != null) {
             for (Shelly2APClient client : profile.status.rangeExtender.apClients) {
                 String secondaryIp = config.deviceIp + ":" + client.mport.toString();
                 String name = "shellyplusrange-" + client.mac.replaceAll(":", "");
-                DiscoveryResult result = ShellyBasicDiscoveryService.createResult(name, secondaryIp, bindingConfig,
-                        httpClient);
+                DiscoveryResult result = ShellyBasicDiscoveryService.createResult(name, secondaryIp, httpClient);
                 if (result != null) {
                     thingTable.discoveredResult(result);
                 }

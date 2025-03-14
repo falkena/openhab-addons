@@ -118,7 +118,7 @@ public class ShellyDiscoveryParticipant implements MDNSDiscoveryParticipant {
             if (serviceConfig.getProperties() != null) {
                 bindingConfig.updateFromProperties(serviceConfig.getProperties());
             }
-            return ShellyBasicDiscoveryService.createResult(name, address, bindingConfig, httpClient);
+            return ShellyBasicDiscoveryService.createResult(name, address, httpClient);
         } catch (IOException | NullPointerException e) {
             // maybe some format description was buggy
             logger.debug("{}: Exception on processing serviceInfo '{}'", name, service.getNiceTextString(), e);
