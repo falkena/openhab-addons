@@ -15,7 +15,6 @@ package org.openhab.binding.systeminfo.internal.handler;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.locks.StampedLock;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.Bridge;
@@ -29,8 +28,6 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 public abstract class SystemInfoBridgeScheduler extends BaseBridgeHandler {
-    private final StampedLock lock = new StampedLock();
-
     /**
      * Refresh interval for {@link #highPriorityChannels} in seconds.
      */
@@ -85,29 +82,20 @@ public abstract class SystemInfoBridgeScheduler extends BaseBridgeHandler {
     }
 
     public Set<ChannelUID> getHighPriorityChannels() {
-        final long stamp = lock.readLock();
-        try {
-            return highPriorityChannels;
-        } finally {
-            lock.unlockRead(stamp);
+        synchronized (highPriorityChannels) {
+            return Set.copyOf(highPriorityChannels);
         }
     }
 
     public Set<ChannelUID> getMediumPriorityChannels() {
-        final long stamp = lock.readLock();
-        try {
-            return mediumPriorityChannels;
-        } finally {
-            lock.unlockRead(stamp);
+        synchronized (mediumPriorityChannels) {
+            return Set.copyOf(mediumPriorityChannels);
         }
     }
 
     public Set<ChannelUID> getLowPriorityChannels() {
-        final long stamp = lock.readLock();
-        try {
-            return lowPriorityChannels;
-        } finally {
-            lock.unlockRead(stamp);
+        synchronized (lowPriorityChannels) {
+            return Set.copyOf(lowPriorityChannels);
         }
     }
 
@@ -120,19 +108,23 @@ public abstract class SystemInfoBridgeScheduler extends BaseBridgeHandler {
     }
 
     public void changeChannelPriority(final ChannelUID channelUID, final String priority) {
-        final long stamp = lock.writeLock();
-        try {
-            mediumPriorityChannels.remove(channelUID);
-            lowPriorityChannels.remove(channelUID);
+        synchronized (highPriorityChannels) {
             highPriorityChannels.remove(channelUID);
-            switch (priority) {
-                case "High" -> highPriorityChannels.add(channelUID);
-                case "Medium" -> mediumPriorityChannels.add(channelUID);
-                case "Low" -> lowPriorityChannels.add(channelUID);
-                default -> logger.debug("Invalid priority configuration parameter for channel {}", channelUID);
+            if ("High".equalsIgnoreCase(priority)) {
+                highPriorityChannels.add(channelUID);
             }
-        } finally {
-            lock.unlockWrite(stamp);
+        }
+        synchronized (mediumPriorityChannels) {
+            mediumPriorityChannels.remove(channelUID);
+            if ("Medium".equalsIgnoreCase(priority)) {
+                mediumPriorityChannels.add(channelUID);
+            }
+        }
+        synchronized (lowPriorityChannels) {
+            lowPriorityChannels.remove(channelUID);
+            if ("Low".equalsIgnoreCase(priority)) {
+                lowPriorityChannels.add(channelUID);
+            }
         }
     }
 }
