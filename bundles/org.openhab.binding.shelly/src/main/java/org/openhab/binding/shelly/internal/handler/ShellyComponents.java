@@ -543,30 +543,39 @@ public class ShellyComponents {
         }
 
         // Update Add-On channeös
-        if (status.extTemperature != null) {
+        final ShellyStatusSensor.ShellyExtTemperature temperature = status.extTemperature;
+        if (temperature != null) {
             // Shelly 1/1PM support up to 3 external sensors
             // for whatever reason those are not represented as an array, but 3 elements
-            updated |= updateTempChannel(status.extTemperature.sensor1, thingHandler, CHANNEL_ESENSOR_TEMP1);
-            updated |= updateTempChannel(status.extTemperature.sensor2, thingHandler, CHANNEL_ESENSOR_TEMP2);
-            updated |= updateTempChannel(status.extTemperature.sensor3, thingHandler, CHANNEL_ESENSOR_TEMP3);
-            updated |= updateTempChannel(status.extTemperature.sensor4, thingHandler, CHANNEL_ESENSOR_TEMP4);
-            updated |= updateTempChannel(status.extTemperature.sensor5, thingHandler, CHANNEL_ESENSOR_TEMP5);
+            updated = updated || updateTempChannel(temperature.sensor1, thingHandler, CHANNEL_ESENSOR_TEMP1);
+            updated = updated || updateTempChannel(temperature.sensor2, thingHandler, CHANNEL_ESENSOR_TEMP2);
+            updated = updated || updateTempChannel(temperature.sensor3, thingHandler, CHANNEL_ESENSOR_TEMP3);
+            updated = updated || updateTempChannel(temperature.sensor4, thingHandler, CHANNEL_ESENSOR_TEMP4);
+            updated = updated || updateTempChannel(temperature.sensor5, thingHandler, CHANNEL_ESENSOR_TEMP5);
         }
-        if ((status.extHumidity != null) && (status.extHumidity.sensor1 != null)) {
-            updated |= thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_HUMIDITY,
-                    toQuantityType(getDouble(status.extHumidity.sensor1.hum), DIGITS_PERCENT, Units.PERCENT));
+
+        final ShellyStatusSensor.ShellyExtHumidity humidity = status.extHumidity;
+        if ((humidity != null) && (humidity.sensor1 != null)) {
+            updated = updated || thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_HUMIDITY,
+                    toQuantityType(getDouble(humidity.sensor1.hum), DIGITS_PERCENT, Units.PERCENT));
         }
-        if ((status.extVoltage != null) && (status.extVoltage.sensor1 != null)) {
-            updated |= thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_VOLTAGE,
-                    toQuantityType(getDouble(status.extVoltage.sensor1.voltage), 4, Units.VOLT));
+
+        final ShellyStatusSensor.ShellyExtVoltage voltage = status.extVoltage;
+        if ((voltage != null) && (voltage.sensor1 != null)) {
+            updated = updated || thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_VOLTAGE,
+                    toQuantityType(getDouble(voltage.sensor1.voltage), 4, Units.VOLT));
         }
-        if ((status.extDigitalInput != null) && (status.extDigitalInput.sensor1 != null)) {
-            updated |= thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_DIGITALINPUT,
-                    getOnOff(status.extDigitalInput.sensor1.state));
+
+        final ShellyStatusSensor.ShellyExtDigitalInput dInput = status.extDigitalInput;
+        if ((dInput != null) && (dInput.sensor1 != null)) {
+            updated = updated || thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_DIGITALINPUT,
+                    getOnOff(dInput.sensor1.state));
         }
-        if ((status.extAnalogInput != null) && (status.extAnalogInput.sensor1 != null)) {
-            updated |= thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_ANALOGINPUT,
-                    toQuantityType(getDouble(status.extAnalogInput.sensor1.percent), DIGITS_PERCENT, Units.PERCENT));
+
+        final ShellyStatusSensor.ShellyExtAnalogInput aInput = status.extAnalogInput;
+        if ((aInput != null) && (aInput.sensor1 != null)) {
+            updated = updated || thingHandler.updateChannel(CHANNEL_GROUP_SENSOR, CHANNEL_ESENSOR_ANALOGINPUT,
+                    toQuantityType(getDouble(aInput.sensor1.percent), DIGITS_PERCENT, Units.PERCENT));
         }
 
         return updated;

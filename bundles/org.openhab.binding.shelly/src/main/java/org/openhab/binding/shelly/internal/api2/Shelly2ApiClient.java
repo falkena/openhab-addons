@@ -206,20 +206,41 @@ public class Shelly2ApiClient extends ShellyHttpClient {
 
     protected boolean fillDeviceStatus(ShellySettingsStatus status, Shelly2DeviceStatusResult result,
             boolean channelUpdate) throws ShellyApiException {
-        boolean updated = false;
 
-        if (result.temperature0 != null && result.temperature0.tC != null && !getProfile().isSensor) {
+        final Shelly2DeviceStatusTempId temperature = result.temperature0;
+        if ((temperature != null) && (temperature.tC != null) && !getProfile().isSensor) {
             if (status.tmp == null) {
                 status.tmp = new ShellySensorTmp();
             }
-            status.temperature = status.tmp.tC = result.temperature0.tC;
+            status.temperature = status.tmp.tC = temperature.tC;
         }
 
-        updated |= updateInputStatus(status, result, channelUpdate);
-        updated |= updateRelayStatus(status, result.switch0, channelUpdate);
-        updated |= updateRelayStatus(status, result.switch1, channelUpdate);
-        updated |= updateRelayStatus(status, result.switch2, channelUpdate);
-        updated |= updateRelayStatus(status, result.switch3, channelUpdate);
+        boolean updated = updateInputStatus(status, result, channelUpdate);
+
+        final Shelly2RelayStatus switch0 = result.switch0;
+        if ((switch0 != null) && (switch0.id == null)) {
+            switch0.id = 0;
+        }
+        updated = updated || updateRelayStatus(status, switch0, channelUpdate);
+
+        final Shelly2RelayStatus switch1 = result.switch1;
+        if ((switch1 != null) && (switch1.id == null)) {
+            switch1.id = 1;
+        }
+        updated = updated || updateRelayStatus(status, switch1, channelUpdate);
+
+        final Shelly2RelayStatus switch2 = result.switch2;
+        if ((switch2 != null) && (switch2.id == null)) {
+            switch2.id = 2;
+        }
+        updated = updated || updateRelayStatus(status, switch2, channelUpdate);
+
+        final Shelly2RelayStatus switch3 = result.switch3;
+        if ((switch3 != null) && (switch3.id == null)) {
+            switch3.id = 3;
+        }
+        updated = updated || updateRelayStatus(status, switch3, channelUpdate);
+
         updated |= updateRelayStatus(status, result.switch100, channelUpdate);
         updated |= updateRelayStatus(status, result.pm10, channelUpdate);
         updated |= updateBreakerStatus(status, result.cb0, result.voltmeter0, channelUpdate);
@@ -394,9 +415,9 @@ public class Shelly2ApiClient extends ShellyHttpClient {
 
     private int getRelayIdx(ShellyDeviceProfile profile, @Nullable Integer id) {
         List<ShellySettingsRelay> relays = profile.settings.relays;
-        if (id != null && relays != null) {
+        if ((id != null) && (relays != null)) {
             int idx = 0;
-            for (ShellySettingsRelay relay : relays) {
+            for (final ShellySettingsRelay relay : relays) {
                 if (relay.isValid && relay.id != null && relay.id.intValue() == id.intValue()) {
                     return idx;
                 }
