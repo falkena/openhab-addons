@@ -21,10 +21,7 @@ import static org.openhab.core.thing.Thing.*;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +45,6 @@ import org.openhab.binding.shelly.internal.api1.Shelly1CoapJSonDTO;
 import org.openhab.binding.shelly.internal.api1.Shelly1CoapServer;
 import org.openhab.binding.shelly.internal.api1.Shelly1HttpApi;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO;
-import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2APClientList.Shelly2APClient;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiRpc;
 import org.openhab.binding.shelly.internal.api2.ShellyBluApi;
 import org.openhab.binding.shelly.internal.config.ShellyBindingConfiguration;
@@ -608,13 +604,14 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
     }
 
     private void checkRangeExtender(ShellyDeviceProfile prf) {
-        if (getBool(prf.settings.rangeExtender) && config.enableRangeExtender && prf.status.rangeExtender != null
-                && prf.status.rangeExtender.apClients != null) {
-            for (Shelly2APClient client : profile.status.rangeExtender.apClients) {
+        final var extender = prf.status.rangeExtender;
+        if (getBool(prf.settings.rangeExtender) && config.enableRangeExtender && (extender != null)
+                && (extender.apClients != null)) {
+            for (final var client : extender.apClients) {
                 String secondaryIp = config.deviceIp + ":" + client.mport.toString();
                 String name = SERVICE_NAME_SHELLYPLUSRANGE_PREFIX + "-" + client.mac.replaceAll(":", "");
-                DiscoveryResult result = ShellyBasicDiscoveryService.createResult(true, name, secondaryIp,
-                        bindingConfig, httpClient, messages, thingTable);
+                DiscoveryResult result = ShellyBasicDiscoveryService.createResult(name, secondaryIp, bindingConfig,
+                        httpClient);
                 if (result != null) {
                     thingTable.discoveredResult(result);
                 }
@@ -1177,7 +1174,7 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
         ThingTypeUID thingTypeUID = ShellyThingCreator.getThingTypeUID(thingType, deviceType, mode);
         if (!thingTypeUID.equals(THING_TYPE_SHELLYUNKNOWN)) {
             logger.debug("{}: Changing thing type to {}", getThing().getLabel(), thingTypeUID);
-            Map<String, String> properties = editProperties();
+            Map<String, @Nullable String> properties = new HashMap<>(editProperties());
             properties.replace(PROPERTY_DEV_TYPE, deviceType);
             properties.replace(PROPERTY_DEV_MODE, mode);
             updateProperties(properties);
@@ -1358,10 +1355,7 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
             // Get subset of those channels that currently do not exist
             List<Channel> existingChannels = getThing().getChannels();
             for (Channel channel : existingChannels) {
-                String id = channel.getUID().getId();
-                if (dynChannels.containsKey(id)) {
-                    dynChannels.remove(id);
-                }
+                dynChannels.remove(channel.getUID().getId());
             }
 
             if (!dynChannels.isEmpty()) {
@@ -1426,8 +1420,9 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
      * @param value Value of the property
      */
     @Override
+    @SuppressWarnings("null")
     public void updateProperties(String key, String value) {
-        Map<String, String> thingProperties = editProperties();
+        Map<String, @Nullable String> thingProperties = new HashMap<>(editProperties());
         if (thingProperties.containsKey(key)) {
             thingProperties.replace(key, value);
         } else {
@@ -1438,8 +1433,8 @@ public abstract class ShellyBaseHandler extends BaseThingHandler
     }
 
     public void flushProperties(Map<String, String> propertyUpdates) {
-        Map<String, String> thingProperties = editProperties();
-        for (Map.Entry<String, String> property : propertyUpdates.entrySet()) {
+        Map<String, @Nullable String> thingProperties = new HashMap<>(editProperties());
+        for (final var property : propertyUpdates.entrySet()) {
             if (thingProperties.containsKey(property.getKey())) {
                 thingProperties.replace(property.getKey(), property.getValue());
             } else {

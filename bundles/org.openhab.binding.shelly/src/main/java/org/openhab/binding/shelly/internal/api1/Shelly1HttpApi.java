@@ -91,7 +91,9 @@ public class Shelly1HttpApi extends ShellyHttpClient implements ShellyApiInterfa
     @Override
     public ShellySettingsDevice getDeviceInfo() throws ShellyApiException {
         ShellySettingsDevice info = callApi(SHELLY_URL_DEVINFO, ShellySettingsDevice.class);
-        info.gen = 1;
+        if (info.gen == null) {
+            info.gen = 1;
+        }
         basicAuth = getBool(info.auth);
 
         if (getString(info.mode).isEmpty()) { // older Gen1 Firmware
