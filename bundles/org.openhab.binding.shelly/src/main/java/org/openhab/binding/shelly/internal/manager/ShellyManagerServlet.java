@@ -18,7 +18,6 @@ import static org.openhab.binding.shelly.internal.util.ShellyUtils.getString;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.Servlet;
