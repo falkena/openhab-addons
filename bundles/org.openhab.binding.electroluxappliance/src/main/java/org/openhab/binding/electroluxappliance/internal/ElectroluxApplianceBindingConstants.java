@@ -29,12 +29,13 @@ public class ElectroluxApplianceBindingConstants {
     public static final String BINDING_ID = "electroluxappliance";
 
     // List of all Thing Type UIDs
+    public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "api");
     public static final ThingTypeUID THING_TYPE_ELECTROLUX_AIR_PURIFIER = new ThingTypeUID(BINDING_ID, "air-purifier");
-    public static final ThingTypeUID THING_TYPE_ELECTROLUX_WASHING_MACHINE = new ThingTypeUID(BINDING_ID,
-            "washing-machine");
     public static final ThingTypeUID THING_TYPE_ELECTROLUX_PORTABLE_AIR_CONDITIONER = new ThingTypeUID(BINDING_ID,
             "portable-air-conditioner");
-    public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "api");
+    public static final ThingTypeUID THING_TYPE_ELECTROLUX_DRYER = new ThingTypeUID(BINDING_ID, "dryer");
+    public static final ThingTypeUID THING_TYPE_ELECTROLUX_WASHING_MACHINE = new ThingTypeUID(BINDING_ID,
+            "washing-machine");
 
     // List of all common Channel ids
     public static final String CHANNEL_DOOR_STATE = "door-state";
