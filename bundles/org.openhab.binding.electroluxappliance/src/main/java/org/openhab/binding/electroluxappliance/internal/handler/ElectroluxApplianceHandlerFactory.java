@@ -12,7 +12,11 @@
  */
 package org.openhab.binding.electroluxappliance.internal.handler;
 
-import static org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceBindingConstants.*;
+import static org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceBindingConstants.THING_TYPE_BRIDGE;
+import static org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceBindingConstants.THING_TYPE_ELECTROLUX_AIR_PURIFIER;
+import static org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceBindingConstants.THING_TYPE_ELECTROLUX_DRYER;
+import static org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceBindingConstants.THING_TYPE_ELECTROLUX_PORTABLE_AIR_CONDITIONER;
+import static org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceBindingConstants.THING_TYPE_ELECTROLUX_WASHING_MACHINE;
 
 import java.util.Set;
 
@@ -49,10 +53,11 @@ import com.google.gson.GsonBuilder;
 @Component(configurationPid = "binding.electroluxappliance", service = ThingHandlerFactory.class)
 public class ElectroluxApplianceHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_ELECTROLUX_AIR_PURIFIER,
-            THING_TYPE_ELECTROLUX_WASHING_MACHINE, THING_TYPE_ELECTROLUX_PORTABLE_AIR_CONDITIONER, THING_TYPE_BRIDGE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_BRIDGE,
+            THING_TYPE_ELECTROLUX_AIR_PURIFIER, THING_TYPE_ELECTROLUX_DRYER, THING_TYPE_ELECTROLUX_WASHING_MACHINE,
+            THING_TYPE_ELECTROLUX_PORTABLE_AIR_CONDITIONER);
     private final Gson gson;
-    private HttpClient httpClient;
+    private final HttpClient httpClient;
     private final TranslationProvider translationProvider;
     private final LocaleProvider localeProvider;
     private final StorageService storageService;
@@ -83,6 +88,8 @@ public class ElectroluxApplianceHandlerFactory extends BaseThingHandlerFactory {
 
         if (THING_TYPE_ELECTROLUX_AIR_PURIFIER.equals(thingTypeUID)) {
             return new ElectroluxAirPurifierHandler(thing, translationProvider, localeProvider);
+        } else if (THING_TYPE_ELECTROLUX_DRYER.equals(thingTypeUID)) {
+            return new ElectroluxDryerHandler(thing, translationProvider, localeProvider);
         } else if (THING_TYPE_ELECTROLUX_WASHING_MACHINE.equals(thingTypeUID)) {
             return new ElectroluxWashingMachineHandler(thing, translationProvider, localeProvider);
         } else if (THING_TYPE_ELECTROLUX_PORTABLE_AIR_CONDITIONER.equals(thingTypeUID)) {
