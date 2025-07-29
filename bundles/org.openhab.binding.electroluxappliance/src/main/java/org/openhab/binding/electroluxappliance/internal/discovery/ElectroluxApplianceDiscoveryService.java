@@ -43,25 +43,29 @@ public class ElectroluxApplianceDiscoveryService
     @Override
     protected void startScan() {
         ThingUID bridgeUID = thingHandler.getThing().getUID();
-        thingHandler.getElectroluxApplianceThings().entrySet().stream().forEach(thing -> {
-            final String deviceType = thing.getValue().getApplianceInfo().getApplianceInfo().getDeviceType();
+        thingHandler.getElectroluxApplianceThings().forEach((key, value) -> {
+            final String deviceType = value.getApplianceInfo().getApplianceInfo().getDeviceType();
 
-            switch (deviceType) {
-                case "PORTABLE_AIR_CONDITIONER":
+            switch (deviceType.toUpperCase()) {
+                case "PORTABLE_AIR_CONDITIONER": {
                     handleThingDiscovered("Electrolux Air Conditioner", bridgeUID,
-                            THING_TYPE_ELECTROLUX_PORTABLE_AIR_CONDITIONER, thing.getKey());
+                            THING_TYPE_ELECTROLUX_PORTABLE_AIR_CONDITIONER, key);
                     break;
+                }
+                case "TUMBLE_DRYER": {
+                    handleThingDiscovered("Electrolux Air Conditioner", bridgeUID, THING_TYPE_ELECTROLUX_DRYER, key);
+                    break;
+                }
                 default:
-                    final String applianceType = thing.getValue().getApplianceType();
+                    final String applianceType = value.getApplianceType();
                     // These two have not been modified as they are not updated to use DTO data validation for commands,
                     // and I cannot confirm the deviceTypes reported by them.
                     // Hence they fall-back to the traditional discovery methods here.
                     if ("PUREA9".equalsIgnoreCase(applianceType)) {
-                        handleThingDiscovered("Electrolux Pure A9", bridgeUID, THING_TYPE_ELECTROLUX_AIR_PURIFIER,
-                                thing.getKey());
+                        handleThingDiscovered("Electrolux Pure A9", bridgeUID, THING_TYPE_ELECTROLUX_AIR_PURIFIER, key);
                     } else if ("WM".equalsIgnoreCase(applianceType)) {
                         handleThingDiscovered("Electrolux Washing Machine", bridgeUID,
-                                THING_TYPE_ELECTROLUX_WASHING_MACHINE, thing.getKey());
+                                THING_TYPE_ELECTROLUX_WASHING_MACHINE, key);
                     }
             }
         });
