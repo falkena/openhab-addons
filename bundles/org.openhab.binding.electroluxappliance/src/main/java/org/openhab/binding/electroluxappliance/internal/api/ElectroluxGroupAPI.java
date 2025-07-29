@@ -32,12 +32,7 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceBridgeConfiguration;
 import org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceException;
-import org.openhab.binding.electroluxappliance.internal.dto.AirPurifierStateDTO;
-import org.openhab.binding.electroluxappliance.internal.dto.ApplianceDTO;
-import org.openhab.binding.electroluxappliance.internal.dto.ApplianceInfoDTO;
-import org.openhab.binding.electroluxappliance.internal.dto.ApplianceStateDTO;
-import org.openhab.binding.electroluxappliance.internal.dto.PortableAirConditionerStateDTO;
-import org.openhab.binding.electroluxappliance.internal.dto.WashingMachineStateDTO;
+import org.openhab.binding.electroluxappliance.internal.dto.*;
 import org.openhab.binding.electroluxappliance.internal.listener.TokenUpdateListener;
 import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.i18n.TranslationProvider;
@@ -121,6 +116,14 @@ public class ElectroluxGroupAPI {
                             String jsonApplianceState = getApplianceState(applianceId);
                             ApplianceStateDTO applianceState = gson.fromJson(jsonApplianceState,
                                     AirPurifierStateDTO.class);
+                            if (applianceState != null) {
+                                dto.setApplianceState(applianceState, retrievalTs);
+                            }
+                            electroluxApplianceThings.put(applianceInfo.getApplianceInfo().getSerialNumber(), dto);
+                        } else if ("TUMBLE_DRYER".equals(applianceInfo.getApplianceInfo().getDeviceType())) {
+                            // Get appliance state
+                            String jsonApplianceState = getApplianceState(applianceId);
+                            ApplianceStateDTO applianceState = gson.fromJson(jsonApplianceState, DryerStateDTO.class);
                             if (applianceState != null) {
                                 dto.setApplianceState(applianceState, retrievalTs);
                             }

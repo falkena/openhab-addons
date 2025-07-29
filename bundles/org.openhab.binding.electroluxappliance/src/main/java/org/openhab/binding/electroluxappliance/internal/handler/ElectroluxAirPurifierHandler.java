@@ -32,7 +32,6 @@ import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
-import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -138,13 +137,13 @@ public class ElectroluxAirPurifierHandler extends ElectroluxApplianceHandler {
         }
         if (dto != null) {
             // Update all channels from the updated data
-            getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
-                    .forEach(channelUID -> {
-                        State state = getValue(channelUID.getId(), dto);
-                        logger.trace("Channel: {}, State: {}", channelUID, state);
-                        updateState(channelUID, state);
-                    });
-            if ("Connected".equalsIgnoreCase(dto.getApplianceState().getConnectionState())) {
+            getThing().getChannels().stream().map(Channel::getUID).filter(this::isLinked).forEach(channelUID -> {
+                State state = getValue(channelUID.getId(), dto);
+                logger.trace("Channel: {}, State: {}", channelUID, state);
+                updateState(channelUID, state);
+            });
+
+            if (dto.isConnected()) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -189,23 +188,22 @@ public class ElectroluxAirPurifierHandler extends ElectroluxApplianceHandler {
     }
 
     @Override
-    public Map<String, String> refreshProperties() {
-        Map<String, String> properties = new HashMap<>();
+    public @Nullable Map<String, @Nullable String> refreshProperties() {
+        final var handler = getBridgeHandler();
+        final var serial = getApplianceConfig().getSerialNumber();
+        final var dto = (handler != null) ? handler.getElectroluxApplianceThings().get(serial) : null;
 
-        final Bridge bridge = getBridge();
-        if (bridge != null && bridge.getHandler() instanceof ElectroluxApplianceBridgeHandler bridgeHandler) {
-            ApplianceDTO dto = bridgeHandler.getElectroluxApplianceThings().get(getApplianceConfig().getSerialNumber());
-            if (dto != null) {
-                var applianceInfo = dto.getApplianceInfo().getApplianceInfo();
-                properties.put(Thing.PROPERTY_VENDOR, applianceInfo.getBrand());
-                properties.put(PROPERTY_COLOUR, applianceInfo.getColour());
-                properties.put(PROPERTY_DEVICE, applianceInfo.getDeviceType());
-                properties.put(Thing.PROPERTY_MODEL_ID, applianceInfo.getModel());
-                properties.put(Thing.PROPERTY_SERIAL_NUMBER, applianceInfo.getSerialNumber());
-                properties.put(Thing.PROPERTY_FIRMWARE_VERSION,
-                        ((AirPurifierStateDTO) dto.getApplianceState()).getProperties().getReported().getFrmVerNIU());
+        Map<String, @Nullable String> properties = new HashMap<>();
+        if (dto != null) {
+            var applianceInfo = dto.getApplianceInfo().getApplianceInfo();
+            properties.put(Thing.PROPERTY_VENDOR, applianceInfo.getBrand());
+            properties.put(PROPERTY_COLOUR, applianceInfo.getColour());
+            properties.put(PROPERTY_DEVICE, applianceInfo.getDeviceType());
+            properties.put(Thing.PROPERTY_MODEL_ID, applianceInfo.getModel());
+            properties.put(Thing.PROPERTY_SERIAL_NUMBER, applianceInfo.getSerialNumber());
+            properties.put(Thing.PROPERTY_FIRMWARE_VERSION,
+                    ((AirPurifierStateDTO) dto.getApplianceState()).getProperties().getReported().getFrmVerNIU());
 
-            }
         }
         return properties;
     }

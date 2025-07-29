@@ -15,21 +15,21 @@ package org.openhab.binding.electroluxappliance.internal.dto;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 /**
- * The {@link AirPurifierStateDTO} class defines the DTO for the Electrolux Washing Machines.
+ * The {@link WashingMachineStateDTO} class defines the DTO for the Electrolux Washing Machines.
  *
  * @author Jan Gustafsson - Initial contribution
  */
 @NonNullByDefault
 public class WashingMachineStateDTO extends ApplianceStateDTO {
 
-    private Properties properties = new Properties();
+    private final Properties properties = new Properties();
 
     public Properties getProperties() {
         return properties;
     }
 
     public static class Properties {
-        private Reported reported = new Reported();
+        private final Reported reported = new Reported();
 
         public Reported getReported() {
             return reported;
@@ -38,6 +38,7 @@ public class WashingMachineStateDTO extends ApplianceStateDTO {
 
     public static class Reported {
         private String displayLight = "";
+        private String doorLock = "";
         private String doorState = "";
         private int timeToEnd;
         private Miscellaneous miscellaneous = new Miscellaneous();
@@ -53,21 +54,20 @@ public class WashingMachineStateDTO extends ApplianceStateDTO {
         private String waterHardness = "";
         private String defaultExtraRinse = "";
         private int totalWashingTime;
-        private ApplianceInfo applianceInfo = new ApplianceInfo();
-        private String doorLock = "";
+        private final ApplianceInfo applianceInfo = new ApplianceInfo();
+        private final String applianceMode = "";
+        private final String applianceState = "";
         private boolean uiLockMode;
         private int washingNominalLoadWeight;
         private int totalWashCyclesCount;
         private int fcOptisenseLoadWeight;
         private String waterSoftenerMode = "";
-        private String applianceState = "";
-        private String applianceMode = "";
         private String applianceMainBoardSwVersion = "";
         private int totalCycleCounter;
         private int measuredLoadWeight;
         private Object[] alerts = new Object[0];
         private Maintenance applianceCareAndMaintenance0 = new Maintenance();
-        private NetworkInterface networkInterface = new NetworkInterface();
+        private final NetworkInterface networkInterface = new NetworkInterface();
         private Maintenance applianceCareAndMaintenance1 = new Maintenance();
         private Maintenance applianceCareAndMaintenance2 = new Maintenance();
         private Maintenance applianceCareAndMaintenance3 = new Maintenance();
@@ -78,6 +78,10 @@ public class WashingMachineStateDTO extends ApplianceStateDTO {
         // Getters for all fields
         public String getDisplayLight() {
             return displayLight;
+        }
+
+        public String getDoorLock() {
+            return doorLock;
         }
 
         public String getDoorState() {
@@ -144,8 +148,12 @@ public class WashingMachineStateDTO extends ApplianceStateDTO {
             return applianceInfo;
         }
 
-        public String getDoorLock() {
-            return doorLock;
+        public String getApplianceMode() {
+            return applianceMode;
+        }
+
+        public String getApplianceState() {
+            return applianceState;
         }
 
         public boolean isUiLockMode() {
@@ -166,14 +174,6 @@ public class WashingMachineStateDTO extends ApplianceStateDTO {
 
         public String getWaterSoftenerMode() {
             return waterSoftenerMode;
-        }
-
-        public String getApplianceState() {
-            return applianceState;
-        }
-
-        public String getApplianceMode() {
-            return applianceMode;
         }
 
         public String getApplianceMainBoardSwVersion() {
@@ -404,14 +404,6 @@ public class WashingMachineStateDTO extends ApplianceStateDTO {
         }
     }
 
-    public static class ApplianceInfo {
-        private String applianceType = "";
-
-        public String getApplianceType() {
-            return applianceType;
-        }
-    }
-
     public static class Maintenance {
         private CareThreshold careThreshold = new CareThreshold();
 
@@ -430,34 +422,6 @@ public class WashingMachineStateDTO extends ApplianceStateDTO {
             public int getThreshold() {
                 return threshold;
             }
-        }
-    }
-
-    public static class NetworkInterface {
-        private String swVersion = "";
-        private String linkQualityIndicator = "";
-        private String otaState = "";
-        private String niuSwUpdateCurrentDescription = "";
-        private String swAncAndRevision = "";
-
-        public String getSwVersion() {
-            return swVersion;
-        }
-
-        public String getLinkQualityIndicator() {
-            return linkQualityIndicator;
-        }
-
-        public String getOtaState() {
-            return otaState;
-        }
-
-        public String getNiuSwUpdateCurrentDescription() {
-            return niuSwUpdateCurrentDescription;
-        }
-
-        public String getSwAncAndRevision() {
-            return swAncAndRevision;
         }
     }
 

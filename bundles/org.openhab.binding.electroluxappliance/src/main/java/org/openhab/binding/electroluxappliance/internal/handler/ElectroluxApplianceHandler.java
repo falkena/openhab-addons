@@ -17,15 +17,16 @@ import static org.openhab.binding.electroluxappliance.internal.ElectroluxApplian
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.electroluxappliance.internal.ElectroluxApplianceConfiguration;
 import org.openhab.binding.electroluxappliance.internal.api.ElectroluxGroupAPI;
 import org.openhab.binding.electroluxappliance.internal.dto.ApplianceDTO;
+import org.openhab.core.config.core.Configuration;
 import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.i18n.TranslationProvider;
-import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -50,7 +51,7 @@ public abstract class ElectroluxApplianceHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(ElectroluxApplianceHandler.class);
 
-    private ElectroluxApplianceConfiguration config = new ElectroluxApplianceConfiguration();
+    private final AtomicReference<ElectroluxApplianceConfiguration> config = new AtomicReference<>();
 
     private final TranslationProvider translationProvider;
     private final LocaleProvider localeProvider;
@@ -73,36 +74,40 @@ public abstract class ElectroluxApplianceHandler extends BaseThingHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
         logger.debug("Command received: {} on channelID: {}", command, channelUID);
         if (CHANNEL_STATUS.equals(channelUID.getId()) || command instanceof RefreshType) {
-            final Bridge bridge = getBridge();
-            if (bridge != null && bridge.getHandler() instanceof ElectroluxApplianceBridgeHandler bridgeHandler) {
-                bridgeHandler.handleCommand(channelUID, command);
+            final var handler = getBridgeHandler();
+            if (handler != null) {
+                handler.handleCommand(channelUID, command);
             }
         }
     }
 
     @Override
     public void initialize() {
-        config = getConfigAs(ElectroluxApplianceConfiguration.class);
-        if (config.getSerialNumber().isBlank()) {
+        config.set(getConfigAs(ElectroluxApplianceConfiguration.class));
+        if (getApplianceConfig().getSerialNumber().isBlank()) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     getLocalizedText("error.electroluxappliance.all-devices.missing-serial-number"));
         } else {
             updateStatus(ThingStatus.UNKNOWN);
 
             // The bridge updates, then attempts to read the config, this fails, then refreshes the token and try's
-            // again
-            // while this is going on this kicks in where the DTO data is not yet read, so this allows for these initial
-            // delays.
+            // again while this is going on this kicks in where the DTO data is not yet read,
+            // so this allows for these initial delays.
             scheduler.schedule(() -> {
                 update();
-                Map<String, String> properties = refreshProperties();
-                updateProperties(properties);
+                updateProperties(refreshProperties());
             }, 5, TimeUnit.SECONDS);
         }
     }
 
+    @Override
+    protected void updateConfiguration(Configuration configuration) {
+        super.updateConfiguration(configuration);
+        config.set(getConfigAs(ElectroluxApplianceConfiguration.class));
+    }
+
     public void update() {
-        ApplianceDTO dto = getApplianceDTO();
+        final var dto = getApplianceDTO();
         if (dto != null) {
             update(dto);
         } else {
@@ -110,27 +115,33 @@ public abstract class ElectroluxApplianceHandler extends BaseThingHandler {
         }
     }
 
-    protected @Nullable ElectroluxGroupAPI getElectroluxGroupAPI() {
-        final Bridge bridge = getBridge();
-        if (bridge != null && bridge.getHandler() instanceof ElectroluxApplianceBridgeHandler bridgeHandler) {
-            return bridgeHandler.getElectroluxDeltaAPI();
+    protected @Nullable ElectroluxApplianceBridgeHandler getBridgeHandler() {
+        final var bridge = getBridge();
+        if (bridge != null) {
+            final var handler = bridge.getHandler();
+            if (handler instanceof ElectroluxApplianceBridgeHandler bridgeHandler) {
+                return bridgeHandler;
+            }
         }
         return null;
     }
 
+    protected @Nullable ElectroluxGroupAPI getElectroluxGroupAPI() {
+        final var handler = getBridgeHandler();
+        return (handler != null) ? handler.getElectroluxDeltaAPI() : null;
+    }
+
     protected @Nullable ApplianceDTO getApplianceDTO() {
-        final Bridge bridge = getBridge();
-        if (bridge != null && bridge.getHandler() instanceof ElectroluxApplianceBridgeHandler bridgeHandler) {
-            return bridgeHandler.getElectroluxApplianceThings().get(config.getSerialNumber());
-        }
-        return null;
+        final var handler = getBridgeHandler();
+        final var serial = getApplianceConfig().getSerialNumber();
+        return (handler != null) ? handler.getElectroluxApplianceThings().get(serial) : null;
     }
 
     public abstract void update(@Nullable ApplianceDTO dto);
 
-    public abstract Map<String, String> refreshProperties();
+    public abstract @Nullable Map<String, @Nullable String> refreshProperties();
 
     protected ElectroluxApplianceConfiguration getApplianceConfig() {
-        return config;
+        return config.get();
     }
 }
