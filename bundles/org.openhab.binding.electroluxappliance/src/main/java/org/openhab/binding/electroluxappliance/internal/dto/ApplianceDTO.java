@@ -53,6 +53,10 @@ public class ApplianceDTO {
         return applianceState;
     }
 
+    public boolean isConnected() {
+        return "Connected".equalsIgnoreCase(applianceState.getConnectionState());
+    }
+
     public Instant getApplianceStateTimestamp() {
         return applianceStateTs;
     }

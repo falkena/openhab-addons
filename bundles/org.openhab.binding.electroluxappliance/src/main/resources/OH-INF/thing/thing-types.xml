@@ -116,6 +116,33 @@
 
 	</thing-type>
 
+	<thing-type id="dryer">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="api"/>
+		</supported-bridge-type-refs>
+
+		<label>Dryer</label>
+		<description>This thing represents the Electrolux Dryer.</description>
+		<semantic-equipment-tag>Dryer</semantic-equipment-tag>
+		<channels>
+			<channel id="door-state" typeId="door-state"/>
+		</channels>
+
+		<properties>
+			<property name="vendor">Electrolux</property>
+		</properties>
+
+		<representation-property>serialNumber</representation-property>
+
+		<config-description>
+			<parameter name="serialNumber" type="text" required="true">
+				<label>Serial Number</label>
+				<description>The appliance serial number.</description>
+			</parameter>
+		</config-description>
+
+	</thing-type>
+
 	<thing-type id="portable-air-conditioner">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="api"/>
