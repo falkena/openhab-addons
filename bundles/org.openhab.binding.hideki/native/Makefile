@@ -3,11 +3,11 @@ TARGET=libhideki.so
 CC         = gcc
 INCLUDE	   = -I./queue \
              -I/$(JAVA_HOME)/include -I/$(JAVA_HOME)/include/linux  \
-             -I/usr/lib/jvm/java-1.11.0-openjdk-arm64/include       \
-             -I/usr/lib/jvm/java-1.11.0-openjdk-arm64/include/linux \
+             -I/usr/lib/jvm/temurin-21-jdk-arm64/include       \
+             -I/usr/lib/jvm/temurin-21-jdk-arm64/include/linux \
              -I/usr/local/include -I/usr/local/include/linux
 
-CFLAGS      := -O3 -std=c++14 -fPIC -pedantic -Wall -Winline -pipe -flto $(CARGS) 
+CFLAGS      := -O3 -std=c++20 -fPIC -pedantic -Wall -Winline -pipe -flto $(CARGS) 
 LIBS         = -lgpiod -lm -lpthread -lstdc++
 
 CLASS_PATH = ../target

@@ -13,7 +13,10 @@ ifeq ($(OS),Windows_NT)
 	PLATFORM_OPTS = -static
 	TBB_PLATFORM_OPTS = -DUSE_WINTHREAD
 else
-	LD_PLATFORM_OPTS = -lrt
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		LD_PLATFORM_OPTS = -lrt
+	endif
 	# -fsanitize=address seems to have a slow memory leak when creating/destroying a lot of threads
 	#DEBUG_OPTS += -fno-omit-frame-pointer -fsanitize=address
 endif
@@ -38,9 +41,9 @@ bin/fuzztests$(EXT): ../concurrentqueue.h ../tests/fuzztests/fuzztests.cpp ../te
 	test -d bin || mkdir bin
 	g++ -std=c++11 -Wall -pedantic-errors -Wpedantic $(BENCH_OPTS) ../tests/common/simplethread.cpp ../tests/common/systemtime.cpp ../tests/fuzztests/fuzztests.cpp -o bin/fuzztests$(EXT) $(LD_OPTS)
 
-bin/benchmarks$(EXT): bin/libtbb.a ../concurrentqueue.h ../benchmarks/benchmarks.cpp ../benchmarks/cpuid.h ../benchmarks/cpuid.cpp ../benchmarks/lockbasedqueue.h ../benchmarks/simplelockfree.h ../tests/common/simplethread.h ../tests/common/simplethread.cpp ../tests/common/systemtime.h ../tests/common/systemtime.cpp makefile
+bin/benchmarks$(EXT): bin/libtbb.a ../concurrentqueue.h ../benchmarks/benchmarks.cpp ../benchmarks/cpuid.h ../benchmarks/cpuid.cpp ../benchmarks/lockbasedqueue.h ../benchmarks/simplelockfree.h ../tests/common/simplethread.h ../tests/common/simplethread.cpp ../tests/common/systemtime.h ../tests/common/systemtime.cpp ../benchmarks/dlib/test_for_odr_violations.cpp makefile
 	test -d bin || mkdir bin
-	g++ -std=c++11 -Wall -pedantic-errors -Wpedantic $(BENCH_OPTS) -I../benchmarks ../benchmarks/cpuid.cpp ../tests/common/simplethread.cpp ../tests/common/systemtime.cpp ../benchmarks/benchmarks.cpp -o bin/benchmarks$(EXT) -Lbin -ltbb $(LD_OPTS)
+	g++ -std=c++11 -Wall -pedantic-errors -Wpedantic $(BENCH_OPTS) -I../benchmarks ../benchmarks/cpuid.cpp ../tests/common/simplethread.cpp ../tests/common/systemtime.cpp ../benchmarks/dlib/test_for_odr_violations.cpp ../benchmarks/benchmarks.cpp -o bin/benchmarks$(EXT) -Lbin -ltbb $(LD_OPTS)
 	
 bin/libtbb.a: makefile
 	test -d bin || mkdir bin
