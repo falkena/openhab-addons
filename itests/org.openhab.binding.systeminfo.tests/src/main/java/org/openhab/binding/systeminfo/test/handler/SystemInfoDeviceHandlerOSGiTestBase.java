@@ -28,7 +28,6 @@ import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
-import org.openhab.core.thing.ThingStatusInfo;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.ThingHandler;
@@ -85,13 +84,13 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
             throw new AssertionError("Bridge is null");
         }
 
-        final ThingBuilder thingBuilder = ThingBuilder.create(thingTypeUID, thingUID);
+        final var thingBuilder = ThingBuilder.create(thingTypeUID, thingUID);
         thingBuilder.withBridge(bridge.getUID()).withConfiguration(thingConfig);
 
-        final ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
+        final var channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
         channelBuilder.withType(channelTypeUID).withKind(ChannelKind.STATE);
 
-        Configuration channelConfiguration = new Configuration();
+        final var channelConfiguration = new Configuration();
         channelConfiguration.put(PRIORITY_PARAMETER, DEFAULT_CHANNEL_TEST_PRIORITY);
         channelBuilder.withConfiguration(channelConfiguration);
         thingBuilder.withChannel(channelBuilder.build());
@@ -107,7 +106,7 @@ public class SystemInfoDeviceHandlerOSGiTestBase extends SystemInfoOSGiTestBase 
         handler.initialize();
 
         waitForAssert(() -> {
-            final ThingStatusInfo statusInfo = thing.getStatusInfo();
+            final var statusInfo = thing.getStatusInfo();
             assertThat(String.format("Thing status detail is %s with description %s", statusInfo.getStatusDetail(),
                     statusInfo.getDescription()), thing.getStatus(), is(equalTo(ThingStatus.ONLINE)));
         });
