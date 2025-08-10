@@ -25,19 +25,12 @@ import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.*;
 
 import java.math.BigDecimal;
 
-import javax.measure.quantity.Dimensionless;
-import javax.measure.quantity.ElectricPotential;
-import javax.measure.quantity.Frequency;
-import javax.measure.quantity.Temperature;
-import javax.measure.quantity.Time;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoComputerHandler;
 import org.openhab.binding.systeminfo.internal.model.DeviceNotFoundException;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedCentralProcessor;
@@ -47,7 +40,6 @@ import org.openhab.binding.systeminfo.test.data.SystemInfoMockedOperatingSystem;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedSensors;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedVirtualMemory;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
@@ -60,7 +52,6 @@ import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
-import org.openhab.core.thing.ThingStatusInfo;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.BridgeHandler;
 import org.openhab.core.thing.binding.builder.BridgeBuilder;
@@ -122,13 +113,13 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertInvalidThingConfigurationValuesAreHandled() {
-        final Configuration configuration = new Configuration();
+        final var configuration = new Configuration();
         configuration.put(HIGH_PRIORITY_REFRESH_TIME, new BigDecimal(-5)); // invalid value - must be positive
         configuration.put(MEDIUM_PRIORITY_REFRESH_TIME, new BigDecimal(3));
 
-        final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_COMPUTER, DEFAULT_TEST_THING_NAME);
+        final var thingUID = new ThingUID(BRIDGE_TYPE_COMPUTER, DEFAULT_TEST_THING_NAME);
 
-        final BridgeBuilder builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
+        final var builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
         builder.withConfiguration(configuration);
 
         final Bridge bridge = builder.build();
@@ -144,7 +135,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
         waitForAssert(() -> {
             assertThat("Invalid configuration is used", bridge.getStatus(), is(equalTo(ThingStatus.OFFLINE)));
-            final ThingStatusInfo statusInfo = bridge.getStatusInfo();
+            final var statusInfo = bridge.getStatusInfo();
             assertThat(statusInfo.getStatusDetail(), is(equalTo(ThingStatusDetail.HANDLER_INITIALIZING_ERROR)));
             assertThat(statusInfo.getDescription(), allOf(notNullValue(), equalTo("@text/offline.cannot-initialize")));
         });
@@ -165,7 +156,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
             throw new AssertionError("Bridge is null");
         }
 
-        final ChannelUID channelUID = new ChannelUID(bridge.getUID(), channelID);
+        final var channelUID = new ChannelUID(bridge.getUID(), channelID);
         initializeItem(channelUID, TEST_ITEM_NAME, acceptedItemType);
         assertItemState(TEST_ITEM_NAME, priority, UnDefType.UNDEF);
     }
@@ -183,8 +174,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     @Test
     public void assertChannelCpuDescriptionIsUpdated() {
         final String format = "Model: %s %s,family: %s, vendor: %s, sn: %s, identifier: %s ";
-        final StringType mockedValue = new StringType(String.format(format,
-                SystemInfoMockedCentralProcessor.TEST_CPU_MODEL,
+        final var mockedValue = new StringType(String.format(format, SystemInfoMockedCentralProcessor.TEST_CPU_MODEL,
                 SystemInfoMockedCentralProcessor.TEST_CPU_IS_64_BIT ? "64 bit" : "32 bit",
                 SystemInfoMockedCentralProcessor.TEST_CPU_FAMILY, SystemInfoMockedCentralProcessor.TEST_CPU_VENDOR,
                 SystemInfoMockedComputerSystem.TEST_SYSTEM_SERIAL,
@@ -196,8 +186,8 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelCpuFrequency() {
-        final QuantityType<Frequency> mockedValue = new QuantityType<>(
-                SystemInfoMockedCentralProcessor.TEST_LOGICAL_CPU_FREQUENCY, Units.HERTZ);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedCentralProcessor.TEST_LOGICAL_CPU_FREQUENCY,
+                Units.HERTZ);
 
         initializeBridgeWithChannel(CHANNEL_CPU_FREQUENCY, CHANNEL_CPU_GROUP, CHANNEL_TYPE_FREQUENCY,
                 "Number:Frequency");
@@ -206,8 +196,8 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelCpuMaxFrequencyIsUpdated() {
-        final QuantityType<Frequency> mockedValue = new QuantityType<>(
-                SystemInfoMockedCentralProcessor.TEST_CPU_MAX_FREQUENCY, Units.HERTZ);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedCentralProcessor.TEST_CPU_MAX_FREQUENCY,
+                Units.HERTZ);
 
         initializeBridgeWithChannel(CHANNEL_CPU_MAXFREQUENCY, CHANNEL_CPU_GROUP, CHANNEL_TYPE_MAX_FREQUENCY,
                 "Number:Frequency");
@@ -216,7 +206,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelCpuNameIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedCentralProcessor.TEST_CPU_NAME);
+        final var mockedValue = new StringType(SystemInfoMockedCentralProcessor.TEST_CPU_NAME);
 
         initializeBridgeWithChannel(CHANNEL_NAME, CHANNEL_CPU_GROUP, CHANNEL_TYPE_NAME, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -224,8 +214,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelCpuTemperatureIsUpdated() {
-        final QuantityType<Temperature> mockedValue = new QuantityType<>(SystemInfoMockedSensors.TEST_CPU_TEMPERATURE,
-                SIUnits.CELSIUS);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedSensors.TEST_CPU_TEMPERATURE, SIUnits.CELSIUS);
 
         initializeBridgeWithChannel(CHANNEL_CPU_TEMPERATURE, CHANNEL_CPU_GROUP, CHANNEL_TYPE_TEMPERATURE,
                 "Number:Temperature");
@@ -234,8 +223,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelCpuVoltageIsUpdated() {
-        final QuantityType<ElectricPotential> mockedValue = new QuantityType<>(SystemInfoMockedSensors.TEST_CPU_VOLTAGE,
-                Units.VOLT);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedSensors.TEST_CPU_VOLTAGE, Units.VOLT);
 
         initializeBridgeWithChannel(CHANNEL_CPU_VOLTAGE, CHANNEL_CPU_GROUP, CHANNEL_TYPE_VOLTAGE,
                 "Number:ElectricPotential");
@@ -244,8 +232,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelMemoryAvailableIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedGlobalMemory.TEST_MEMORY_AVAILABLE, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_AVAILABLE, Units.BYTE);
 
         initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -256,8 +243,8 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
         final double percent = (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_AVAILABLE
                 / (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_TOTAL * 100.0;
-        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
-                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
+        final var mockedValue = new QuantityType<>(BigDecimal.valueOf((double) Math.round(percent * scale) / scale),
+                Units.PERCENT);
 
         initializeBridgeWithChannel(CHANNEL_AVAILABLE_PERCENT, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_PERCENT,
                 "Number:Dimensionless");
@@ -266,8 +253,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelMemoryTotalIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_TOTAL,
-                Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_TOTAL, Units.BYTE);
 
         initializeBridgeWithChannel(CHANNEL_TOTAL, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_TOTAL, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -275,8 +261,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelMemoryUsedIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_USED,
-                Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedGlobalMemory.TEST_MEMORY_USED, Units.BYTE);
 
         initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -287,8 +272,8 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
         final double percent = (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_USED
                 / (double) SystemInfoMockedGlobalMemory.TEST_MEMORY_TOTAL * 100.0;
-        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
-                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
+        final var mockedValue = new QuantityType<>(BigDecimal.valueOf((double) Math.round(percent * scale) / scale),
+                Units.PERCENT);
 
         initializeBridgeWithChannel(CHANNEL_USED_PERCENT, CHANNEL_MEMORY_GROUP, CHANNEL_TYPE_PERCENT,
                 "Number:Dimensionless");
@@ -297,8 +282,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSystemLoadIsUpdated() {
-        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
-                SystemInfoMockedCentralProcessor.TEST_CPU_LOAD, Units.PERCENT);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD, Units.PERCENT);
 
         initializeBridgeWithChannel(CHANNEL_LOAD, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD, "Number:Dimensionless");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -306,7 +290,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSystemLoad1IsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD1);
+        final var mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD1);
 
         initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD_1, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD_AVERAGE, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -314,7 +298,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSystemLoad5IsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD5);
+        final var mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD5);
 
         initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD_5, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD_AVERAGE, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -322,7 +306,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSystemLoad15IsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD15);
+        final var mockedValue = new DecimalType(SystemInfoMockedCentralProcessor.TEST_CPU_LOAD15);
 
         initializeBridgeWithChannel(CHANNEL_SYSTEM_LOAD_15, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_LOAD_AVERAGE, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -330,7 +314,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSystemThreadsIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedOperatingSystem.TEST_SYSTEM_THREAD_COUNT);
+        final var mockedValue = new DecimalType(SystemInfoMockedOperatingSystem.TEST_SYSTEM_THREAD_COUNT);
 
         initializeBridgeWithChannel(CHANNEL_THREADS, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_THREADS, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -338,8 +322,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSystemUptimeIsUpdated() {
-        final QuantityType<Time> mockedValue = new QuantityType<>(SystemInfoMockedOperatingSystem.TEST_SYSTEM_UPTIME,
-                Units.SECOND);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedOperatingSystem.TEST_SYSTEM_UPTIME, Units.SECOND);
 
         initializeBridgeWithChannel(CHANNEL_SYSTEM_UPTIME, CHANNEL_SYSTEM_GROUP, CHANNEL_TYPE_UPTIME, "Number:Time");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -347,8 +330,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSwapAvailableIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedVirtualMemory.TEST_SWAP_AVAILABLE, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_AVAILABLE, Units.BYTE);
 
         initializeBridgeWithChannel(CHANNEL_AVAILABLE, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -359,8 +341,8 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
         final double percent = (double) SystemInfoMockedVirtualMemory.TEST_SWAP_AVAILABLE
                 / (double) SystemInfoMockedVirtualMemory.TEST_SWAP_TOTAL * 100.0;
-        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
-                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
+        final var mockedValue = new QuantityType<>(BigDecimal.valueOf((double) Math.round(percent * scale) / scale),
+                Units.PERCENT);
 
         initializeBridgeWithChannel(CHANNEL_AVAILABLE_PERCENT, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_PERCENT,
                 "Number:Dimensionless");
@@ -369,8 +351,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSwapTotalIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_TOTAL,
-                Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_TOTAL, Units.BYTE);
 
         initializeBridgeWithChannel(CHANNEL_TOTAL, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_TOTAL, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -378,8 +359,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSwapUsedIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_USED,
-                Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedVirtualMemory.TEST_SWAP_USED, Units.BYTE);
 
         initializeBridgeWithChannel(CHANNEL_USED, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -390,8 +370,8 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final double scale = Math.pow(10, PRECISION_AFTER_DECIMAL_SIGN);
         final double percent = (double) SystemInfoMockedVirtualMemory.TEST_SWAP_USED
                 / (double) SystemInfoMockedVirtualMemory.TEST_SWAP_TOTAL * 100.0;
-        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(
-                BigDecimal.valueOf((double) Math.round(percent * scale) / scale), Units.PERCENT);
+        final var mockedValue = new QuantityType<>(BigDecimal.valueOf((double) Math.round(percent * scale) / scale),
+                Units.PERCENT);
 
         initializeBridgeWithChannel(CHANNEL_USED_PERCENT, CHANNEL_SWAP_GROUP, CHANNEL_TYPE_PERCENT,
                 "Number:Dimensionless");
@@ -400,58 +380,47 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelSensorsFanSpeedIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_SENSORS_FAN_SPEED;
+        final var mockedValue = new DecimalType(180);
+        when(mockedSystemInfo.getSensorsFanSpeed(DEFAULT_DEVICE_INDEX)).thenReturn(mockedValue);
 
-        DecimalType mockedSensorsCpuFanSpeedValue = new DecimalType(180);
-        when(mockedSystemInfo.getSensorsFanSpeed(DEFAULT_DEVICE_INDEX)).thenReturn(mockedSensorsCpuFanSpeedValue);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedSensorsCpuFanSpeedValue);
+        initializeThingWithChannel(CHANNEL_SENSORS_FAN_SPEED, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelBatteryNameIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_NAME;
+        final var mockedValue = new StringType("Mocked Battery Name");
+        when(mockedSystemInfo.getBatteryName(DEFAULT_DEVICE_INDEX)).thenReturn(mockedValue);
 
-        StringType mockedBatteryName = new StringType("Mocked Battery Name");
-        when(mockedSystemInfo.getBatteryName(DEFAULT_DEVICE_INDEX)).thenReturn(mockedBatteryName);
-
-        initializeThingWithChannel(channnelID, "String");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedBatteryName);
+        initializeThingWithChannel(CHANNEL_BATTERY_NAME, "String");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelBatteryRemainingCapacityIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_CAPACITY;
+        final var mockedValue = new PercentType(20);
+        when(mockedSystemInfo.getBatteryRemainingCapacity(DEFAULT_DEVICE_INDEX)).thenReturn(mockedValue);
 
-        PercentType mockedBatteryRemainingCapacity = new PercentType(20);
-        when(mockedSystemInfo.getBatteryRemainingCapacity(DEFAULT_DEVICE_INDEX))
-                .thenReturn(mockedBatteryRemainingCapacity);
-
-        initializeThingWithChannel(channnelID, "Number");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedBatteryRemainingCapacity);
+        initializeThingWithChannel(CHANNEL_BATTERY_REMAINING_CAPACITY, "Number");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelBatteryRemainingTimeIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_BATTERY_REMAINING_TIME;
+        final var mockedValue = new QuantityType<>(3600, Units.MINUTE);
+        when(mockedSystemInfo.getBatteryRemainingTime(DEFAULT_DEVICE_INDEX)).thenReturn(mockedValue);
 
-        QuantityType<Time> mockedBatteryRemainingTime = new QuantityType<>(3600, Units.MINUTE);
-        when(mockedSystemInfo.getBatteryRemainingTime(DEFAULT_DEVICE_INDEX)).thenReturn(mockedBatteryRemainingTime);
-
-        initializeThingWithChannel(channnelID, "Number:Time");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedBatteryRemainingTime);
+        initializeThingWithChannel(CHANNEL_BATTERY_REMAINING_TIME, "Number:Time");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
     public void assertChannelDisplayInformationIsUpdated() throws DeviceNotFoundException {
-        String channnelID = SystemInfoBindingConstants.CHANNEL_DISPLAY_INFORMATION;
+        final var mockedValue = new StringType("Mocked Display Information");
+        when(mockedSystemInfo.getDisplayInformation(DEFAULT_DEVICE_INDEX)).thenReturn(mockedValue);
 
-        StringType mockedDisplayInfo = new StringType("Mocked Display Information");
-        when(mockedSystemInfo.getDisplayInformation(DEFAULT_DEVICE_INDEX)).thenReturn(mockedDisplayInfo);
-
-        initializeThingWithChannel(channnelID, "String");
-        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedDisplayInfo);
+        initializeThingWithChannel(CHANNEL_DISPLAY_INFORMATION, "String");
+        assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
     }
 
     @Test
@@ -487,7 +456,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         });
 
         // Change the priority of a channel, keep the pid
-        final Configuration updatedConfig = new Configuration();
+        final var updatedConfig = new Configuration();
         updatedConfig.put(priorityKey, newPriority);
         updatedConfig.put(pidKey, channel.getConfiguration().get(pidKey));
         Channel updatedChannel = ChannelBuilder.create(channel.getUID(), channel.getAcceptedItemType())
@@ -508,9 +477,9 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     protected void initializeBridgeWithChannel(final String channelID, @Nullable String groupID,
             final ChannelTypeUID channelTypeUID, final String acceptedItemType) {
-        final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_COMPUTER, DEFAULT_TEST_THING_NAME);
+        final var thingUID = new ThingUID(BRIDGE_TYPE_COMPUTER, DEFAULT_TEST_THING_NAME);
 
-        final BridgeBuilder builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
+        final var builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
         builder.withConfiguration(configuration);
 
         final ChannelUID channelUID;
@@ -519,10 +488,10 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         } else {
             channelUID = new ChannelUID(thingUID, groupID, channelID);
         }
-        ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
+        final var channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
         channelBuilder.withType(channelTypeUID).withKind(ChannelKind.STATE);
 
-        Configuration channelConfiguration = new Configuration();
+        final var channelConfiguration = new Configuration();
         channelConfiguration.put(PRIORITY_PARAMETER, DEFAULT_CHANNEL_TEST_PRIORITY);
         channelBuilder.withConfiguration(channelConfiguration);
         builder.withChannel(channelBuilder.build());
@@ -538,7 +507,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         handler.initialize();
 
         waitForAssert(() -> {
-            final ThingStatusInfo statusInfo = bridge.getStatusInfo();
+            final var statusInfo = bridge.getStatusInfo();
             assertThat(String.format("Bridge status detail is %s with description %s", statusInfo.getStatusDetail(),
                     statusInfo.getDescription()), bridge.getStatus(), is(equalTo(ThingStatus.ONLINE)));
         });

@@ -19,8 +19,6 @@ import static org.mockito.Mockito.lenient;
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.*;
 import static org.openhab.binding.systeminfo.test.SystemInfoOSGiTestConstants.*;
 
-import javax.measure.quantity.Dimensionless;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -33,12 +31,10 @@ import org.openhab.binding.systeminfo.internal.handler.SystemInfoProcessHandler;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedOSProcess;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedOperatingSystem;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.Units;
-import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.builder.ChannelBuilder;
 import org.openhab.core.thing.binding.builder.ThingBuilder;
@@ -92,8 +88,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelLoadIsUpdated() {
-        final QuantityType<Dimensionless> mockedValue = new QuantityType<>(SystemInfoMockedOSProcess.TEST_PROCESS_LOAD,
-                Units.PERCENT);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedOSProcess.TEST_PROCESS_LOAD, Units.PERCENT);
 
         initializeThingWithChannel(CHANNEL_LOAD, CHANNEL_TYPE_LOAD, "Number:Dimensionless");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -101,7 +96,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelNameIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedOSProcess.TEST_PROCESS_NAME);
+        final var mockedValue = new StringType(SystemInfoMockedOSProcess.TEST_PROCESS_NAME);
 
         initializeThingWithChannel(CHANNEL_NAME, CHANNEL_TYPE_NAME, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -109,7 +104,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelPathIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedOSProcess.TEST_PROCESS_PATH);
+        final var mockedValue = new StringType(SystemInfoMockedOSProcess.TEST_PROCESS_PATH);
 
         initializeThingWithChannel(CHANNEL_PROCESS_PATH, CHANNEL_TYPE_PATH, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -117,8 +112,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelResidentMemoryIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedOSProcess.TEST_PROCESS_RESIDENT_MEMORY, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedOSProcess.TEST_PROCESS_RESIDENT_MEMORY, Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_USED, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -126,7 +120,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelThreadCountIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedOSProcess.TEST_PROCESS_THREAD_COUNT);
+        final var mockedValue = new DecimalType(SystemInfoMockedOSProcess.TEST_PROCESS_THREAD_COUNT);
 
         initializeThingWithChannel(CHANNEL_THREADS, CHANNEL_TYPE_THREADS, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -134,8 +128,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertChannelVirtualMemoryIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedOSProcess.TEST_PROCESS_VIRTUAL_MEMORY, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedOSProcess.TEST_PROCESS_VIRTUAL_MEMORY, Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_ALLOCATED, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -145,7 +138,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
             final String acceptedItemType) {
         initializeThing(configuration, null, "", DEFAULT_CHANNEL_TEST_PRIORITY);
 
-        final Bridge bridge = systemInfoBridge;
+        final var bridge = systemInfoBridge;
         if (bridge == null) {
             throw new AssertionError("Bridge is null");
         }
@@ -154,15 +147,15 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
         thingConfig.setProcessID(SystemInfoMockedOSProcess.TEST_PROCESS_ID);
         thingConfig.setProcessName(SystemInfoMockedOSProcess.TEST_PROCESS_NAME);
 
-        final ThingUID thingUID = new ThingUID(THING_TYPE_PROCESS, DEFAULT_TEST_THING_NAME);
-        final ThingBuilder thingBuilder = ThingBuilder.create(THING_TYPE_PROCESS, thingUID);
+        final var thingUID = new ThingUID(THING_TYPE_PROCESS, DEFAULT_TEST_THING_NAME);
+        final var thingBuilder = ThingBuilder.create(THING_TYPE_PROCESS, thingUID);
         thingBuilder.withBridge(bridge.getUID()).withConfiguration(thingConfig.asConfiguration());
 
-        final ChannelUID channelUID = new ChannelUID(thingUID, channelID);
-        final ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
+        final var channelUID = new ChannelUID(thingUID, channelID);
+        final var channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
         channelBuilder.withType(channelTypeUID).withKind(ChannelKind.STATE);
 
-        Configuration channelConfiguration = new Configuration();
+        final var channelConfiguration = new Configuration();
         channelConfiguration.put(PRIORITY_PARAMETER, DEFAULT_CHANNEL_TEST_PRIORITY);
         channelBuilder.withConfiguration(channelConfiguration);
         thingBuilder.withChannel(channelBuilder.build());
@@ -179,7 +172,7 @@ public class SystemInfoProcessHandlerOSGiTest extends SystemInfoOSGiTestBase {
         handler.initialize();
 
         waitForAssert(() -> {
-            final ThingStatusInfo statusInfo = thing.getStatusInfo();
+            final var statusInfo = thing.getStatusInfo();
             assertThat(String.format("Thing status detail is %s with description %s", statusInfo.getStatusDetail(),
                     statusInfo.getDescription()), thing.getStatus(), is(equalTo(ThingStatus.ONLINE)));
         });

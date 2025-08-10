@@ -49,7 +49,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoDriveHandler;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedHWDiskStore;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
@@ -58,7 +57,6 @@ import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
-import org.openhab.core.thing.ThingStatusInfo;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.BridgeHandler;
 import org.openhab.core.thing.binding.ThingHandler;
@@ -110,13 +108,13 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertMockDataConsistency() {
-        final List<HWDiskStore> diskStores = mockedSystemInfo.getHardDriveList();
+        final var diskStores = mockedSystemInfo.getHardDriveList();
         assertThat(mockedSystemInfo.getHardDriveCount(), is(equalTo(diskStores.size())));
     }
 
     @Test
     public void assertChannelNameIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_NAME);
+        final var mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_NAME);
 
         initializeThingWithChannel(CHANNEL_NAME, CHANNEL_TYPE_NAME, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -124,7 +122,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelModelIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_MODEL);
+        final var mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_MODEL);
 
         initializeThingWithChannel(CHANNEL_DRIVE_MODEL, CHANNEL_TYPE_MODEL, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -132,7 +130,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelReadsIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_READS);
+        final var mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_READS);
 
         initializeThingWithChannel(CHANNEL_DRIVE_READS, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -140,8 +138,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelReadBytesIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedHWDiskStore.TEST_DRIVE_READ_BYTES, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedHWDiskStore.TEST_DRIVE_READ_BYTES, Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_DRIVE_READ_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -149,7 +146,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelSerialIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_SERIAL);
+        final var mockedValue = new StringType(SystemInfoMockedHWDiskStore.TEST_DRIVE_SERIAL);
 
         initializeThingWithChannel(CHANNEL_DRIVE_SERIAL, CHANNEL_TYPE_SERIAL, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -157,7 +154,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelWritesIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITES);
+        final var mockedValue = new DecimalType(SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITES);
 
         initializeThingWithChannel(CHANNEL_DRIVE_WRITES, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -165,8 +162,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
 
     @Test
     public void assertChannelWriteBytesIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITE_BYTES, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedHWDiskStore.TEST_DRIVE_WRITE_BYTES, Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_DRIVE_WRITE_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -181,19 +177,19 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
             throw new AssertionError("Bridge is null");
         }
 
-        final ThingUID thingUID = new ThingUID(BRIDGE_TYPE_DRIVE, DEFAULT_TEST_THING_NAME);
-        final BridgeBuilder bridgeBuilder = BridgeBuilder.create(BRIDGE_TYPE_DRIVE, thingUID);
+        final var thingUID = new ThingUID(BRIDGE_TYPE_DRIVE, DEFAULT_TEST_THING_NAME);
+        final var bridgeBuilder = BridgeBuilder.create(BRIDGE_TYPE_DRIVE, thingUID);
         bridgeBuilder.withBridge(systemInfoBridge.getBridgeUID());
 
-        final Configuration bridgeConfiguration = new Configuration();
+        final var bridgeConfiguration = new Configuration();
         bridgeConfiguration.put(DEVICE_INDEX_PARAMETER, new BigDecimal(DEFAULT_DEVICE_INDEX));
         bridgeBuilder.withConfiguration(bridgeConfiguration);
 
-        final ChannelUID channelUID = new ChannelUID(thingUID, channelID);
-        final ChannelBuilder channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
+        final var channelUID = new ChannelUID(thingUID, channelID);
+        final var channelBuilder = ChannelBuilder.create(channelUID, acceptedItemType);
         channelBuilder.withType(channelTypeUID).withKind(ChannelKind.STATE);
 
-        Configuration channelConfiguration = new Configuration();
+        final var channelConfiguration = new Configuration();
         channelConfiguration.put(PRIORITY_PARAMETER, DEFAULT_CHANNEL_TEST_PRIORITY);
         channelBuilder.withConfiguration(channelConfiguration);
         bridgeBuilder.withChannel(channelBuilder.build());
@@ -210,7 +206,7 @@ public class SystemInfoDriveHandlerOSGiTest extends SystemInfoDeviceHandlerOSGiT
         handler.initialize();
 
         waitForAssert(() -> {
-            final ThingStatusInfo statusInfo = bridge.getStatusInfo();
+            final var statusInfo = bridge.getStatusInfo();
             assertThat(String.format("Thing status detail is %s with description %s", statusInfo.getStatusDetail(),
                     statusInfo.getDescription()), bridge.getStatus(), is(equalTo(ThingStatus.ONLINE)));
         });
