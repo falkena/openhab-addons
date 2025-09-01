@@ -91,7 +91,7 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     protected void initializeThingWithChannel(String channelID, String acceptedItemType) {
         super.initializeThingWithChannel(channelID, acceptedItemType);
 
-        final Bridge bridge = systemInfoBridge;
+        final var bridge = systemInfoBridge;
         if (bridge == null) {
             throw new AssertionError("Bridge is null");
         }
@@ -122,11 +122,11 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         final var builder = BridgeBuilder.create(BRIDGE_TYPE_COMPUTER, thingUID);
         builder.withConfiguration(configuration);
 
-        final Bridge bridge = builder.build();
+        final var bridge = builder.build();
         assertThat(bridge, is(notNullValue()));
         managedThingProvider.add(bridge);
 
-        final BridgeHandler handler = bridge.getHandler();
+        final var handler = bridge.getHandler();
         if (handler == null) {
             throw new AssertionError("Bridge handler is null");
         }
@@ -145,13 +145,13 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
 
     @Test
     public void assertMediumPriorityChannelIsUpdated() {
-        final String channelID = DEFAULT_TEST_CHANNEL_ID;
-        final String acceptedItemType = "Number";
-        final String priority = "Medium";
+        final var channelID = DEFAULT_TEST_CHANNEL_ID;
+        final var acceptedItemType = "Number";
+        final var priority = "Medium";
 
         initializeThing(configuration, channelID, acceptedItemType, priority);
 
-        final Bridge bridge = systemInfoBridge;
+        final var bridge = systemInfoBridge;
         if (bridge == null) {
             throw new AssertionError("Bridge is null");
         }
@@ -165,15 +165,15 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
     public void assertStateOfSecondDeviceIsUpdated() {
         // This test assumes that at least 2 network interfaces are present on the test platform
         int deviceIndex = 1;
-        String channnelID = "network" + deviceIndex + "#mac";
+        final var channelID = "network" + deviceIndex + "#mac";
 
-        initializeThingWithChannel(channnelID, "String");
+        initializeThingWithChannel(channelID, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, UnDefType.UNDEF);
     }
 
     @Test
     public void assertChannelCpuDescriptionIsUpdated() {
-        final String format = "Model: %s %s,family: %s, vendor: %s, sn: %s, identifier: %s ";
+        final var format = "Model: %s %s,family: %s, vendor: %s, sn: %s, identifier: %s ";
         final var mockedValue = new StringType(String.format(format, SystemInfoMockedCentralProcessor.TEST_CPU_MODEL,
                 SystemInfoMockedCentralProcessor.TEST_CPU_IS_64_BIT ? "64 bit" : "32 bit",
                 SystemInfoMockedCentralProcessor.TEST_CPU_FAMILY, SystemInfoMockedCentralProcessor.TEST_CPU_VENDOR,
@@ -432,23 +432,23 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         String acceptedItemType = "Number";
         initializeThingWithChannel(DEFAULT_TEST_CHANNEL_ID, acceptedItemType);
 
-        final Bridge bridge = systemInfoBridge;
+        final var bridge = systemInfoBridge;
         if (bridge == null) {
             throw new AssertionError("Bridge is null");
         }
 
-        final Channel channel = bridge.getChannel(DEFAULT_TEST_CHANNEL_ID);
+        final var channel = bridge.getChannel(DEFAULT_TEST_CHANNEL_ID);
         if (channel == null) {
             throw new AssertionError("Channel is null");
         }
 
-        final BridgeHandler handler = bridge.getHandler();
+        final var handler = bridge.getHandler();
         if (handler == null) {
             throw new AssertionError("Bridge handler is null");
         }
         assertThat(handler, is(instanceOf(SystemInfoComputerHandler.class)));
 
-        final SystemInfoComputerHandler computerHandler = (SystemInfoComputerHandler) handler;
+        final var computerHandler = (SystemInfoComputerHandler) handler;
         waitForAssert(() -> {
             assertThat("The initial priority of channel " + channel.getUID() + " is not as expected.",
                     channel.getConfiguration().get(priorityKey), is(equalTo(DEFAULT_CHANNEL_TEST_PRIORITY)));
@@ -496,10 +496,10 @@ public class SystemInfoComputerOSGiTest extends SystemInfoOSGiTestBase {
         channelBuilder.withConfiguration(channelConfiguration);
         builder.withChannel(channelBuilder.build());
 
-        final Bridge bridge = builder.build();
+        final var bridge = builder.build();
         managedThingProvider.add(bridge);
 
-        final BridgeHandler handler = bridge.getHandler();
+        final var handler = bridge.getHandler();
         if (handler == null) {
             throw new AssertionError("Bridge handler is null");
         }
