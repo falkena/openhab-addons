@@ -14,4 +14,13 @@
 
   <name>openHAB Add-ons :: Bundles :: Electrolux Appliance Binding</name>
 
+  <dependencies>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.11.0</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+
 </project>
