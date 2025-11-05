@@ -52,6 +52,7 @@ import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.UnDefType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
@@ -79,18 +80,21 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
     private final Set<PLCCommonHandler> handlers = new HashSet<>();
     private volatile @NonNullByDefault({}) PLCLogoBridgeConfiguration config;
 
-    private @Nullable ScheduledFuture<?> rtcJob;
+    private volatile @Nullable ScheduledFuture<?> rtcJob;
     private final Runnable rtcReader = new Runnable() {
         private final ChannelUID channel = new ChannelUID(getThing().getUID(), RTC_CHANNEL);
 
         @Override
         public void run() {
-            handleCommand(channel, RefreshType.REFRESH);
+            final var rtcJob = PLCBridgeHandler.this.rtcJob;
+            if ((rtcJob != null) && !rtcJob.isDone()) {
+                handleCommand(channel, RefreshType.REFRESH);
+            }
         }
     };
     private volatile ZonedDateTime rtc;
 
-    private @Nullable ScheduledFuture<?> readerJob;
+    private volatile @Nullable ScheduledFuture<?> readerJob;
     private final Runnable dataReader = new Runnable() {
         // Buffer for block data read operation
         private final byte[] buffer = new byte[2048];
@@ -98,41 +102,44 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
 
         @Override
         public void run() {
-            for (final var channel : channels) {
-                // RTC channel is updated in rtcJob
-                if (!RTC_CHANNEL.equalsIgnoreCase(channel.getUID().getId())) {
-                    handleCommand(channel.getUID(), RefreshType.REFRESH);
+            final var readerJob = PLCBridgeHandler.this.readerJob;
+            if ((readerJob != null) && !readerJob.isDone()) {
+                for (final var channel : channels) {
+                    // RTC channel is updated in rtcJob
+                    if (!RTC_CHANNEL.equalsIgnoreCase(channel.getUID().getId())) {
+                        handleCommand(channel.getUID(), RefreshType.REFRESH);
+                    }
                 }
-            }
 
-            final var client = PLCBridgeHandler.this.client;
-            final var memory = LOGO_MEMORY_BLOCK.get(getLogoFamily());
-            final var layout = (memory != null) ? memory.get(MEMORY_SIZE) : null;
-            if ((layout != null) && (client != null)) {
-                final int result;
-                try {
-                    result = client.readBytes(0, layout.length(), buffer);
-                } catch (Exception exception) {
-                    logger.error("Reader thread got exception: {}.", exception.getMessage());
-                    return;
-                }
-                if (result == 0) {
-                    synchronized (handlers) {
-                        for (final var handler : handlers) {
-                            final var length = handler.getBufferLength();
-                            final var address = handler.getStartAddress();
-                            if ((length > 0) && (address != PLCCommonHandler.INVALID)) {
-                                handler.setData(Arrays.copyOfRange(buffer, address, address + length));
-                            } else {
-                                logger.debug("Invalid handler {} found.", handler.getClass().getSimpleName());
+                final var client = PLCBridgeHandler.this.client;
+                final var memory = LOGO_MEMORY_BLOCK.get(getLogoFamily());
+                final var layout = (memory != null) ? memory.get(MEMORY_SIZE) : null;
+                if ((layout != null) && (client != null)) {
+                    final int result;
+                    try {
+                        result = client.readBytes(0, layout.length(), buffer);
+                    } catch (Exception exception) {
+                        logger.error("Reader thread got exception: {}.", exception.getMessage());
+                        return;
+                    }
+                    if (result == 0) {
+                        synchronized (handlers) {
+                            for (final var handler : handlers) {
+                                final var length = handler.getBufferLength();
+                                final var address = handler.getStartAddress();
+                                if ((length > 0) && (address != PLCCommonHandler.INVALID)) {
+                                    handler.setData(Arrays.copyOfRange(buffer, address, address + length));
+                                } else {
+                                    logger.debug("Invalid handler {} found.", handler.getClass().getSimpleName());
+                                }
                             }
                         }
+                    } else {
+                        logger.debug("Can not read data from LOGO!: {}.", S7Client.ErrorText(result));
                     }
                 } else {
-                    logger.debug("Can not read data from LOGO!: {}.", S7Client.ErrorText(result));
+                    logger.debug("Either memory block {} or LOGO! client {} is invalid.", memory, client);
                 }
-            } else {
-                logger.debug("Either memory block {} or LOGO! client {} is invalid.", memory, client);
             }
         }
     };
@@ -207,11 +214,12 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
                         updateState(channelUID, new DateTimeType(getDateTime(buffer)));
                     }
                     case DAY_OF_WEEK_CHANNEL -> {
-                        var value = DAY_OF_WEEK.get(S7.BCDtoByte(buffer[7]));
-                        if (value == null) {
-                            value = String.format("Unknown day of week value %d received", S7.BCDtoByte(buffer[7]));
+                        if (buffer.length >= 8) {
+                            final var value = DAY_OF_WEEK.get(S7.BCDtoByte((byte) (buffer[7] & 0x0F)));
+                            updateState(channelUID, (value != null) ? StringType.valueOf(value) : UnDefType.UNDEF);
+                        } else {
+                            updateState(channelUID, UnDefType.UNDEF);
                         }
-                        updateState(channelUID, new StringType(value));
                     }
                     default -> logger.info("Invalid channel {} found.", channelUID);
                 }
@@ -380,7 +388,14 @@ public class PLCBridgeHandler extends BaseBridgeHandler {
             calendar.set(Calendar.HOUR_OF_DAY, S7.BCDtoByte(buffer[3]));
             calendar.set(Calendar.MINUTE, S7.BCDtoByte(buffer[4]));
             calendar.set(Calendar.SECOND, S7.BCDtoByte(buffer[5]));
-            calendar.set(Calendar.MILLISECOND, 0);
+
+            var milliSeconds = 0;
+            if (buffer.length >= 8) {
+                final var nibble = ((buffer[7] & 0xF0) >> 4);
+                milliSeconds = 10 * S7.BCDtoByte(buffer[6]) + S7.BCDtoByte((byte) nibble);
+            }
+            calendar.set(Calendar.MILLISECOND, milliSeconds);
+
             result = calendar.toZonedDateTime();
         } else {
             logger.warn("Return local server time: {}.", "Not enough fields provided");
