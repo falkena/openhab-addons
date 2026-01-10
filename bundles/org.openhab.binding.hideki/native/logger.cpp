@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
       receiver.start();
 
       while(true) {
-        Receiver::PulseDurationType duration = 0;
+        auto duration = Receiver::PulseDurationType::zero();
         if(receiver.getNextPulse(duration)) {
-          logger->info("{:5d}", duration);
+          logger->info("{:>5}", duration);
         } else {
           sleep(1);
         }

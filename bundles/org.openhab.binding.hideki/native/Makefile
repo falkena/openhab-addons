@@ -3,8 +3,8 @@ TARGET=libhideki.so
 CC         = gcc
 INCLUDE	   = -I./queue \
              -I/$(JAVA_HOME)/include -I/$(JAVA_HOME)/include/linux  \
-             -I/usr/lib/jvm/temurin-21-jdk-arm64/include       \
-             -I/usr/lib/jvm/temurin-21-jdk-arm64/include/linux \
+             -I/usr/lib/jvm/java-21-openjdk-arm64/include       \
+             -I/usr/lib/jvm/java-21-openjdk-arm64/include/linux \
              -I/usr/local/include -I/usr/local/include/linux
 
 CFLAGS      := -O3 -std=c++20 -fPIC -pedantic -Wall -Winline -pipe -flto $(CARGS) 
@@ -54,4 +54,3 @@ HidekiJniWrapper.o: HidekiJniWrapper.h
 
 #HidekiDecoder.h : HidekiDecoder.class
 #	javah -classpath $(CLASS_PATH) $*
-
