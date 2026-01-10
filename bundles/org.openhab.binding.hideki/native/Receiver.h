@@ -2,14 +2,14 @@
 
 #include "concurrentqueue.h"
 
-#include <inttypes.h>
 #include <pthread.h>
 
 #include <atomic>
+#include <chrono>
 
 class Receiver {
   public:
-    using PulseDurationType = decltype(timespec::tv_sec);
+    using PulseDurationType = std::chrono::nanoseconds;
     enum class State : uint8_t {
       ERROR,
       INITIALIZED

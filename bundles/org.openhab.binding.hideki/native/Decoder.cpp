@@ -34,7 +34,7 @@ bool Decoder::start()
 {
   std::memset(&mReceivedData, 0, sizeof(decltype(mReceivedData)));
 
-  if (!mDecoderThreadIsAlive && mReceiver->start()) {
+  if(!mDecoderThreadIsAlive && mReceiver->start()) {
     if(pthread_create(&mDecoderThread, nullptr, decode, this) == 0) {
       pthread_mutex_lock(&mStartMutex);
       while(!mDecoderThreadIsAlive) {
@@ -55,7 +55,7 @@ bool Decoder::start()
 */
 bool Decoder::stop()
 {
-  if (mDecoderThreadIsAlive && mReceiver->stop()) {
+  if(mDecoderThreadIsAlive && mReceiver->stop()) {
     mStopDecoderThread = true;
     pthread_join(mDecoderThread, nullptr);
   }
@@ -69,7 +69,7 @@ int Decoder::getDecodedData(std::array<uint8_t, DATA_BUFFER_LENGTH>& data, doubl
   int length = -1;
 
   pthread_rwlock_rdlock(&mFetchNewDataLock);
-  if (mReceivedNewData) {
+  if(mReceivedNewData) {
     data = mReceivedData.data;
     length = (data[2] >> 1) & 0x1F;
     rssi = mReceivedData.rssi.value;
@@ -90,9 +90,9 @@ int Decoder::getDecodedData(std::array<uint8_t, DATA_BUFFER_LENGTH>& data, doubl
 // Set limits according to
 // http://jeelabs.org/2010/04/16/cresta-sensor/index.html
 // http://jeelabs.org/2010/04/17/improved-ook-scope/index.html
-static constexpr Receiver::PulseDurationType LOW_TIME = 183; //200;    // Minimal short pulse length in microseconds
-static constexpr Receiver::PulseDurationType MID_TIME = 726; //750;    // Maximal short / Minimal long pulse length in microseconds
-static constexpr Receiver::PulseDurationType HIGH_TIME = 1464; //1300; // Maximal long pulse length in microseconds
+static constexpr auto LOW_TIME = std::chrono::microseconds{183}; //200;    // Minimal short pulse length
+static constexpr auto MID_TIME = std::chrono::microseconds{726}; //750;    // Maximal short / Minimal long pulse length
+static constexpr auto HIGH_TIME = std::chrono::microseconds{1464}; //1300; // Maximal long pulse length
 void* Decoder::decode(void* parameter)
 {
   Decoder* decoder = reinterpret_cast<Decoder*>(parameter);
@@ -106,23 +106,34 @@ void* Decoder::decode(void* parameter)
   pthread_mutex_unlock(&decoder->mStartMutex);
 
   // Start decoder
-  while (!decoder->mStopDecoderThread) {
-    auto duration = std::numeric_limits<Receiver::PulseDurationType>::max();
-    if(!decoder->mReceiver->getNextPulse(duration)) {
+  while(!decoder->mStopDecoderThread) {
+    auto pulse = Receiver::PulseDurationType::max();
+    if(!decoder->mReceiver->getNextPulse(pulse)) {
       usleep(1000); // Sleep for 1 millisecond
+      continue;
+    }
+
+    // Convert to nanoseconds to microseconds
+    const auto duration = std::chrono::round<std::chrono::microseconds>(pulse);
+
+    // Filter very short and very long pulses
+    static constexpr auto BANDWIDTH = std::chrono::microseconds{83};
+    static constexpr auto LONG_PULSE_THRESHOLD = HIGH_TIME + BANDWIDTH;
+    static constexpr auto SHORT_PULSE_THRESHOLD = LOW_TIME - BANDWIDTH;
+    if((SHORT_PULSE_THRESHOLD >= duration) || (duration >= LONG_PULSE_THRESHOLD) ) {
       continue;
     }
 
     bool reset = true;
     static int halfBit = 0; // Indicator for received half bit
-    if ((MID_TIME <= duration) && (duration < HIGH_TIME)) { // The pulse was long --> Got 1
+    if((MID_TIME <= duration) && (duration < HIGH_TIME)) { // The pulse was long --> Got 1
       value = value + 1;
       value = value << 1;
       count = count + 1;
       reset = false;
       halfBit = 0;
-    } else if ((LOW_TIME <= duration) && (duration < MID_TIME)) { // The pulse was short --> Got 0?
-      if (halfBit == 1) { // Two short pulses one after the other --> Got 0
+    } else if((LOW_TIME <= duration) && (duration < MID_TIME)) { // The pulse was short --> Got 0?
+      if(halfBit == 1) { // Two short pulses one after the other --> Got 0
         value = value + 0;
         value = value << 1;
         count = count + 1;
@@ -134,30 +145,30 @@ void* Decoder::decode(void* parameter)
     static uint32_t byte = 0;
     static struct ReceivedData buffer = { .rssi = { 0.0, 0 }, .data = { 0 } };
     std::size_t length = buffer.data.size() + 1;
-    if ((byte > 2) && !reset) {
+    if((byte > 2) && !reset) {
       length = (buffer.data[2] >> 1) & 0x1F;
-      if (length > buffer.data.size() - 1) {
+      if(length > buffer.data.size() - 1) {
         reset = true;
       }
     }
 
     // Last byte has 8 bits only. No parity will be read
     // Fake parity bit to pass next step
-    if ((byte == length + 2) && (count == 8) && !reset)
+    if((byte == length + 2) && (count == 8) && !reset)
     {
       count = count + 1;
       value = __builtin_parity(value) + (value << 1);
     }
 
-    if ((count == 9) && !reset) {
+    if((count == 9) && !reset) {
       value = value >> 1; // We made one shift more than need. Shift back.
-      if (__builtin_parity(value >> 1) == value % 2) {
+      if(__builtin_parity(value >> 1) == value % 2) {
         buffer.data[byte] = static_cast<decltype(buffer.data)::value_type>((value >> 1) & 0xFF);
         buffer.data[byte] = ((buffer.data[byte] & 0xAA) >> 1) | ((buffer.data[byte] & 0x55) << 1);
         buffer.data[byte] = ((buffer.data[byte] & 0xCC) >> 2) | ((buffer.data[byte] & 0x33) << 2);
         buffer.data[byte] = ((buffer.data[byte] & 0xF0) >> 4) | ((buffer.data[byte] & 0x0F) << 4);
 
-        if (buffer.data[0] == 0x9F) {
+        if(buffer.data[0] == 0x9F) {
           byte = byte + 1;
           buffer.rssi.count += 1;
           buffer.rssi.value += decoder->mReceiver->getRSSIValue();
@@ -165,29 +176,29 @@ void* Decoder::decode(void* parameter)
           reset = true;
         }
 
-        if ((byte > 2) && !reset) {
+        if((byte > 2) && !reset) {
           length = (buffer.data[2] >> 1) & 0x1F;
-          if (length > buffer.data.size() - 1) {
+          if(length > buffer.data.size() - 1) {
             reset = true;
           }
         }
 
-        if ((byte > length + 1) && !reset) {
+        if((byte > length + 1) && !reset) {
           uint32_t crc1 = 0;
-          for (uint8_t i = 1; i < length + 1; ++i) {
+          for(uint8_t i = 1; i < length + 1; ++i) {
             crc1 = crc1 ^ buffer.data[i];
           }
-          if (crc1 != buffer.data[length + 1]) {
+          if(crc1 != buffer.data[length + 1]) {
             reset = true;
           }
         }
 
-        if ((byte > length + 2) && !reset) {
+        if((byte > length + 2) && !reset) {
           uint32_t crc2 = 0;
-          for (uint8_t i = 1; i < length + 2; ++i) {
+          for(uint8_t i = 1; i < length + 2; ++i) {
             crc2 = crc2 ^ buffer.data[i];
-            for (uint8_t j = 0; j < 8; ++j) {
-              if ((crc2 & 0x01) != 0) {
+            for(uint8_t j = 0; j < 8; ++j) {
+              if((crc2 & 0x01) != 0) {
                 crc2 = (crc2 >> 1) ^ 0xE0;
               } else {
                 crc2 = (crc2 >> 1);
@@ -195,7 +206,7 @@ void* Decoder::decode(void* parameter)
             }
           }
 
-          if (crc2 == buffer.data[length + 2]) {
+          if(crc2 == buffer.data[length + 2]) {
             pthread_rwlock_wrlock(&decoder->mFetchNewDataLock);
             decoder->mReceivedNewData = true;
             std::memcpy(&decoder->mReceivedData, &buffer, sizeof(decltype(buffer)));
@@ -209,7 +220,7 @@ void* Decoder::decode(void* parameter)
       halfBit = 0;
     }
 
-    if (reset) { // Reset if failed or got valid data
+    if(reset) { // Reset if failed or got valid data
       byte = 0;
       count = 0;
       value = 0;
