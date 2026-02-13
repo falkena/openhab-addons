@@ -163,11 +163,11 @@ class WindowCoveringDeviceTest {
     @Test
     void testHandleMatterEventWithRollershutter() {
         // Test fully closed
-        shutterDevice.handleMatterEvent("windowCovering", "targetPositionLiftPercent100ths", 10000.0);
+        shutterDevice.handleMatterEvent("windowCovering", "targetPositionLiftPercent100ths", 0.0);
         verify(rollershutterItem).send(UpDownType.DOWN, MATTER_SOURCE);
 
         // Test fully open
-        shutterDevice.handleMatterEvent("windowCovering", "targetPositionLiftPercent100ths", 0.0);
+        shutterDevice.handleMatterEvent("windowCovering", "targetPositionLiftPercent100ths", 10000.0);
         verify(rollershutterItem).send(UpDownType.UP, MATTER_SOURCE);
 
         // Test 50% position
