@@ -102,12 +102,15 @@ public class WindowCoveringDevice extends BaseDevice {
                 } else if (primaryItem instanceof DimmerItem dimmerItem) {
                     dimmerItem.send(percentType, MATTER_SOURCE);
                 } else if (primaryItem instanceof RollershutterItem rollerShutterItem) {
-                    if (targetPercent == 100) {
+                    // Matter defines 100% as fully open and 0% as fully closed
+                    // openHAB defines 0% as fully open and 100% as fully closed
+                    final PercentType position = new PercentType(100 - targetPercent);
+                    if (position.intValue() == 100) {
                         rollerShutterItem.send(UpDownType.DOWN, MATTER_SOURCE);
-                    } else if (targetPercent == 0) {
+                    } else if (position.intValue() == 0) {
                         rollerShutterItem.send(UpDownType.UP, MATTER_SOURCE);
                     } else {
-                        rollerShutterItem.send(percentType, MATTER_SOURCE);
+                        rollerShutterItem.send(position, MATTER_SOURCE);
                     }
                 } else if (primaryItem instanceof SwitchItem switchItem) {
                     // anything > 0 is considered partially open and ON , otherwise completely open and OFF (unless
@@ -156,12 +159,18 @@ public class WindowCoveringDevice extends BaseDevice {
             if (lastTargetPercent == null && currentPercent != lastCurrentPercent) {
                 // either 0/OPEN or 100/CLOSED, if the value was not updated, we ignore it (probably should not happen)
                 int targetPercent = currentPercent < lastCurrentPercent ? 0 : 100;
+                // Matter defines 100% as fully open and 0% as fully closed
+                // openHAB defines 0% as fully open and 100% as fully closed
+                int position = item instanceof RollershutterItem ? 100 - targetPercent : targetPercent;
                 setEndpointState(WindowCoveringCluster.CLUSTER_PREFIX,
-                        WindowCoveringCluster.ATTRIBUTE_TARGET_POSITION_LIFT_PERCENT100THS, targetPercent * 100).get();
+                        WindowCoveringCluster.ATTRIBUTE_TARGET_POSITION_LIFT_PERCENT100THS, position * 100).get();
                 lastTargetPercent = targetPercent;
             }
+            // Matter defines 100% as fully open and 0% as fully closed
+            // openHAB defines 0% as fully open and 100% as fully closed
+            int position = item instanceof RollershutterItem ? 100 - currentPercent : currentPercent;
             setEndpointState(WindowCoveringCluster.CLUSTER_PREFIX,
-                    WindowCoveringCluster.ATTRIBUTE_CURRENT_POSITION_LIFT_PERCENT100THS, currentPercent * 100).get();
+                    WindowCoveringCluster.ATTRIBUTE_CURRENT_POSITION_LIFT_PERCENT100THS, position * 100).get();
         } catch (InterruptedException | ExecutionException e) {
             logger.debug("Could not set state", e);
             return;
@@ -171,8 +180,10 @@ public class WindowCoveringDevice extends BaseDevice {
         // uniform way to detect this, so we wait 5 seconds of no updates. Setting this too early/late will not have
         // negative effects, but it looks better in UIs if we wait a bit.
         cancelTimer();
-        this.movementFinishedTimer = scheduler.schedule(() -> finishMovement(currentPercent), 5000,
-                TimeUnit.MILLISECONDS);
+        // Matter defines 100% as fully open and 0% as fully closed
+        // openHAB defines 0% as fully open and 100% as fully closed
+        int position = item instanceof RollershutterItem ? 100 - currentPercent : currentPercent;
+        this.movementFinishedTimer = scheduler.schedule(() -> finishMovement(position), 5000, TimeUnit.MILLISECONDS);
     }
 
     private int itemStateToPercent(State state) {
@@ -204,7 +215,7 @@ public class WindowCoveringDevice extends BaseDevice {
         return localPercent;
     }
 
-    private void finishMovement(final Integer currentPercent) {
+    private void finishMovement(final int currentPercent) {
         try {
             setEndpointState(WindowCoveringCluster.CLUSTER_PREFIX,
                     WindowCoveringCluster.ATTRIBUTE_TARGET_POSITION_LIFT_PERCENT100THS, currentPercent * 100).get();
