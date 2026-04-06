@@ -24,6 +24,7 @@ import static org.openhab.core.thing.Thing.PROPERTY_MODEL_ID;
 import static org.openhab.core.thing.Thing.PROPERTY_SERIAL_NUMBER;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -88,7 +89,7 @@ public class SystemInfoDriveHandler extends SystemInfoBridgeScheduler {
         try {
             final int index = getConfigAs(SystemInfoDriveConfig.class).getIndex();
             final HWDiskStore drive = systemInfo.getHardDriveList().get(index);
-            final Map<String, String> properties = editProperties();
+            final Map<String, @Nullable String> properties = new HashMap<>(editProperties());
             properties.put(PROPERTY_MODEL_ID, drive.getModel());
             properties.put(PROPERTY_SERIAL_NUMBER, drive.getSerial());
             updateProperties(properties);

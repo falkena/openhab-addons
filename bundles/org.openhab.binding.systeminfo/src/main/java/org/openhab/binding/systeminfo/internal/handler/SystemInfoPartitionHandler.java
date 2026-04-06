@@ -89,7 +89,7 @@ public class SystemInfoPartitionHandler extends SystemInfoBaseThingHandler {
                 try {
                     final int index = getConfigAs(SystemInfoPartitionConfig.class).getIndex();
                     final HWPartition partition = drive.getPartitions().get(index);
-                    final Map<String, String> properties = editProperties();
+                    final Map<String, @Nullable String> properties = new HashMap<>(editProperties());
                     properties.put(PROPERTY_IDENTIFICATION, partition.getIdentification());
                     updateProperties(properties);
 

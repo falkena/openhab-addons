@@ -22,6 +22,7 @@ import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants
 import static org.openhab.binding.systeminfo.internal.SystemInfoBindingConstants.CHANNEL_NETWORK_SENT_BYTES;
 import static org.openhab.core.thing.Thing.PROPERTY_MAC_ADDRESS;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -68,7 +69,7 @@ public class SystemInfoNetworkHandler extends SystemInfoBaseThingHandler {
             final String name = config.getAdapterName();
             return name.equalsIgnoreCase(entry.getName());
         }).findFirst().ifPresentOrElse((adapter) -> {
-            final Map<String, String> properties = editProperties();
+            final Map<String, @Nullable String> properties = new HashMap<>(editProperties());
             properties.put(PROPERTY_MAC_ADDRESS, adapter.getMacaddr().toUpperCase());
             updateProperties(properties);
             config.setIndex(adapter.getIndex());
