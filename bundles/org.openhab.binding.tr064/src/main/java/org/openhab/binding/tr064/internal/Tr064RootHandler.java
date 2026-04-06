@@ -287,7 +287,7 @@ public class Tr064RootHandler extends BaseBridgeHandler implements PhonebookProv
                 SOAPMessage soapResponse1 = soapConnector
                         .doSOAPRequest(new SOAPRequest(deviceService, getInfoAction.getName()));
                 SOAPValueConverter soapValueConverter = new SOAPValueConverter(httpClient, timeout);
-                Map<String, String> properties = editProperties();
+                Map<String, @Nullable String> properties = new HashMap<>(editProperties());
                 PROPERTY_ARGUMENTS.forEach(argumentName -> getInfoAction.getArgumentList().stream()
                         .filter(argument -> argument.getName().equals(argumentName)).findFirst()
                         .ifPresent(argument -> soapValueConverter

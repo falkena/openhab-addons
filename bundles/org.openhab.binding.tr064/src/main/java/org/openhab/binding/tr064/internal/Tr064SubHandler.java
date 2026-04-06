@@ -268,7 +268,7 @@ public class Tr064SubHandler extends BaseThingHandler {
             }
             this.deviceType = deviceType;
 
-            Map<String, String> properties = editProperties();
+            Map<String, @Nullable String> properties = new HashMap<>(editProperties());
             properties.put("deviceType", deviceType);
             updateProperties(properties);
 
