@@ -45,7 +45,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.systeminfo.internal.handler.SystemInfoNetworkHandler;
 import org.openhab.binding.systeminfo.test.data.SystemInfoMockedNetworkInterface;
 import org.openhab.core.config.core.Configuration;
-import org.openhab.core.library.dimension.DataAmount;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
@@ -92,7 +91,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelNameIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_NAME);
+        final var mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_NAME);
 
         initializeThingWithChannel(CHANNEL_NAME, CHANNEL_TYPE_NAME, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -100,7 +99,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelDescriptionIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_DESCRIPTION);
+        final var mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_DESCRIPTION);
 
         initializeThingWithChannel(CHANNEL_DESCRIPTION, CHANNEL_TYPE_DESCRIPTION, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -108,7 +107,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelReceivedIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedNetworkInterface.TEST_NETWORK_RECEIVED);
+        final var mockedValue = new DecimalType(SystemInfoMockedNetworkInterface.TEST_NETWORK_RECEIVED);
 
         initializeThingWithChannel(CHANNEL_NETWORK_RECEIVED, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -116,8 +115,8 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelReceivedBytesIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedNetworkInterface.TEST_NETWORK_RECEIVED_BYTES, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedNetworkInterface.TEST_NETWORK_RECEIVED_BYTES,
+                Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_NETWORK_RECEIVED_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -125,7 +124,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelSentIsUpdated() {
-        final DecimalType mockedValue = new DecimalType(SystemInfoMockedNetworkInterface.TEST_NETWORK_SENT);
+        final var mockedValue = new DecimalType(SystemInfoMockedNetworkInterface.TEST_NETWORK_SENT);
 
         initializeThingWithChannel(CHANNEL_NETWORK_SENT, CHANNEL_TYPE_COUNT, "Number");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -133,8 +132,8 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelSentBytesIsUpdated() {
-        final QuantityType<DataAmount> mockedValue = new QuantityType<>(
-                SystemInfoMockedNetworkInterface.TEST_NETWORK_SENT_BYTES, Units.BYTE);
+        final var mockedValue = new QuantityType<>(SystemInfoMockedNetworkInterface.TEST_NETWORK_SENT_BYTES,
+                Units.BYTE);
 
         initializeThingWithChannel(CHANNEL_NETWORK_SENT_BYTES, CHANNEL_TYPE_BYTES, "Number:DataAmount");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -142,7 +141,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelIpIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_IP);
+        final var mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_IP);
 
         initializeThingWithChannel(CHANNEL_NETWORK_IP, CHANNEL_TYPE_IP, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -150,7 +149,7 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
 
     @Test
     public void assertChannelMacIsUpdated() {
-        final StringType mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_MAC);
+        final var mockedValue = new StringType(SystemInfoMockedNetworkInterface.TEST_NETWORK_MAC);
 
         initializeThingWithChannel(CHANNEL_NETWORK_MAC, CHANNEL_TYPE_MAC, "String");
         assertItemState(TEST_ITEM_NAME, DEFAULT_CHANNEL_TEST_PRIORITY, mockedValue);
@@ -159,11 +158,11 @@ public class SystemInfoNetworkHandlerOSGiTest extends SystemInfoDeviceHandlerOSG
     private void initializeThingWithChannel(final String channelID, final ChannelTypeUID channelTypeUID,
             final String acceptedItemType) {
 
-        final Configuration thingConfiguration = new Configuration();
+        final var thingConfiguration = new Configuration();
         thingConfiguration.put(DEVICE_NAME_PARAMETER, SystemInfoMockedNetworkInterface.TEST_NETWORK_NAME);
 
-        final ThingUID thingUID = new ThingUID(THING_TYPE_NETWORK, DEFAULT_TEST_THING_NAME);
-        final ChannelUID channelUID = new ChannelUID(thingUID, channelID);
+        final var thingUID = new ThingUID(THING_TYPE_NETWORK, DEFAULT_TEST_THING_NAME);
+        final var channelUID = new ChannelUID(thingUID, channelID);
         final Thing thing = initializeThingWithChannel(thingUID, THING_TYPE_NETWORK, thingConfiguration, channelUID,
                 channelTypeUID, acceptedItemType);
 

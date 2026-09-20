@@ -22,7 +22,7 @@ The binding uses the [OSHI](https://github.com/oshi/oshi) library to access this
 
 Bridge **computer** represents an computer system with information about CPU, memory, one storage volume, one display device and one network adapter.
 
-```
+```java
 Bridge systeminfo:computer:<SystemId> [ interval_high=<number>, interval_medium=<number> ]
 ```
 
@@ -55,7 +55,7 @@ If multiple storage or display devices support is needed, a new thing type has t
 
 Binding supports **drive** as additional bridge.
 
-```
+```java
 Bridge systeminfo:drive:<DriveId> [ index=<number> ]
 ```
 
@@ -78,7 +78,7 @@ The thing has the following properties:
 
 The configuration pattern for **network** things is:
 
-```
+```java
 Thing systeminfo:network:<AdapterId> [ name=<name> ]
 ```
 
@@ -98,7 +98,7 @@ The thing has the following property:
 
 The configuration pattern for **process** things is:
 
-```
+```java
 Thing systeminfo:process:<ProcessId> [ name=<name> ]
 ```
 

@@ -58,6 +58,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -408,7 +409,7 @@ public class SystemInfoComputerHandler extends SystemInfoBridgeScheduler {
     }
 
     private boolean updateProperties() {
-        Map<String, String> properties = editProperties();
+        final Map<String, String> properties = new HashMap<>(editProperties());
         try {
             final CentralProcessor cpu = systeminfo.getCPUSpecification();
             properties.put(PROPERTY_CPU_LOGICAL_CORES, Integer.toString(cpu.getLogicalProcessorCount()));
